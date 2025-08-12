@@ -1,0 +1,29 @@
+{
+  "name": "@akashcapro/codex-shared-utils",
+  "version": "0.2.37",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "proto/compiled",
+    "types/",
+    "utils"
+  ],
+  "scripts": {
+    "proto:gen": "find proto -name '*.proto' | xargs protoc --plugin=./node_modules/.bin/protoc-gen-ts_proto --ts_proto_out=proto/compiled --ts_proto_opt=esModuleInterop=true,forceLong=string,useOptionals=messages,outputServices=grpc-js,snakeToCamel=true,lowerCaseServiceMethods=true -I proto",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@grpc/grpc-js": "^1.13.4",
+    "dotenv": "^17.2.0",
+    "winston": "^3.17.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/node": "^20.0.0",
+    "express": "^5.1.0",
+    "grpc-tools": "^1.13.0",
+    "ts-proto": "^2.7.5",
+    "typescript": "^5.2.0"
+  }
+}

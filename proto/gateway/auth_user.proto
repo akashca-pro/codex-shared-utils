@@ -1,0 +1,179 @@
+syntax = "proto3";
+
+package auth_user.v1;
+
+service AuthUserService {
+  rpc Signup(SignupRequest) returns (SignupResponse);
+  rpc ResendOtp(ResendOtpRequest) returns (ResendOtpResponse);
+  rpc VerifyOtp(VerifyOtpRequest) returns (VerifyOtpResponse);
+  rpc Login(LoginRequest) returns (LoginResponse);
+  rpc OAuthLogin(OAuthLoginRequest) returns (OAuthLoginResponse);
+  rpc ForgotPassword(ForgotPasswordRequest) returns (ForgotPasswordResponse);
+  rpc ResetPassword(ResetPasswordRequest) returns (ResetPasswordResponse);
+  rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse);
+  rpc Profile(UserProfileRequest) returns (UserProfileResponse);
+  rpc UpdateProfile(UpdateProfileRequest) returns (UpdateProfileResponse);
+} 
+service AuthAdminService {
+  rpc Login(LoginRequest) returns (LoginResponse);
+  rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse);
+  rpc Profile(AdminProfileRequest) returns (AdminProfileResponse);
+  rpc UpdateProfile(UpdateProfileRequest) returns (UpdateProfileResponse);
+}
+
+// ===== User Messages =====
+
+message UserInfo {
+  string userId = 1;
+  string username = 2;
+  string email = 3;
+  string role = 4;
+  string avatar = 5;
+}
+
+message SignupRequest {
+  string username = 1;
+  string firstName = 2;
+  string lastName = 3;
+  string email = 4;
+  string password = 5;
+  string country = 6;
+}
+
+message SignupResponse {
+  string message = 1;
+}
+
+message ResendOtpRequest {
+  string email = 1;
+}
+
+message ResendOtpResponse {
+  string message = 1;
+}
+
+message VerifyOtpRequest {
+  string email = 1;
+  string otp = 2;
+}
+
+message VerifyOtpResponse {
+  string message = 1;
+  string accessToken = 2;
+  string refreshToken = 3;
+  UserInfo userInfo = 4;
+}
+
+message LoginRequest {
+  string email = 1;
+  string password = 2;
+  string role = 3;
+}
+
+message LoginResponse {
+  string message = 1;
+  string accessToken = 2;
+  string refreshToken = 3;
+  UserInfo userInfo = 4;
+}
+
+message OAuthLoginRequest {
+  string email = 1;
+  string firstName = 2;
+  string oAuthId = 3;
+  string avatar = 5;
+}
+
+message OAuthLoginResponse {
+  string message = 1;
+  string accessToken = 2;
+  string refreshToken = 3;
+  UserInfo userInfo = 4;
+}
+
+message ForgotPasswordRequest {
+  string email = 1;
+}
+
+message ForgotPasswordResponse {
+  string message = 1;
+}
+
+message ResetPasswordRequest {
+  string email = 1;
+  string newPassword = 2;
+  string otp = 3;
+}
+
+message ResetPasswordResponse {
+  string message = 1;
+}
+
+message UserProfileRequest {
+  string userId = 1;
+  string email = 2;
+}
+
+
+message UserProfileResponse {
+  string userId = 1;
+  string username = 2;
+  string email = 3;
+  string firstName = 4;
+  string lastName = 5;
+  string avatar = 6;
+  string country = 7;
+  string preferredLanguage = 8;
+  int32 easySolved = 9;
+  int32 mediumSolved = 10;
+  int32 hardSolved = 11;
+  int32 totalSubmission = 12;
+  int32 streak = 13;
+  string createdAt = 14;
+  string updatedAt = 15;
+}
+
+message RefreshTokenRequest {
+  string userId = 1;
+  string email = 2;
+  string role = 3;
+}
+
+message RefreshTokenResponse {
+  string message = 1;
+  string accessToken = 2;
+  UserInfo userInfo = 3;
+}
+
+message UpdateProfileRequest {
+  string userId = 1;
+  string username = 2;
+  string firstName = 3;
+  string lastName = 4;
+  string country = 5;
+  string preferredLanguage = 6;
+  string avatar = 7;
+}
+
+message UpdateProfileResponse{
+  string message = 1;  
+}
+
+// ===== Admin =====
+
+message AdminProfileRequest {
+  string userId = 1;
+  string email = 2;
+}
+
+message AdminProfileResponse {
+  string userId = 1;
+  string username = 2;
+  string email = 3;
+  string firstName = 4;
+  string lastName = 5;
+  string avatar = 6;
+  string country = 7;
+  string createdAt = 8;
+  string updatedAt = 9;
+}

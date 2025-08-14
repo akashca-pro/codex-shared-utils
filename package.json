@@ -1,6 +1,6 @@
 {
   "name": "@akashcapro/codex-shared-utils",
-  "version": "0.2.37",
+  "version": "0.2.41",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [

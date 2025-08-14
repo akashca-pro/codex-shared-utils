@@ -41,7 +41,7 @@ message Example {
     string _id = 1;
     string input = 2;
     string output = 3;
-    string expanation = 4;
+    string explanation = 4;
 }
 
 message StarterCode {
@@ -68,11 +68,11 @@ message Problem {
     Difficulty difficulty = 5;
     repeated string tags = 6;
     repeated string constraints = 7;
-    repeated StarterCode starterCode = 8;
+    repeated StarterCode starterCodes = 8;
     TestCaseCollection testcaseCollection = 9;
     repeated Example examples = 10;
     bool active = 11;
-    repeated SolutionCode solutionCode = 12;
+    repeated SolutionCode solutionCodes = 12;
     string createdAt = 13;
     string updatedAt = 14;
 }
@@ -116,7 +116,7 @@ message GetProblemPublicResponse {
     Difficulty difficulty = 5;
     repeated string tags = 6;
     repeated string constraints = 7;
-    repeated StarterCode starterCode = 8;
+    repeated StarterCode starterCodes = 8;
     repeated TestCase run = 9;
     repeated Example examples = 10;
     string createdAt = 13;
@@ -144,11 +144,11 @@ message ListProblemResponse {
 
 message UpdateBasicProblemDetailsRequest {
     string _id = 1;
-    string questionId = 2;
-    string title = 3;
-    string description = 4;
-    Difficulty difficulty = 5;
-    bool active = 6;
+    optional string questionId = 2;
+    optional string title = 3;
+    optional string description = 4;
+    optional Difficulty difficulty = 5;
+    optional bool active = 6;
     repeated string tags = 7;
     repeated string constraints = 8;
     repeated Example examples = 9;
@@ -221,10 +221,12 @@ message Submission {
     Language language = 8;
     string userCode = 9;
     ExecutionResult executionResult = 10;
-    int32 executionTime = 11;
-    int32 memoryUsage = 12;
+    optional int32 executionTime = 11;
+    optional int32 memoryUsage = 12;
     Difficulty difficulty = 13;
     bool isFirst = 14;
+    string updatedAt = 15;
+    string createdAt = 16;
 }
 
 // --- Service Definition ---

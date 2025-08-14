@@ -18,7 +18,7 @@ const logger = winston.createLogger({
     winston.format.splat(), //  For string interpolation
     winston.format.json() // Output a JSON object
   ),
-  transports:  [
+  transports: [
     new winston.transports.Console({
       format: winston.format.combine(
         winston.format.colorize(),

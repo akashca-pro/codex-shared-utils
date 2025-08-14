@@ -160,7 +160,7 @@ export interface Example {
   Id: string;
   input: string;
   output: string;
-  expanation: string;
+  explanation: string;
 }
 
 export interface StarterCode {
@@ -185,11 +185,11 @@ export interface Problem {
   difficulty: Difficulty;
   tags: string[];
   constraints: string[];
-  starterCode: StarterCode[];
+  starterCodes: StarterCode[];
   testcaseCollection?: TestCaseCollection | undefined;
   examples: Example[];
   active: boolean;
-  solutionCode: SolutionCode[];
+  solutionCodes: SolutionCode[];
   createdAt: string;
   updatedAt: string;
 }
@@ -216,7 +216,7 @@ export interface GetProblemPublicResponse {
   difficulty: Difficulty;
   tags: string[];
   constraints: string[];
-  starterCode: StarterCode[];
+  starterCodes: StarterCode[];
   run: TestCase[];
   examples: Example[];
   createdAt: string;
@@ -243,11 +243,11 @@ export interface ListProblemResponse {
 
 export interface UpdateBasicProblemDetailsRequest {
   Id: string;
-  questionId: string;
-  title: string;
-  description: string;
-  difficulty: Difficulty;
-  active: boolean;
+  questionId?: string | undefined;
+  title?: string | undefined;
+  description?: string | undefined;
+  difficulty?: Difficulty | undefined;
+  active?: boolean | undefined;
   tags: string[];
   constraints: string[];
   examples: Example[];
@@ -317,10 +317,12 @@ export interface Submission {
   language: Language;
   userCode: string;
   executionResult?: ExecutionResult | undefined;
-  executionTime: number;
-  memoryUsage: number;
+  executionTime?: number | undefined;
+  memoryUsage?: number | undefined;
   difficulty: Difficulty;
   isFirst: boolean;
+  updatedAt: string;
+  createdAt: string;
 }
 
 export interface CreateSubmissionRequest {
@@ -525,7 +527,7 @@ export const TestCaseCollection: MessageFns<TestCaseCollection> = {
 };
 
 function createBaseExample(): Example {
-  return { Id: "", input: "", output: "", expanation: "" };
+  return { Id: "", input: "", output: "", explanation: "" };
 }
 
 export const Example: MessageFns<Example> = {
@@ -539,8 +541,8 @@ export const Example: MessageFns<Example> = {
     if (message.output !== "") {
       writer.uint32(26).string(message.output);
     }
-    if (message.expanation !== "") {
-      writer.uint32(34).string(message.expanation);
+    if (message.explanation !== "") {
+      writer.uint32(34).string(message.explanation);
     }
     return writer;
   },
@@ -581,7 +583,7 @@ export const Example: MessageFns<Example> = {
             break;
           }
 
-          message.expanation = reader.string();
+          message.explanation = reader.string();
           continue;
         }
       }
@@ -598,7 +600,7 @@ export const Example: MessageFns<Example> = {
       Id: isSet(object.Id) ? globalThis.String(object.Id) : "",
       input: isSet(object.input) ? globalThis.String(object.input) : "",
       output: isSet(object.output) ? globalThis.String(object.output) : "",
-      expanation: isSet(object.expanation) ? globalThis.String(object.expanation) : "",
+      explanation: isSet(object.explanation) ? globalThis.String(object.explanation) : "",
     };
   },
 
@@ -613,8 +615,8 @@ export const Example: MessageFns<Example> = {
     if (message.output !== "") {
       obj.output = message.output;
     }
-    if (message.expanation !== "") {
-      obj.expanation = message.expanation;
+    if (message.explanation !== "") {
+      obj.explanation = message.explanation;
     }
     return obj;
   },
@@ -627,7 +629,7 @@ export const Example: MessageFns<Example> = {
     message.Id = object.Id ?? "";
     message.input = object.input ?? "";
     message.output = object.output ?? "";
-    message.expanation = object.expanation ?? "";
+    message.explanation = object.explanation ?? "";
     return message;
   },
 };
@@ -857,11 +859,11 @@ function createBaseProblem(): Problem {
     difficulty: 0,
     tags: [],
     constraints: [],
-    starterCode: [],
+    starterCodes: [],
     testcaseCollection: undefined,
     examples: [],
     active: false,
-    solutionCode: [],
+    solutionCodes: [],
     createdAt: "",
     updatedAt: "",
   };
@@ -890,7 +892,7 @@ export const Problem: MessageFns<Problem> = {
     for (const v of message.constraints) {
       writer.uint32(58).string(v!);
     }
-    for (const v of message.starterCode) {
+    for (const v of message.starterCodes) {
       StarterCode.encode(v!, writer.uint32(66).fork()).join();
     }
     if (message.testcaseCollection !== undefined) {
@@ -902,7 +904,7 @@ export const Problem: MessageFns<Problem> = {
     if (message.active !== false) {
       writer.uint32(88).bool(message.active);
     }
-    for (const v of message.solutionCode) {
+    for (const v of message.solutionCodes) {
       SolutionCode.encode(v!, writer.uint32(98).fork()).join();
     }
     if (message.createdAt !== "") {
@@ -982,7 +984,7 @@ export const Problem: MessageFns<Problem> = {
             break;
           }
 
-          message.starterCode.push(StarterCode.decode(reader, reader.uint32()));
+          message.starterCodes.push(StarterCode.decode(reader, reader.uint32()));
           continue;
         }
         case 9: {
@@ -1014,7 +1016,7 @@ export const Problem: MessageFns<Problem> = {
             break;
           }
 
-          message.solutionCode.push(SolutionCode.decode(reader, reader.uint32()));
+          message.solutionCodes.push(SolutionCode.decode(reader, reader.uint32()));
           continue;
         }
         case 13: {
@@ -1053,16 +1055,16 @@ export const Problem: MessageFns<Problem> = {
       constraints: globalThis.Array.isArray(object?.constraints)
         ? object.constraints.map((e: any) => globalThis.String(e))
         : [],
-      starterCode: globalThis.Array.isArray(object?.starterCode)
-        ? object.starterCode.map((e: any) => StarterCode.fromJSON(e))
+      starterCodes: globalThis.Array.isArray(object?.starterCodes)
+        ? object.starterCodes.map((e: any) => StarterCode.fromJSON(e))
         : [],
       testcaseCollection: isSet(object.testcaseCollection)
         ? TestCaseCollection.fromJSON(object.testcaseCollection)
         : undefined,
       examples: globalThis.Array.isArray(object?.examples) ? object.examples.map((e: any) => Example.fromJSON(e)) : [],
       active: isSet(object.active) ? globalThis.Boolean(object.active) : false,
-      solutionCode: globalThis.Array.isArray(object?.solutionCode)
-        ? object.solutionCode.map((e: any) => SolutionCode.fromJSON(e))
+      solutionCodes: globalThis.Array.isArray(object?.solutionCodes)
+        ? object.solutionCodes.map((e: any) => SolutionCode.fromJSON(e))
         : [],
       createdAt: isSet(object.createdAt) ? globalThis.String(object.createdAt) : "",
       updatedAt: isSet(object.updatedAt) ? globalThis.String(object.updatedAt) : "",
@@ -1092,8 +1094,8 @@ export const Problem: MessageFns<Problem> = {
     if (message.constraints?.length) {
       obj.constraints = message.constraints;
     }
-    if (message.starterCode?.length) {
-      obj.starterCode = message.starterCode.map((e) => StarterCode.toJSON(e));
+    if (message.starterCodes?.length) {
+      obj.starterCodes = message.starterCodes.map((e) => StarterCode.toJSON(e));
     }
     if (message.testcaseCollection !== undefined) {
       obj.testcaseCollection = TestCaseCollection.toJSON(message.testcaseCollection);
@@ -1104,8 +1106,8 @@ export const Problem: MessageFns<Problem> = {
     if (message.active !== false) {
       obj.active = message.active;
     }
-    if (message.solutionCode?.length) {
-      obj.solutionCode = message.solutionCode.map((e) => SolutionCode.toJSON(e));
+    if (message.solutionCodes?.length) {
+      obj.solutionCodes = message.solutionCodes.map((e) => SolutionCode.toJSON(e));
     }
     if (message.createdAt !== "") {
       obj.createdAt = message.createdAt;
@@ -1128,13 +1130,13 @@ export const Problem: MessageFns<Problem> = {
     message.difficulty = object.difficulty ?? 0;
     message.tags = object.tags?.map((e) => e) || [];
     message.constraints = object.constraints?.map((e) => e) || [];
-    message.starterCode = object.starterCode?.map((e) => StarterCode.fromPartial(e)) || [];
+    message.starterCodes = object.starterCodes?.map((e) => StarterCode.fromPartial(e)) || [];
     message.testcaseCollection = (object.testcaseCollection !== undefined && object.testcaseCollection !== null)
       ? TestCaseCollection.fromPartial(object.testcaseCollection)
       : undefined;
     message.examples = object.examples?.map((e) => Example.fromPartial(e)) || [];
     message.active = object.active ?? false;
-    message.solutionCode = object.solutionCode?.map((e) => SolutionCode.fromPartial(e)) || [];
+    message.solutionCodes = object.solutionCodes?.map((e) => SolutionCode.fromPartial(e)) || [];
     message.createdAt = object.createdAt ?? "";
     message.updatedAt = object.updatedAt ?? "";
     return message;
@@ -1366,7 +1368,7 @@ function createBaseGetProblemPublicResponse(): GetProblemPublicResponse {
     difficulty: 0,
     tags: [],
     constraints: [],
-    starterCode: [],
+    starterCodes: [],
     run: [],
     examples: [],
     createdAt: "",
@@ -1397,7 +1399,7 @@ export const GetProblemPublicResponse: MessageFns<GetProblemPublicResponse> = {
     for (const v of message.constraints) {
       writer.uint32(58).string(v!);
     }
-    for (const v of message.starterCode) {
+    for (const v of message.starterCodes) {
       StarterCode.encode(v!, writer.uint32(66).fork()).join();
     }
     for (const v of message.run) {
@@ -1483,7 +1485,7 @@ export const GetProblemPublicResponse: MessageFns<GetProblemPublicResponse> = {
             break;
           }
 
-          message.starterCode.push(StarterCode.decode(reader, reader.uint32()));
+          message.starterCodes.push(StarterCode.decode(reader, reader.uint32()));
           continue;
         }
         case 9: {
@@ -1538,8 +1540,8 @@ export const GetProblemPublicResponse: MessageFns<GetProblemPublicResponse> = {
       constraints: globalThis.Array.isArray(object?.constraints)
         ? object.constraints.map((e: any) => globalThis.String(e))
         : [],
-      starterCode: globalThis.Array.isArray(object?.starterCode)
-        ? object.starterCode.map((e: any) => StarterCode.fromJSON(e))
+      starterCodes: globalThis.Array.isArray(object?.starterCodes)
+        ? object.starterCodes.map((e: any) => StarterCode.fromJSON(e))
         : [],
       run: globalThis.Array.isArray(object?.run) ? object.run.map((e: any) => TestCase.fromJSON(e)) : [],
       examples: globalThis.Array.isArray(object?.examples) ? object.examples.map((e: any) => Example.fromJSON(e)) : [],
@@ -1571,8 +1573,8 @@ export const GetProblemPublicResponse: MessageFns<GetProblemPublicResponse> = {
     if (message.constraints?.length) {
       obj.constraints = message.constraints;
     }
-    if (message.starterCode?.length) {
-      obj.starterCode = message.starterCode.map((e) => StarterCode.toJSON(e));
+    if (message.starterCodes?.length) {
+      obj.starterCodes = message.starterCodes.map((e) => StarterCode.toJSON(e));
     }
     if (message.run?.length) {
       obj.run = message.run.map((e) => TestCase.toJSON(e));
@@ -1601,7 +1603,7 @@ export const GetProblemPublicResponse: MessageFns<GetProblemPublicResponse> = {
     message.difficulty = object.difficulty ?? 0;
     message.tags = object.tags?.map((e) => e) || [];
     message.constraints = object.constraints?.map((e) => e) || [];
-    message.starterCode = object.starterCode?.map((e) => StarterCode.fromPartial(e)) || [];
+    message.starterCodes = object.starterCodes?.map((e) => StarterCode.fromPartial(e)) || [];
     message.run = object.run?.map((e) => TestCase.fromPartial(e)) || [];
     message.examples = object.examples?.map((e) => Example.fromPartial(e)) || [];
     message.createdAt = object.createdAt ?? "";
@@ -1885,11 +1887,11 @@ export const ListProblemResponse: MessageFns<ListProblemResponse> = {
 function createBaseUpdateBasicProblemDetailsRequest(): UpdateBasicProblemDetailsRequest {
   return {
     Id: "",
-    questionId: "",
-    title: "",
-    description: "",
-    difficulty: 0,
-    active: false,
+    questionId: undefined,
+    title: undefined,
+    description: undefined,
+    difficulty: undefined,
+    active: undefined,
     tags: [],
     constraints: [],
     examples: [],
@@ -1902,19 +1904,19 @@ export const UpdateBasicProblemDetailsRequest: MessageFns<UpdateBasicProblemDeta
     if (message.Id !== "") {
       writer.uint32(10).string(message.Id);
     }
-    if (message.questionId !== "") {
+    if (message.questionId !== undefined) {
       writer.uint32(18).string(message.questionId);
     }
-    if (message.title !== "") {
+    if (message.title !== undefined) {
       writer.uint32(26).string(message.title);
     }
-    if (message.description !== "") {
+    if (message.description !== undefined) {
       writer.uint32(34).string(message.description);
     }
-    if (message.difficulty !== 0) {
+    if (message.difficulty !== undefined) {
       writer.uint32(40).int32(message.difficulty);
     }
-    if (message.active !== false) {
+    if (message.active !== undefined) {
       writer.uint32(48).bool(message.active);
     }
     for (const v of message.tags) {
@@ -2031,11 +2033,11 @@ export const UpdateBasicProblemDetailsRequest: MessageFns<UpdateBasicProblemDeta
   fromJSON(object: any): UpdateBasicProblemDetailsRequest {
     return {
       Id: isSet(object.Id) ? globalThis.String(object.Id) : "",
-      questionId: isSet(object.questionId) ? globalThis.String(object.questionId) : "",
-      title: isSet(object.title) ? globalThis.String(object.title) : "",
-      description: isSet(object.description) ? globalThis.String(object.description) : "",
-      difficulty: isSet(object.difficulty) ? difficultyFromJSON(object.difficulty) : 0,
-      active: isSet(object.active) ? globalThis.Boolean(object.active) : false,
+      questionId: isSet(object.questionId) ? globalThis.String(object.questionId) : undefined,
+      title: isSet(object.title) ? globalThis.String(object.title) : undefined,
+      description: isSet(object.description) ? globalThis.String(object.description) : undefined,
+      difficulty: isSet(object.difficulty) ? difficultyFromJSON(object.difficulty) : undefined,
+      active: isSet(object.active) ? globalThis.Boolean(object.active) : undefined,
       tags: globalThis.Array.isArray(object?.tags) ? object.tags.map((e: any) => globalThis.String(e)) : [],
       constraints: globalThis.Array.isArray(object?.constraints)
         ? object.constraints.map((e: any) => globalThis.String(e))
@@ -2052,19 +2054,19 @@ export const UpdateBasicProblemDetailsRequest: MessageFns<UpdateBasicProblemDeta
     if (message.Id !== "") {
       obj.Id = message.Id;
     }
-    if (message.questionId !== "") {
+    if (message.questionId !== undefined) {
       obj.questionId = message.questionId;
     }
-    if (message.title !== "") {
+    if (message.title !== undefined) {
       obj.title = message.title;
     }
-    if (message.description !== "") {
+    if (message.description !== undefined) {
       obj.description = message.description;
     }
-    if (message.difficulty !== 0) {
+    if (message.difficulty !== undefined) {
       obj.difficulty = difficultyToJSON(message.difficulty);
     }
-    if (message.active !== false) {
+    if (message.active !== undefined) {
       obj.active = message.active;
     }
     if (message.tags?.length) {
@@ -2092,11 +2094,11 @@ export const UpdateBasicProblemDetailsRequest: MessageFns<UpdateBasicProblemDeta
   ): UpdateBasicProblemDetailsRequest {
     const message = createBaseUpdateBasicProblemDetailsRequest();
     message.Id = object.Id ?? "";
-    message.questionId = object.questionId ?? "";
-    message.title = object.title ?? "";
-    message.description = object.description ?? "";
-    message.difficulty = object.difficulty ?? 0;
-    message.active = object.active ?? false;
+    message.questionId = object.questionId ?? undefined;
+    message.title = object.title ?? undefined;
+    message.description = object.description ?? undefined;
+    message.difficulty = object.difficulty ?? undefined;
+    message.active = object.active ?? undefined;
     message.tags = object.tags?.map((e) => e) || [];
     message.constraints = object.constraints?.map((e) => e) || [];
     message.examples = object.examples?.map((e) => Example.fromPartial(e)) || [];
@@ -2927,10 +2929,12 @@ function createBaseSubmission(): Submission {
     language: 0,
     userCode: "",
     executionResult: undefined,
-    executionTime: 0,
-    memoryUsage: 0,
+    executionTime: undefined,
+    memoryUsage: undefined,
     difficulty: 0,
     isFirst: false,
+    updatedAt: "",
+    createdAt: "",
   };
 }
 
@@ -2966,10 +2970,10 @@ export const Submission: MessageFns<Submission> = {
     if (message.executionResult !== undefined) {
       ExecutionResult.encode(message.executionResult, writer.uint32(82).fork()).join();
     }
-    if (message.executionTime !== 0) {
+    if (message.executionTime !== undefined) {
       writer.uint32(88).int32(message.executionTime);
     }
-    if (message.memoryUsage !== 0) {
+    if (message.memoryUsage !== undefined) {
       writer.uint32(96).int32(message.memoryUsage);
     }
     if (message.difficulty !== 0) {
@@ -2977,6 +2981,12 @@ export const Submission: MessageFns<Submission> = {
     }
     if (message.isFirst !== false) {
       writer.uint32(112).bool(message.isFirst);
+    }
+    if (message.updatedAt !== "") {
+      writer.uint32(122).string(message.updatedAt);
+    }
+    if (message.createdAt !== "") {
+      writer.uint32(130).string(message.createdAt);
     }
     return writer;
   },
@@ -3100,6 +3110,22 @@ export const Submission: MessageFns<Submission> = {
           message.isFirst = reader.bool();
           continue;
         }
+        case 15: {
+          if (tag !== 122) {
+            break;
+          }
+
+          message.updatedAt = reader.string();
+          continue;
+        }
+        case 16: {
+          if (tag !== 130) {
+            break;
+          }
+
+          message.createdAt = reader.string();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -3121,10 +3147,12 @@ export const Submission: MessageFns<Submission> = {
       language: isSet(object.language) ? languageFromJSON(object.language) : 0,
       userCode: isSet(object.userCode) ? globalThis.String(object.userCode) : "",
       executionResult: isSet(object.executionResult) ? ExecutionResult.fromJSON(object.executionResult) : undefined,
-      executionTime: isSet(object.executionTime) ? globalThis.Number(object.executionTime) : 0,
-      memoryUsage: isSet(object.memoryUsage) ? globalThis.Number(object.memoryUsage) : 0,
+      executionTime: isSet(object.executionTime) ? globalThis.Number(object.executionTime) : undefined,
+      memoryUsage: isSet(object.memoryUsage) ? globalThis.Number(object.memoryUsage) : undefined,
       difficulty: isSet(object.difficulty) ? difficultyFromJSON(object.difficulty) : 0,
       isFirst: isSet(object.isFirst) ? globalThis.Boolean(object.isFirst) : false,
+      updatedAt: isSet(object.updatedAt) ? globalThis.String(object.updatedAt) : "",
+      createdAt: isSet(object.createdAt) ? globalThis.String(object.createdAt) : "",
     };
   },
 
@@ -3160,10 +3188,10 @@ export const Submission: MessageFns<Submission> = {
     if (message.executionResult !== undefined) {
       obj.executionResult = ExecutionResult.toJSON(message.executionResult);
     }
-    if (message.executionTime !== 0) {
+    if (message.executionTime !== undefined) {
       obj.executionTime = Math.round(message.executionTime);
     }
-    if (message.memoryUsage !== 0) {
+    if (message.memoryUsage !== undefined) {
       obj.memoryUsage = Math.round(message.memoryUsage);
     }
     if (message.difficulty !== 0) {
@@ -3171,6 +3199,12 @@ export const Submission: MessageFns<Submission> = {
     }
     if (message.isFirst !== false) {
       obj.isFirst = message.isFirst;
+    }
+    if (message.updatedAt !== "") {
+      obj.updatedAt = message.updatedAt;
+    }
+    if (message.createdAt !== "") {
+      obj.createdAt = message.createdAt;
     }
     return obj;
   },
@@ -3192,10 +3226,12 @@ export const Submission: MessageFns<Submission> = {
     message.executionResult = (object.executionResult !== undefined && object.executionResult !== null)
       ? ExecutionResult.fromPartial(object.executionResult)
       : undefined;
-    message.executionTime = object.executionTime ?? 0;
-    message.memoryUsage = object.memoryUsage ?? 0;
+    message.executionTime = object.executionTime ?? undefined;
+    message.memoryUsage = object.memoryUsage ?? undefined;
     message.difficulty = object.difficulty ?? 0;
     message.isFirst = object.isFirst ?? false;
+    message.updatedAt = object.updatedAt ?? "";
+    message.createdAt = object.createdAt ?? "";
     return message;
   },
 };

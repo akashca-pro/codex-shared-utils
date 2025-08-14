@@ -12,6 +12,11 @@
     "moduleResolution": "node",
     "typeRoots": ["./types", "./node_modules/@types"]
   },
-"include": ["proto/compiled/**/*.ts", "types/**/*.ts", "utils/**/*.ts", "index.ts"],
+"include": [
+  "proto/compiled/**/*.ts", 
+  "types/**/*.ts", 
+  "utils/**/*.ts",
+  "enums/**/*.ts",  
+  "index.ts"],
   "exclude": ["node_modules", "dist"]
 }

@@ -194,6 +194,17 @@ export interface Problem {
   updatedAt: string;
 }
 
+export interface ListProblemDetails {
+  Id: string;
+  title: string;
+  questionId: string;
+  difficulty: Difficulty;
+  tags: string[];
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface CreateProblemRequest {
   questionId: string;
   title: string;
@@ -203,7 +214,7 @@ export interface CreateProblemRequest {
 }
 
 export interface GetProblemRequest {
-  Id?: string | undefined;
+  Id: string;
   title?: string | undefined;
   questionId?: string | undefined;
 }
@@ -235,7 +246,7 @@ export interface ListProblemRequest {
 }
 
 export interface ListProblemResponse {
-  problems: Problem[];
+  problems: ListProblemDetails[];
   totalPage: number;
   currentPage: number;
   totalItems: number;
@@ -1143,6 +1154,178 @@ export const Problem: MessageFns<Problem> = {
   },
 };
 
+function createBaseListProblemDetails(): ListProblemDetails {
+  return { Id: "", title: "", questionId: "", difficulty: 0, tags: [], active: false, createdAt: "", updatedAt: "" };
+}
+
+export const ListProblemDetails: MessageFns<ListProblemDetails> = {
+  encode(message: ListProblemDetails, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.Id !== "") {
+      writer.uint32(10).string(message.Id);
+    }
+    if (message.title !== "") {
+      writer.uint32(18).string(message.title);
+    }
+    if (message.questionId !== "") {
+      writer.uint32(26).string(message.questionId);
+    }
+    if (message.difficulty !== 0) {
+      writer.uint32(32).int32(message.difficulty);
+    }
+    for (const v of message.tags) {
+      writer.uint32(50).string(v!);
+    }
+    if (message.active !== false) {
+      writer.uint32(88).bool(message.active);
+    }
+    if (message.createdAt !== "") {
+      writer.uint32(106).string(message.createdAt);
+    }
+    if (message.updatedAt !== "") {
+      writer.uint32(114).string(message.updatedAt);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ListProblemDetails {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseListProblemDetails();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.Id = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.title = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.questionId = reader.string();
+          continue;
+        }
+        case 4: {
+          if (tag !== 32) {
+            break;
+          }
+
+          message.difficulty = reader.int32() as any;
+          continue;
+        }
+        case 6: {
+          if (tag !== 50) {
+            break;
+          }
+
+          message.tags.push(reader.string());
+          continue;
+        }
+        case 11: {
+          if (tag !== 88) {
+            break;
+          }
+
+          message.active = reader.bool();
+          continue;
+        }
+        case 13: {
+          if (tag !== 106) {
+            break;
+          }
+
+          message.createdAt = reader.string();
+          continue;
+        }
+        case 14: {
+          if (tag !== 114) {
+            break;
+          }
+
+          message.updatedAt = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ListProblemDetails {
+    return {
+      Id: isSet(object.Id) ? globalThis.String(object.Id) : "",
+      title: isSet(object.title) ? globalThis.String(object.title) : "",
+      questionId: isSet(object.questionId) ? globalThis.String(object.questionId) : "",
+      difficulty: isSet(object.difficulty) ? difficultyFromJSON(object.difficulty) : 0,
+      tags: globalThis.Array.isArray(object?.tags) ? object.tags.map((e: any) => globalThis.String(e)) : [],
+      active: isSet(object.active) ? globalThis.Boolean(object.active) : false,
+      createdAt: isSet(object.createdAt) ? globalThis.String(object.createdAt) : "",
+      updatedAt: isSet(object.updatedAt) ? globalThis.String(object.updatedAt) : "",
+    };
+  },
+
+  toJSON(message: ListProblemDetails): unknown {
+    const obj: any = {};
+    if (message.Id !== "") {
+      obj.Id = message.Id;
+    }
+    if (message.title !== "") {
+      obj.title = message.title;
+    }
+    if (message.questionId !== "") {
+      obj.questionId = message.questionId;
+    }
+    if (message.difficulty !== 0) {
+      obj.difficulty = difficultyToJSON(message.difficulty);
+    }
+    if (message.tags?.length) {
+      obj.tags = message.tags;
+    }
+    if (message.active !== false) {
+      obj.active = message.active;
+    }
+    if (message.createdAt !== "") {
+      obj.createdAt = message.createdAt;
+    }
+    if (message.updatedAt !== "") {
+      obj.updatedAt = message.updatedAt;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<ListProblemDetails>, I>>(base?: I): ListProblemDetails {
+    return ListProblemDetails.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<ListProblemDetails>, I>>(object: I): ListProblemDetails {
+    const message = createBaseListProblemDetails();
+    message.Id = object.Id ?? "";
+    message.title = object.title ?? "";
+    message.questionId = object.questionId ?? "";
+    message.difficulty = object.difficulty ?? 0;
+    message.tags = object.tags?.map((e) => e) || [];
+    message.active = object.active ?? false;
+    message.createdAt = object.createdAt ?? "";
+    message.updatedAt = object.updatedAt ?? "";
+    return message;
+  },
+};
+
 function createBaseCreateProblemRequest(): CreateProblemRequest {
   return { questionId: "", title: "", description: "", difficulty: 0, tags: [] };
 }
@@ -1268,12 +1451,12 @@ export const CreateProblemRequest: MessageFns<CreateProblemRequest> = {
 };
 
 function createBaseGetProblemRequest(): GetProblemRequest {
-  return { Id: undefined, title: undefined, questionId: undefined };
+  return { Id: "", title: undefined, questionId: undefined };
 }
 
 export const GetProblemRequest: MessageFns<GetProblemRequest> = {
   encode(message: GetProblemRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.Id !== undefined) {
+    if (message.Id !== "") {
       writer.uint32(10).string(message.Id);
     }
     if (message.title !== undefined) {
@@ -1327,7 +1510,7 @@ export const GetProblemRequest: MessageFns<GetProblemRequest> = {
 
   fromJSON(object: any): GetProblemRequest {
     return {
-      Id: isSet(object.Id) ? globalThis.String(object.Id) : undefined,
+      Id: isSet(object.Id) ? globalThis.String(object.Id) : "",
       title: isSet(object.title) ? globalThis.String(object.title) : undefined,
       questionId: isSet(object.questionId) ? globalThis.String(object.questionId) : undefined,
     };
@@ -1335,7 +1518,7 @@ export const GetProblemRequest: MessageFns<GetProblemRequest> = {
 
   toJSON(message: GetProblemRequest): unknown {
     const obj: any = {};
-    if (message.Id !== undefined) {
+    if (message.Id !== "") {
       obj.Id = message.Id;
     }
     if (message.title !== undefined) {
@@ -1352,7 +1535,7 @@ export const GetProblemRequest: MessageFns<GetProblemRequest> = {
   },
   fromPartial<I extends Exact<DeepPartial<GetProblemRequest>, I>>(object: I): GetProblemRequest {
     const message = createBaseGetProblemRequest();
-    message.Id = object.Id ?? undefined;
+    message.Id = object.Id ?? "";
     message.title = object.title ?? undefined;
     message.questionId = object.questionId ?? undefined;
     return message;
@@ -1783,7 +1966,7 @@ function createBaseListProblemResponse(): ListProblemResponse {
 export const ListProblemResponse: MessageFns<ListProblemResponse> = {
   encode(message: ListProblemResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
     for (const v of message.problems) {
-      Problem.encode(v!, writer.uint32(10).fork()).join();
+      ListProblemDetails.encode(v!, writer.uint32(10).fork()).join();
     }
     if (message.totalPage !== 0) {
       writer.uint32(16).int32(message.totalPage);
@@ -1809,7 +1992,7 @@ export const ListProblemResponse: MessageFns<ListProblemResponse> = {
             break;
           }
 
-          message.problems.push(Problem.decode(reader, reader.uint32()));
+          message.problems.push(ListProblemDetails.decode(reader, reader.uint32()));
           continue;
         }
         case 2: {
@@ -1847,7 +2030,9 @@ export const ListProblemResponse: MessageFns<ListProblemResponse> = {
 
   fromJSON(object: any): ListProblemResponse {
     return {
-      problems: globalThis.Array.isArray(object?.problems) ? object.problems.map((e: any) => Problem.fromJSON(e)) : [],
+      problems: globalThis.Array.isArray(object?.problems)
+        ? object.problems.map((e: any) => ListProblemDetails.fromJSON(e))
+        : [],
       totalPage: isSet(object.totalPage) ? globalThis.Number(object.totalPage) : 0,
       currentPage: isSet(object.currentPage) ? globalThis.Number(object.currentPage) : 0,
       totalItems: isSet(object.totalItems) ? globalThis.Number(object.totalItems) : 0,
@@ -1857,7 +2042,7 @@ export const ListProblemResponse: MessageFns<ListProblemResponse> = {
   toJSON(message: ListProblemResponse): unknown {
     const obj: any = {};
     if (message.problems?.length) {
-      obj.problems = message.problems.map((e) => Problem.toJSON(e));
+      obj.problems = message.problems.map((e) => ListProblemDetails.toJSON(e));
     }
     if (message.totalPage !== 0) {
       obj.totalPage = Math.round(message.totalPage);
@@ -1876,7 +2061,7 @@ export const ListProblemResponse: MessageFns<ListProblemResponse> = {
   },
   fromPartial<I extends Exact<DeepPartial<ListProblemResponse>, I>>(object: I): ListProblemResponse {
     const message = createBaseListProblemResponse();
-    message.problems = object.problems?.map((e) => Problem.fromPartial(e)) || [];
+    message.problems = object.problems?.map((e) => ListProblemDetails.fromPartial(e)) || [];
     message.totalPage = object.totalPage ?? 0;
     message.currentPage = object.currentPage ?? 0;
     message.totalItems = object.totalItems ?? 0;

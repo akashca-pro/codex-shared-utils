@@ -77,6 +77,17 @@ message Problem {
     string updatedAt = 14;
 }
 
+message ListProblemDetails {
+    string _id = 1;
+    string title = 2;
+    string questionId = 3;
+    Difficulty difficulty = 4;
+    repeated string tags = 6;
+    bool active = 11;
+    string createdAt = 13;
+    string updatedAt = 14;
+}
+
 
 // --- Service Definition --- 
 
@@ -103,7 +114,7 @@ message CreateProblemRequest {
 }
 
 message GetProblemRequest {
-    optional string _id = 1;
+    string _id = 1;
     optional string title = 2;
     optional string questionId = 3;
 }
@@ -136,7 +147,7 @@ message ListProblemRequest {
 }
 
 message ListProblemResponse {
-    repeated Problem problems = 1;
+    repeated ListProblemDetails problems = 1;
     int32 totalPage = 2;
     int32 currentPage = 3;
     int32 totalItems = 4;

@@ -58,6 +58,13 @@ message SolutionCode {
     int32 memoryTaken = 5;
 }
 
+message UpdateSolutionCode {
+    optional Language language = 2;
+    optional string code = 3;
+    optional int32 executionTime = 4;
+    optional int32 memoryTaken = 5;
+}
+
 // main problem message for admin.
 
 message Problem {
@@ -193,7 +200,7 @@ message AddSolutionCodeRequest {
 message UpdateSolutionCodeRequest {
     string _id = 1;
     string solutionCodeId = 2;
-    SolutionCode solutionCode = 3;
+    UpdateSolutionCode solutionCode = 3;
 }
 
 message RemoveSolutionCodeRequest {

@@ -177,6 +177,13 @@ export interface SolutionCode {
   memoryTaken: number;
 }
 
+export interface UpdateSolutionCode {
+  language?: Language | undefined;
+  code?: string | undefined;
+  executionTime?: number | undefined;
+  memoryTaken?: number | undefined;
+}
+
 export interface Problem {
   Id: string;
   questionId: string;
@@ -291,7 +298,7 @@ export interface AddSolutionCodeRequest {
 export interface UpdateSolutionCodeRequest {
   Id: string;
   solutionCodeId: string;
-  solutionCode?: SolutionCode | undefined;
+  solutionCode?: UpdateSolutionCode | undefined;
 }
 
 export interface RemoveSolutionCodeRequest {
@@ -857,6 +864,114 @@ export const SolutionCode: MessageFns<SolutionCode> = {
     message.code = object.code ?? "";
     message.executionTime = object.executionTime ?? 0;
     message.memoryTaken = object.memoryTaken ?? 0;
+    return message;
+  },
+};
+
+function createBaseUpdateSolutionCode(): UpdateSolutionCode {
+  return { language: undefined, code: undefined, executionTime: undefined, memoryTaken: undefined };
+}
+
+export const UpdateSolutionCode: MessageFns<UpdateSolutionCode> = {
+  encode(message: UpdateSolutionCode, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.language !== undefined) {
+      writer.uint32(16).int32(message.language);
+    }
+    if (message.code !== undefined) {
+      writer.uint32(26).string(message.code);
+    }
+    if (message.executionTime !== undefined) {
+      writer.uint32(32).int32(message.executionTime);
+    }
+    if (message.memoryTaken !== undefined) {
+      writer.uint32(40).int32(message.memoryTaken);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): UpdateSolutionCode {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseUpdateSolutionCode();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 2: {
+          if (tag !== 16) {
+            break;
+          }
+
+          message.language = reader.int32() as any;
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.code = reader.string();
+          continue;
+        }
+        case 4: {
+          if (tag !== 32) {
+            break;
+          }
+
+          message.executionTime = reader.int32();
+          continue;
+        }
+        case 5: {
+          if (tag !== 40) {
+            break;
+          }
+
+          message.memoryTaken = reader.int32();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): UpdateSolutionCode {
+    return {
+      language: isSet(object.language) ? languageFromJSON(object.language) : undefined,
+      code: isSet(object.code) ? globalThis.String(object.code) : undefined,
+      executionTime: isSet(object.executionTime) ? globalThis.Number(object.executionTime) : undefined,
+      memoryTaken: isSet(object.memoryTaken) ? globalThis.Number(object.memoryTaken) : undefined,
+    };
+  },
+
+  toJSON(message: UpdateSolutionCode): unknown {
+    const obj: any = {};
+    if (message.language !== undefined) {
+      obj.language = languageToJSON(message.language);
+    }
+    if (message.code !== undefined) {
+      obj.code = message.code;
+    }
+    if (message.executionTime !== undefined) {
+      obj.executionTime = Math.round(message.executionTime);
+    }
+    if (message.memoryTaken !== undefined) {
+      obj.memoryTaken = Math.round(message.memoryTaken);
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<UpdateSolutionCode>, I>>(base?: I): UpdateSolutionCode {
+    return UpdateSolutionCode.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<UpdateSolutionCode>, I>>(object: I): UpdateSolutionCode {
+    const message = createBaseUpdateSolutionCode();
+    message.language = object.language ?? undefined;
+    message.code = object.code ?? undefined;
+    message.executionTime = object.executionTime ?? undefined;
+    message.memoryTaken = object.memoryTaken ?? undefined;
     return message;
   },
 };
@@ -2667,7 +2782,7 @@ export const UpdateSolutionCodeRequest: MessageFns<UpdateSolutionCodeRequest> = 
       writer.uint32(18).string(message.solutionCodeId);
     }
     if (message.solutionCode !== undefined) {
-      SolutionCode.encode(message.solutionCode, writer.uint32(26).fork()).join();
+      UpdateSolutionCode.encode(message.solutionCode, writer.uint32(26).fork()).join();
     }
     return writer;
   },
@@ -2700,7 +2815,7 @@ export const UpdateSolutionCodeRequest: MessageFns<UpdateSolutionCodeRequest> = 
             break;
           }
 
-          message.solutionCode = SolutionCode.decode(reader, reader.uint32());
+          message.solutionCode = UpdateSolutionCode.decode(reader, reader.uint32());
           continue;
         }
       }
@@ -2716,7 +2831,7 @@ export const UpdateSolutionCodeRequest: MessageFns<UpdateSolutionCodeRequest> = 
     return {
       Id: isSet(object.Id) ? globalThis.String(object.Id) : "",
       solutionCodeId: isSet(object.solutionCodeId) ? globalThis.String(object.solutionCodeId) : "",
-      solutionCode: isSet(object.solutionCode) ? SolutionCode.fromJSON(object.solutionCode) : undefined,
+      solutionCode: isSet(object.solutionCode) ? UpdateSolutionCode.fromJSON(object.solutionCode) : undefined,
     };
   },
 
@@ -2729,7 +2844,7 @@ export const UpdateSolutionCodeRequest: MessageFns<UpdateSolutionCodeRequest> = 
       obj.solutionCodeId = message.solutionCodeId;
     }
     if (message.solutionCode !== undefined) {
-      obj.solutionCode = SolutionCode.toJSON(message.solutionCode);
+      obj.solutionCode = UpdateSolutionCode.toJSON(message.solutionCode);
     }
     return obj;
   },
@@ -2742,7 +2857,7 @@ export const UpdateSolutionCodeRequest: MessageFns<UpdateSolutionCodeRequest> = 
     message.Id = object.Id ?? "";
     message.solutionCodeId = object.solutionCodeId ?? "";
     message.solutionCode = (object.solutionCode !== undefined && object.solutionCode !== null)
-      ? SolutionCode.fromPartial(object.solutionCode)
+      ? UpdateSolutionCode.fromPartial(object.solutionCode)
       : undefined;
     return message;
   },

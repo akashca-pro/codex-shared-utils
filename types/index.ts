@@ -7,6 +7,9 @@ declare module 'express' {
     refreshTokenId?:string;
     accessTokenExp? : number;
     refreshTokenExp? : number;
+    validated? : Record<
+    'body' | 'query' | 'params',
+     any>;
   }
 }
 

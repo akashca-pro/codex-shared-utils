@@ -230,7 +230,7 @@ export interface GetProblemPublicResponse {
   Id: string;
   questionId: string;
   title: string;
-  decription: string;
+  description: string;
   difficulty: Difficulty;
   tags: string[];
   constraints: string[];
@@ -1662,7 +1662,7 @@ function createBaseGetProblemPublicResponse(): GetProblemPublicResponse {
     Id: "",
     questionId: "",
     title: "",
-    decription: "",
+    description: "",
     difficulty: 0,
     tags: [],
     constraints: [],
@@ -1685,8 +1685,8 @@ export const GetProblemPublicResponse: MessageFns<GetProblemPublicResponse> = {
     if (message.title !== "") {
       writer.uint32(26).string(message.title);
     }
-    if (message.decription !== "") {
-      writer.uint32(34).string(message.decription);
+    if (message.description !== "") {
+      writer.uint32(34).string(message.description);
     }
     if (message.difficulty !== 0) {
       writer.uint32(40).int32(message.difficulty);
@@ -1751,7 +1751,7 @@ export const GetProblemPublicResponse: MessageFns<GetProblemPublicResponse> = {
             break;
           }
 
-          message.decription = reader.string();
+          message.description = reader.string();
           continue;
         }
         case 5: {
@@ -1832,7 +1832,7 @@ export const GetProblemPublicResponse: MessageFns<GetProblemPublicResponse> = {
       Id: isSet(object.Id) ? globalThis.String(object.Id) : "",
       questionId: isSet(object.questionId) ? globalThis.String(object.questionId) : "",
       title: isSet(object.title) ? globalThis.String(object.title) : "",
-      decription: isSet(object.decription) ? globalThis.String(object.decription) : "",
+      description: isSet(object.description) ? globalThis.String(object.description) : "",
       difficulty: isSet(object.difficulty) ? difficultyFromJSON(object.difficulty) : 0,
       tags: globalThis.Array.isArray(object?.tags) ? object.tags.map((e: any) => globalThis.String(e)) : [],
       constraints: globalThis.Array.isArray(object?.constraints)
@@ -1859,8 +1859,8 @@ export const GetProblemPublicResponse: MessageFns<GetProblemPublicResponse> = {
     if (message.title !== "") {
       obj.title = message.title;
     }
-    if (message.decription !== "") {
-      obj.decription = message.decription;
+    if (message.description !== "") {
+      obj.description = message.description;
     }
     if (message.difficulty !== 0) {
       obj.difficulty = difficultyToJSON(message.difficulty);
@@ -1897,7 +1897,7 @@ export const GetProblemPublicResponse: MessageFns<GetProblemPublicResponse> = {
     message.Id = object.Id ?? "";
     message.questionId = object.questionId ?? "";
     message.title = object.title ?? "";
-    message.decription = object.decription ?? "";
+    message.description = object.description ?? "";
     message.difficulty = object.difficulty ?? 0;
     message.tags = object.tags?.map((e) => e) || [];
     message.constraints = object.constraints?.map((e) => e) || [];

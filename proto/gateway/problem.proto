@@ -130,7 +130,7 @@ message GetProblemPublicResponse {
     string _id = 1;
     string questionId = 2;
     string title = 3;
-    string decription = 4;
+    string description = 4;
     Difficulty difficulty = 5;
     repeated string tags = 6;
     repeated string constraints = 7;

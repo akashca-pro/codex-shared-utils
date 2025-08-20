@@ -188,7 +188,7 @@ export interface Problem {
   Id: string;
   questionId: string;
   title: string;
-  decription: string;
+  description: string;
   difficulty: Difficulty;
   tags: string[];
   constraints: string[];
@@ -246,10 +246,11 @@ export interface ListProblemRequest {
   limit: number;
   /** optional filters */
   difficulty?: Difficulty | undefined;
-  tag?: string | undefined;
+  tags: string[];
   active?: boolean | undefined;
   search?: string | undefined;
   questionId?: string | undefined;
+  sort?: string | undefined;
 }
 
 export interface ListProblemResponse {
@@ -304,6 +305,14 @@ export interface UpdateSolutionCodeRequest {
 export interface RemoveSolutionCodeRequest {
   Id: string;
   solutionCodeId: string;
+}
+
+export interface CheckQuestionIdRequest {
+  questionId: string;
+}
+
+export interface CheckProblemTitleRequest {
+  title: string;
 }
 
 export interface Stats {
@@ -981,7 +990,7 @@ function createBaseProblem(): Problem {
     Id: "",
     questionId: "",
     title: "",
-    decription: "",
+    description: "",
     difficulty: 0,
     tags: [],
     constraints: [],
@@ -1006,8 +1015,8 @@ export const Problem: MessageFns<Problem> = {
     if (message.title !== "") {
       writer.uint32(26).string(message.title);
     }
-    if (message.decription !== "") {
-      writer.uint32(34).string(message.decription);
+    if (message.description !== "") {
+      writer.uint32(34).string(message.description);
     }
     if (message.difficulty !== 0) {
       writer.uint32(40).int32(message.difficulty);
@@ -1078,7 +1087,7 @@ export const Problem: MessageFns<Problem> = {
             break;
           }
 
-          message.decription = reader.string();
+          message.description = reader.string();
           continue;
         }
         case 5: {
@@ -1175,7 +1184,7 @@ export const Problem: MessageFns<Problem> = {
       Id: isSet(object.Id) ? globalThis.String(object.Id) : "",
       questionId: isSet(object.questionId) ? globalThis.String(object.questionId) : "",
       title: isSet(object.title) ? globalThis.String(object.title) : "",
-      decription: isSet(object.decription) ? globalThis.String(object.decription) : "",
+      description: isSet(object.description) ? globalThis.String(object.description) : "",
       difficulty: isSet(object.difficulty) ? difficultyFromJSON(object.difficulty) : 0,
       tags: globalThis.Array.isArray(object?.tags) ? object.tags.map((e: any) => globalThis.String(e)) : [],
       constraints: globalThis.Array.isArray(object?.constraints)
@@ -1208,8 +1217,8 @@ export const Problem: MessageFns<Problem> = {
     if (message.title !== "") {
       obj.title = message.title;
     }
-    if (message.decription !== "") {
-      obj.decription = message.decription;
+    if (message.description !== "") {
+      obj.description = message.description;
     }
     if (message.difficulty !== 0) {
       obj.difficulty = difficultyToJSON(message.difficulty);
@@ -1252,7 +1261,7 @@ export const Problem: MessageFns<Problem> = {
     message.Id = object.Id ?? "";
     message.questionId = object.questionId ?? "";
     message.title = object.title ?? "";
-    message.decription = object.decription ?? "";
+    message.description = object.description ?? "";
     message.difficulty = object.difficulty ?? 0;
     message.tags = object.tags?.map((e) => e) || [];
     message.constraints = object.constraints?.map((e) => e) || [];
@@ -1915,10 +1924,11 @@ function createBaseListProblemRequest(): ListProblemRequest {
     page: 0,
     limit: 0,
     difficulty: undefined,
-    tag: undefined,
+    tags: [],
     active: undefined,
     search: undefined,
     questionId: undefined,
+    sort: undefined,
   };
 }
 
@@ -1933,8 +1943,8 @@ export const ListProblemRequest: MessageFns<ListProblemRequest> = {
     if (message.difficulty !== undefined) {
       writer.uint32(24).int32(message.difficulty);
     }
-    if (message.tag !== undefined) {
-      writer.uint32(34).string(message.tag);
+    for (const v of message.tags) {
+      writer.uint32(34).string(v!);
     }
     if (message.active !== undefined) {
       writer.uint32(40).bool(message.active);
@@ -1944,6 +1954,9 @@ export const ListProblemRequest: MessageFns<ListProblemRequest> = {
     }
     if (message.questionId !== undefined) {
       writer.uint32(58).string(message.questionId);
+    }
+    if (message.sort !== undefined) {
+      writer.uint32(66).string(message.sort);
     }
     return writer;
   },
@@ -1984,7 +1997,7 @@ export const ListProblemRequest: MessageFns<ListProblemRequest> = {
             break;
           }
 
-          message.tag = reader.string();
+          message.tags.push(reader.string());
           continue;
         }
         case 5: {
@@ -2011,6 +2024,14 @@ export const ListProblemRequest: MessageFns<ListProblemRequest> = {
           message.questionId = reader.string();
           continue;
         }
+        case 8: {
+          if (tag !== 66) {
+            break;
+          }
+
+          message.sort = reader.string();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -2025,10 +2046,11 @@ export const ListProblemRequest: MessageFns<ListProblemRequest> = {
       page: isSet(object.page) ? globalThis.Number(object.page) : 0,
       limit: isSet(object.limit) ? globalThis.Number(object.limit) : 0,
       difficulty: isSet(object.difficulty) ? difficultyFromJSON(object.difficulty) : undefined,
-      tag: isSet(object.tag) ? globalThis.String(object.tag) : undefined,
+      tags: globalThis.Array.isArray(object?.tags) ? object.tags.map((e: any) => globalThis.String(e)) : [],
       active: isSet(object.active) ? globalThis.Boolean(object.active) : undefined,
       search: isSet(object.search) ? globalThis.String(object.search) : undefined,
       questionId: isSet(object.questionId) ? globalThis.String(object.questionId) : undefined,
+      sort: isSet(object.sort) ? globalThis.String(object.sort) : undefined,
     };
   },
 
@@ -2043,8 +2065,8 @@ export const ListProblemRequest: MessageFns<ListProblemRequest> = {
     if (message.difficulty !== undefined) {
       obj.difficulty = difficultyToJSON(message.difficulty);
     }
-    if (message.tag !== undefined) {
-      obj.tag = message.tag;
+    if (message.tags?.length) {
+      obj.tags = message.tags;
     }
     if (message.active !== undefined) {
       obj.active = message.active;
@@ -2054,6 +2076,9 @@ export const ListProblemRequest: MessageFns<ListProblemRequest> = {
     }
     if (message.questionId !== undefined) {
       obj.questionId = message.questionId;
+    }
+    if (message.sort !== undefined) {
+      obj.sort = message.sort;
     }
     return obj;
   },
@@ -2066,10 +2091,11 @@ export const ListProblemRequest: MessageFns<ListProblemRequest> = {
     message.page = object.page ?? 0;
     message.limit = object.limit ?? 0;
     message.difficulty = object.difficulty ?? undefined;
-    message.tag = object.tag ?? undefined;
+    message.tags = object.tags?.map((e) => e) || [];
     message.active = object.active ?? undefined;
     message.search = object.search ?? undefined;
     message.questionId = object.questionId ?? undefined;
+    message.sort = object.sort ?? undefined;
     return message;
   },
 };
@@ -2935,6 +2961,122 @@ export const RemoveSolutionCodeRequest: MessageFns<RemoveSolutionCodeRequest> = 
     const message = createBaseRemoveSolutionCodeRequest();
     message.Id = object.Id ?? "";
     message.solutionCodeId = object.solutionCodeId ?? "";
+    return message;
+  },
+};
+
+function createBaseCheckQuestionIdRequest(): CheckQuestionIdRequest {
+  return { questionId: "" };
+}
+
+export const CheckQuestionIdRequest: MessageFns<CheckQuestionIdRequest> = {
+  encode(message: CheckQuestionIdRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.questionId !== "") {
+      writer.uint32(10).string(message.questionId);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): CheckQuestionIdRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseCheckQuestionIdRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.questionId = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): CheckQuestionIdRequest {
+    return { questionId: isSet(object.questionId) ? globalThis.String(object.questionId) : "" };
+  },
+
+  toJSON(message: CheckQuestionIdRequest): unknown {
+    const obj: any = {};
+    if (message.questionId !== "") {
+      obj.questionId = message.questionId;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<CheckQuestionIdRequest>, I>>(base?: I): CheckQuestionIdRequest {
+    return CheckQuestionIdRequest.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<CheckQuestionIdRequest>, I>>(object: I): CheckQuestionIdRequest {
+    const message = createBaseCheckQuestionIdRequest();
+    message.questionId = object.questionId ?? "";
+    return message;
+  },
+};
+
+function createBaseCheckProblemTitleRequest(): CheckProblemTitleRequest {
+  return { title: "" };
+}
+
+export const CheckProblemTitleRequest: MessageFns<CheckProblemTitleRequest> = {
+  encode(message: CheckProblemTitleRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.title !== "") {
+      writer.uint32(18).string(message.title);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): CheckProblemTitleRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseCheckProblemTitleRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.title = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): CheckProblemTitleRequest {
+    return { title: isSet(object.title) ? globalThis.String(object.title) : "" };
+  },
+
+  toJSON(message: CheckProblemTitleRequest): unknown {
+    const obj: any = {};
+    if (message.title !== "") {
+      obj.title = message.title;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<CheckProblemTitleRequest>, I>>(base?: I): CheckProblemTitleRequest {
+    return CheckProblemTitleRequest.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<CheckProblemTitleRequest>, I>>(object: I): CheckProblemTitleRequest {
+    const message = createBaseCheckProblemTitleRequest();
+    message.title = object.title ?? "";
     return message;
   },
 };
@@ -4170,6 +4312,26 @@ export const ProblemServiceService = {
     responseSerialize: (value: Empty): Buffer => Buffer.from(Empty.encode(value).finish()),
     responseDeserialize: (value: Buffer): Empty => Empty.decode(value),
   },
+  checkQuestionIdAvailability: {
+    path: "/problem.v1.ProblemService/CheckQuestionIdAvailability",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: CheckQuestionIdRequest): Buffer =>
+      Buffer.from(CheckQuestionIdRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): CheckQuestionIdRequest => CheckQuestionIdRequest.decode(value),
+    responseSerialize: (value: Empty): Buffer => Buffer.from(Empty.encode(value).finish()),
+    responseDeserialize: (value: Buffer): Empty => Empty.decode(value),
+  },
+  checkProblemTitle: {
+    path: "/problem.v1.ProblemService/CheckProblemTitle",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: CheckProblemTitleRequest): Buffer =>
+      Buffer.from(CheckProblemTitleRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): CheckProblemTitleRequest => CheckProblemTitleRequest.decode(value),
+    responseSerialize: (value: Empty): Buffer => Buffer.from(Empty.encode(value).finish()),
+    responseDeserialize: (value: Buffer): Empty => Empty.decode(value),
+  },
 } as const;
 
 export interface ProblemServiceServer extends UntypedServiceImplementation {
@@ -4184,6 +4346,8 @@ export interface ProblemServiceServer extends UntypedServiceImplementation {
   addSolutionCode: handleUnaryCall<AddSolutionCodeRequest, Empty>;
   updateSolutionCode: handleUnaryCall<UpdateSolutionCodeRequest, Empty>;
   removeSolutionCode: handleUnaryCall<RemoveSolutionCodeRequest, Empty>;
+  checkQuestionIdAvailability: handleUnaryCall<CheckQuestionIdRequest, Empty>;
+  checkProblemTitle: handleUnaryCall<CheckProblemTitleRequest, Empty>;
 }
 
 export interface ProblemServiceClient extends Client {
@@ -4348,6 +4512,36 @@ export interface ProblemServiceClient extends Client {
   ): ClientUnaryCall;
   removeSolutionCode(
     request: RemoveSolutionCodeRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: Empty) => void,
+  ): ClientUnaryCall;
+  checkQuestionIdAvailability(
+    request: CheckQuestionIdRequest,
+    callback: (error: ServiceError | null, response: Empty) => void,
+  ): ClientUnaryCall;
+  checkQuestionIdAvailability(
+    request: CheckQuestionIdRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: Empty) => void,
+  ): ClientUnaryCall;
+  checkQuestionIdAvailability(
+    request: CheckQuestionIdRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: Empty) => void,
+  ): ClientUnaryCall;
+  checkProblemTitle(
+    request: CheckProblemTitleRequest,
+    callback: (error: ServiceError | null, response: Empty) => void,
+  ): ClientUnaryCall;
+  checkProblemTitle(
+    request: CheckProblemTitleRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: Empty) => void,
+  ): ClientUnaryCall;
+  checkProblemTitle(
+    request: CheckProblemTitleRequest,
     metadata: Metadata,
     options: Partial<CallOptions>,
     callback: (error: ServiceError | null, response: Empty) => void,

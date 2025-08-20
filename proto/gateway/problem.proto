@@ -71,7 +71,7 @@ message Problem {
     string _id = 1;
     string questionId = 2;
     string title = 3;
-    string decription = 4;
+    string description = 4;
     Difficulty difficulty = 5;
     repeated string tags = 6;
     repeated string constraints = 7;
@@ -110,6 +110,8 @@ service ProblemService {
     rpc AddSolutionCode(AddSolutionCodeRequest) returns (google.protobuf.Empty);
     rpc UpdateSolutionCode(UpdateSolutionCodeRequest) returns (google.protobuf.Empty);
     rpc RemoveSolutionCode(RemoveSolutionCodeRequest) returns (google.protobuf.Empty);
+    rpc CheckQuestionIdAvailability(CheckQuestionIdRequest) returns (google.protobuf.Empty);
+    rpc CheckProblemTitle(CheckProblemTitleRequest) returns (google.protobuf.Empty);
 }
 
 message CreateProblemRequest {
@@ -147,10 +149,11 @@ message ListProblemRequest {
 
     // optional filters
     optional Difficulty difficulty = 3;
-    optional string tag = 4;
+    repeated string tags = 4;
     optional bool active = 5;
     optional string search = 6;
     optional string questionId = 7;
+    optional string sort = 8;
 }
 
 message ListProblemResponse {
@@ -206,6 +209,14 @@ message UpdateSolutionCodeRequest {
 message RemoveSolutionCodeRequest {
     string _id = 1;
     string solutionCodeId = 2;
+}
+
+message CheckQuestionIdRequest {
+    string questionId = 1;
+}
+
+message CheckProblemTitleRequest {
+    string title = 2;
 }
 
 // === Submissions ==== 

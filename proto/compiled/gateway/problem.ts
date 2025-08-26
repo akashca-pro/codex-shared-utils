@@ -341,6 +341,7 @@ export interface Submission {
   title: string;
   battleId?: string | undefined;
   score: number;
+  status: string;
   language: Language;
   userCode: string;
   executionResult?: ExecutionResult | undefined;
@@ -368,6 +369,8 @@ export interface UpdateSubmissionRequest {
   executionResult?: ExecutionResult | undefined;
   executionTime: number;
   memoryUsage: number;
+  score: number;
+  status: string;
 }
 
 export interface GetSubmissionsRequest {
@@ -3368,6 +3371,7 @@ function createBaseSubmission(): Submission {
     title: "",
     battleId: undefined,
     score: 0,
+    status: "",
     language: 0,
     userCode: "",
     executionResult: undefined,
@@ -3403,32 +3407,35 @@ export const Submission: MessageFns<Submission> = {
     if (message.score !== 0) {
       writer.uint32(56).int32(message.score);
     }
+    if (message.status !== "") {
+      writer.uint32(66).string(message.status);
+    }
     if (message.language !== 0) {
-      writer.uint32(64).int32(message.language);
+      writer.uint32(72).int32(message.language);
     }
     if (message.userCode !== "") {
-      writer.uint32(74).string(message.userCode);
+      writer.uint32(82).string(message.userCode);
     }
     if (message.executionResult !== undefined) {
-      ExecutionResult.encode(message.executionResult, writer.uint32(82).fork()).join();
+      ExecutionResult.encode(message.executionResult, writer.uint32(90).fork()).join();
     }
     if (message.executionTime !== undefined) {
-      writer.uint32(88).int32(message.executionTime);
+      writer.uint32(96).int32(message.executionTime);
     }
     if (message.memoryUsage !== undefined) {
-      writer.uint32(96).int32(message.memoryUsage);
+      writer.uint32(104).int32(message.memoryUsage);
     }
     if (message.difficulty !== 0) {
-      writer.uint32(104).int32(message.difficulty);
+      writer.uint32(112).int32(message.difficulty);
     }
     if (message.isFirst !== false) {
-      writer.uint32(112).bool(message.isFirst);
+      writer.uint32(120).bool(message.isFirst);
     }
     if (message.updatedAt !== "") {
-      writer.uint32(122).string(message.updatedAt);
+      writer.uint32(130).string(message.updatedAt);
     }
     if (message.createdAt !== "") {
-      writer.uint32(130).string(message.createdAt);
+      writer.uint32(138).string(message.createdAt);
     }
     return writer;
   },
@@ -3497,19 +3504,19 @@ export const Submission: MessageFns<Submission> = {
           continue;
         }
         case 8: {
-          if (tag !== 64) {
+          if (tag !== 66) {
+            break;
+          }
+
+          message.status = reader.string();
+          continue;
+        }
+        case 9: {
+          if (tag !== 72) {
             break;
           }
 
           message.language = reader.int32() as any;
-          continue;
-        }
-        case 9: {
-          if (tag !== 74) {
-            break;
-          }
-
-          message.userCode = reader.string();
           continue;
         }
         case 10: {
@@ -3517,15 +3524,15 @@ export const Submission: MessageFns<Submission> = {
             break;
           }
 
-          message.executionResult = ExecutionResult.decode(reader, reader.uint32());
+          message.userCode = reader.string();
           continue;
         }
         case 11: {
-          if (tag !== 88) {
+          if (tag !== 90) {
             break;
           }
 
-          message.executionTime = reader.int32();
+          message.executionResult = ExecutionResult.decode(reader, reader.uint32());
           continue;
         }
         case 12: {
@@ -3533,7 +3540,7 @@ export const Submission: MessageFns<Submission> = {
             break;
           }
 
-          message.memoryUsage = reader.int32();
+          message.executionTime = reader.int32();
           continue;
         }
         case 13: {
@@ -3541,7 +3548,7 @@ export const Submission: MessageFns<Submission> = {
             break;
           }
 
-          message.difficulty = reader.int32() as any;
+          message.memoryUsage = reader.int32();
           continue;
         }
         case 14: {
@@ -3549,19 +3556,27 @@ export const Submission: MessageFns<Submission> = {
             break;
           }
 
-          message.isFirst = reader.bool();
+          message.difficulty = reader.int32() as any;
           continue;
         }
         case 15: {
-          if (tag !== 122) {
+          if (tag !== 120) {
+            break;
+          }
+
+          message.isFirst = reader.bool();
+          continue;
+        }
+        case 16: {
+          if (tag !== 130) {
             break;
           }
 
           message.updatedAt = reader.string();
           continue;
         }
-        case 16: {
-          if (tag !== 130) {
+        case 17: {
+          if (tag !== 138) {
             break;
           }
 
@@ -3586,6 +3601,7 @@ export const Submission: MessageFns<Submission> = {
       title: isSet(object.title) ? globalThis.String(object.title) : "",
       battleId: isSet(object.battleId) ? globalThis.String(object.battleId) : undefined,
       score: isSet(object.score) ? globalThis.Number(object.score) : 0,
+      status: isSet(object.status) ? globalThis.String(object.status) : "",
       language: isSet(object.language) ? languageFromJSON(object.language) : 0,
       userCode: isSet(object.userCode) ? globalThis.String(object.userCode) : "",
       executionResult: isSet(object.executionResult) ? ExecutionResult.fromJSON(object.executionResult) : undefined,
@@ -3620,6 +3636,9 @@ export const Submission: MessageFns<Submission> = {
     }
     if (message.score !== 0) {
       obj.score = Math.round(message.score);
+    }
+    if (message.status !== "") {
+      obj.status = message.status;
     }
     if (message.language !== 0) {
       obj.language = languageToJSON(message.language);
@@ -3663,6 +3682,7 @@ export const Submission: MessageFns<Submission> = {
     message.title = object.title ?? "";
     message.battleId = object.battleId ?? undefined;
     message.score = object.score ?? 0;
+    message.status = object.status ?? "";
     message.language = object.language ?? 0;
     message.userCode = object.userCode ?? "";
     message.executionResult = (object.executionResult !== undefined && object.executionResult !== null)
@@ -3860,7 +3880,7 @@ export const CreateSubmissionRequest: MessageFns<CreateSubmissionRequest> = {
 };
 
 function createBaseUpdateSubmissionRequest(): UpdateSubmissionRequest {
-  return { Id: "", executionResult: undefined, executionTime: 0, memoryUsage: 0 };
+  return { Id: "", executionResult: undefined, executionTime: 0, memoryUsage: 0, score: 0, status: "" };
 }
 
 export const UpdateSubmissionRequest: MessageFns<UpdateSubmissionRequest> = {
@@ -3876,6 +3896,12 @@ export const UpdateSubmissionRequest: MessageFns<UpdateSubmissionRequest> = {
     }
     if (message.memoryUsage !== 0) {
       writer.uint32(32).int32(message.memoryUsage);
+    }
+    if (message.score !== 0) {
+      writer.uint32(40).int32(message.score);
+    }
+    if (message.status !== "") {
+      writer.uint32(50).string(message.status);
     }
     return writer;
   },
@@ -3919,6 +3945,22 @@ export const UpdateSubmissionRequest: MessageFns<UpdateSubmissionRequest> = {
           message.memoryUsage = reader.int32();
           continue;
         }
+        case 5: {
+          if (tag !== 40) {
+            break;
+          }
+
+          message.score = reader.int32();
+          continue;
+        }
+        case 6: {
+          if (tag !== 50) {
+            break;
+          }
+
+          message.status = reader.string();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -3934,6 +3976,8 @@ export const UpdateSubmissionRequest: MessageFns<UpdateSubmissionRequest> = {
       executionResult: isSet(object.executionResult) ? ExecutionResult.fromJSON(object.executionResult) : undefined,
       executionTime: isSet(object.executionTime) ? globalThis.Number(object.executionTime) : 0,
       memoryUsage: isSet(object.memoryUsage) ? globalThis.Number(object.memoryUsage) : 0,
+      score: isSet(object.score) ? globalThis.Number(object.score) : 0,
+      status: isSet(object.status) ? globalThis.String(object.status) : "",
     };
   },
 
@@ -3951,6 +3995,12 @@ export const UpdateSubmissionRequest: MessageFns<UpdateSubmissionRequest> = {
     if (message.memoryUsage !== 0) {
       obj.memoryUsage = Math.round(message.memoryUsage);
     }
+    if (message.score !== 0) {
+      obj.score = Math.round(message.score);
+    }
+    if (message.status !== "") {
+      obj.status = message.status;
+    }
     return obj;
   },
 
@@ -3965,6 +4015,8 @@ export const UpdateSubmissionRequest: MessageFns<UpdateSubmissionRequest> = {
       : undefined;
     message.executionTime = object.executionTime ?? 0;
     message.memoryUsage = object.memoryUsage ?? 0;
+    message.score = object.score ?? 0;
+    message.status = object.status ?? "";
     return message;
   },
 };

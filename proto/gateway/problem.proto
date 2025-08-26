@@ -247,15 +247,16 @@ message Submission {
     string title = 5;
     optional string battleId = 6;
     int32 score = 7;
-    Language language = 8;
-    string userCode = 9;
-    ExecutionResult executionResult = 10;
-    optional int32 executionTime = 11;
-    optional int32 memoryUsage = 12;
-    Difficulty difficulty = 13;
-    bool isFirst = 14;
-    string updatedAt = 15;
-    string createdAt = 16;
+    string status = 8;
+    Language language = 9;
+    string userCode = 10;
+    ExecutionResult executionResult = 11;
+    optional int32 executionTime = 12;
+    optional int32 memoryUsage = 13;
+    Difficulty difficulty = 14;
+    bool isFirst = 15;
+    string updatedAt = 16;
+    string createdAt = 17;
 }
 
 // --- Service Definition ---
@@ -282,6 +283,8 @@ message UpdateSubmissionRequest {
     ExecutionResult executionResult = 2;
     int32 executionTime = 3;
     int32 memoryUsage = 4;
+    int32 score = 5;
+    string status = 6;
 }
 
 message GetSubmissionsRequest {

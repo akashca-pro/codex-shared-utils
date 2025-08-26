@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package code_manage.v1;
+
+import "google/protobuf/empty.proto";
+
+
+enum Language {
+  LANGUAGE_UNSPECIFIED = 0;
+  JAVASCRIPT = 1;
+  PYTHON = 2;
+}
+
+message TestCase {
+    string _id = 1;
+    string input = 2;
+    string output = 3;
+}
+
+service CodeManageService {
+    rpc SubmitCodeExec(SubmitCodeExecRequest) returns (SubmitCodeExecResponse);
+    rpc RunCodeExec(RunCodeExecRequest) returns (google.protobuf.Empty);
+    rpc CustomCodeExec(CustomCodeExecRequest) returns (google.protobuf.Empty);
+}
+
+
+message SubmitCodeExecRequest{
+    string problemId = 1;
+    string userId = 2;
+    optional string country = 3;
+    string userCode = 4;
+    Language language = 5;
+}
+
+message SubmitCodeExecResponse{ 
+    string submissionId = 1;
+}
+
+message RunCodeExecRequest {
+    string problemId = 1;
+    string userId = 2;
+    Language language = 3;
+    string userCode = 4;
+    repeated TestCase testCases = 5;
+}
+
+message CustomCodeExecRequest {
+    string tempId = 1;
+    string userCode = 2;
+    Language language = 3;
+}

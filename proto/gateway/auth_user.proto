@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package auth_user.v1;
 
+import "google/protobuf/empty.proto";
+
 service AuthUserService {
   rpc Signup(SignupRequest) returns (SignupResponse);
   rpc ResendOtp(ResendOtpRequest) returns (ResendOtpResponse);
@@ -13,13 +15,11 @@ service AuthUserService {
   rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse);
   rpc Profile(UserProfileRequest) returns (UserProfileResponse);
   rpc UpdateProfile(UpdateProfileRequest) returns (UpdateProfileResponse);
+  rpc ChangeEmail(ChangeEmailRequest) returns (google.protobuf.Empty);
+  rpc VerifyNewEmail(VerifyNewEmailRequest) returns (google.protobuf.Empty);
+  rpc ChangePassword(ChangePasswordRequest) returns (google.protobuf.Empty);
+  rpc DeleteAccount(DeleteAccountRequest) returns (google.protobuf.Empty);
 } 
-service AuthAdminService {
-  rpc Login(LoginRequest) returns (LoginResponse);
-  rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse);
-  rpc Profile(AdminProfileRequest) returns (AdminProfileResponse);
-  rpc UpdateProfile(UpdateProfileRequest) returns (UpdateProfileResponse);
-}
 
 // ===== User Messages =====
 
@@ -147,19 +147,51 @@ message RefreshTokenResponse {
 
 message UpdateProfileRequest {
   string userId = 1;
-  string username = 2;
-  string firstName = 3;
-  string lastName = 4;
-  string country = 5;
-  string preferredLanguage = 6;
-  string avatar = 7;
+  optional string username = 2;
+  optional string firstName = 3;
+  optional string lastName = 4;
+  optional string country = 5;
+  optional string preferredLanguage = 6;
+  optional string avatar = 7;
 }
 
 message UpdateProfileResponse{
   string message = 1;  
 }
 
+message ChangeEmailRequest {
+  string userId  = 1;
+  string newEmail = 2;
+  string password = 3;
+}
+
+message ChangePasswordRequest {
+  string userId  = 1;
+  string currPass = 2;
+  string newPass = 3;
+}
+
+message DeleteAccountRequest {
+  string userId = 1;
+  string password = 2;
+}
+
+message VerifyNewEmailRequest {
+  string userId = 1;
+  string email = 2;
+  string otp = 3;
+}
+
 // ===== Admin =====
+
+service AuthAdminService {
+  rpc Login(LoginRequest) returns (LoginResponse);
+  rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse);
+  rpc Profile(AdminProfileRequest) returns (AdminProfileResponse);
+  rpc UpdateProfile(UpdateProfileRequest) returns (UpdateProfileResponse);
+  rpc ListUsers (ListUsersRequest) returns (ListUsersResponse);
+  rpc BlockUser (BlockUserRequest) returns (google.protobuf.Empty);
+}
 
 message AdminProfileRequest {
   string userId = 1;
@@ -176,4 +208,49 @@ message AdminProfileResponse {
   string country = 7;
   string createdAt = 8;
   string updatedAt = 9;
+}
+
+message UserDetails {
+  string userId = 1;
+  string username = 2;
+  string email = 3;
+  string firstName = 4;
+  string lastName = 5;
+  string avatar = 6;
+  string country = 7;
+  string preferredLanguage = 8;
+  bool isArchived = 9;
+  int32 easySolved = 10;
+  int32 mediumSolved = 11;
+  int32 hardSolved = 12;
+  int32 totalSubmission = 13;
+  int32 streak = 14;
+  string createdAt = 15;
+  string updatedAt = 16;
+  bool isVerified = 17;
+  string authProvider = 18;
+  bool isBlocked = 19;
+}
+
+message ListUsersRequest {
+    int32 page = 1;
+    int32 limit = 2;
+    optional string search = 3;
+    optional string sort = 4;
+    optional string authProvider = 5;
+    optional bool isArchived = 6;
+    optional bool isVerified = 7;
+    optional bool isBlocked = 8;
+}
+
+message ListUsersResponse {
+    repeated UserDetails users = 1;
+    int32 totalPage = 2;
+    int32 currentPage = 3;
+    int32 totalItems = 4;
+}
+
+message BlockUserRequest {
+    string userId = 1;
+    bool block = 2;
 }

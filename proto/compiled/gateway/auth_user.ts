@@ -18,6 +18,7 @@ import {
   type ServiceError,
   type UntypedServiceImplementation,
 } from "@grpc/grpc-js";
+import { Empty } from "../google/protobuf/empty";
 
 export const protobufPackage = "auth_user.v1";
 
@@ -144,16 +145,39 @@ export interface RefreshTokenResponse {
 
 export interface UpdateProfileRequest {
   userId: string;
-  username: string;
-  firstName: string;
-  lastName: string;
-  country: string;
-  preferredLanguage: string;
-  avatar: string;
+  username?: string | undefined;
+  firstName?: string | undefined;
+  lastName?: string | undefined;
+  country?: string | undefined;
+  preferredLanguage?: string | undefined;
+  avatar?: string | undefined;
 }
 
 export interface UpdateProfileResponse {
   message: string;
+}
+
+export interface ChangeEmailRequest {
+  userId: string;
+  newEmail: string;
+  password: string;
+}
+
+export interface ChangePasswordRequest {
+  userId: string;
+  currPass: string;
+  newPass: string;
+}
+
+export interface DeleteAccountRequest {
+  userId: string;
+  password: string;
+}
+
+export interface VerifyNewEmailRequest {
+  userId: string;
+  email: string;
+  otp: string;
 }
 
 export interface AdminProfileRequest {
@@ -171,6 +195,51 @@ export interface AdminProfileResponse {
   country: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface UserDetails {
+  userId: string;
+  username: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  avatar: string;
+  country: string;
+  preferredLanguage: string;
+  isArchived: boolean;
+  easySolved: number;
+  mediumSolved: number;
+  hardSolved: number;
+  totalSubmission: number;
+  streak: number;
+  createdAt: string;
+  updatedAt: string;
+  isVerified: boolean;
+  authProvider: string;
+  isBlocked: boolean;
+}
+
+export interface ListUsersRequest {
+  page: number;
+  limit: number;
+  search?: string | undefined;
+  sort?: string | undefined;
+  authProvider?: string | undefined;
+  isArchived?: boolean | undefined;
+  isVerified?: boolean | undefined;
+  isBlocked?: boolean | undefined;
+}
+
+export interface ListUsersResponse {
+  users: UserDetails[];
+  totalPage: number;
+  currentPage: number;
+  totalItems: number;
+}
+
+export interface BlockUserRequest {
+  userId: string;
+  block: boolean;
 }
 
 function createBaseUserInfo(): UserInfo {
@@ -2046,7 +2115,15 @@ export const RefreshTokenResponse: MessageFns<RefreshTokenResponse> = {
 };
 
 function createBaseUpdateProfileRequest(): UpdateProfileRequest {
-  return { userId: "", username: "", firstName: "", lastName: "", country: "", preferredLanguage: "", avatar: "" };
+  return {
+    userId: "",
+    username: undefined,
+    firstName: undefined,
+    lastName: undefined,
+    country: undefined,
+    preferredLanguage: undefined,
+    avatar: undefined,
+  };
 }
 
 export const UpdateProfileRequest: MessageFns<UpdateProfileRequest> = {
@@ -2054,22 +2131,22 @@ export const UpdateProfileRequest: MessageFns<UpdateProfileRequest> = {
     if (message.userId !== "") {
       writer.uint32(10).string(message.userId);
     }
-    if (message.username !== "") {
+    if (message.username !== undefined) {
       writer.uint32(18).string(message.username);
     }
-    if (message.firstName !== "") {
+    if (message.firstName !== undefined) {
       writer.uint32(26).string(message.firstName);
     }
-    if (message.lastName !== "") {
+    if (message.lastName !== undefined) {
       writer.uint32(34).string(message.lastName);
     }
-    if (message.country !== "") {
+    if (message.country !== undefined) {
       writer.uint32(42).string(message.country);
     }
-    if (message.preferredLanguage !== "") {
+    if (message.preferredLanguage !== undefined) {
       writer.uint32(50).string(message.preferredLanguage);
     }
-    if (message.avatar !== "") {
+    if (message.avatar !== undefined) {
       writer.uint32(58).string(message.avatar);
     }
     return writer;
@@ -2150,12 +2227,12 @@ export const UpdateProfileRequest: MessageFns<UpdateProfileRequest> = {
   fromJSON(object: any): UpdateProfileRequest {
     return {
       userId: isSet(object.userId) ? globalThis.String(object.userId) : "",
-      username: isSet(object.username) ? globalThis.String(object.username) : "",
-      firstName: isSet(object.firstName) ? globalThis.String(object.firstName) : "",
-      lastName: isSet(object.lastName) ? globalThis.String(object.lastName) : "",
-      country: isSet(object.country) ? globalThis.String(object.country) : "",
-      preferredLanguage: isSet(object.preferredLanguage) ? globalThis.String(object.preferredLanguage) : "",
-      avatar: isSet(object.avatar) ? globalThis.String(object.avatar) : "",
+      username: isSet(object.username) ? globalThis.String(object.username) : undefined,
+      firstName: isSet(object.firstName) ? globalThis.String(object.firstName) : undefined,
+      lastName: isSet(object.lastName) ? globalThis.String(object.lastName) : undefined,
+      country: isSet(object.country) ? globalThis.String(object.country) : undefined,
+      preferredLanguage: isSet(object.preferredLanguage) ? globalThis.String(object.preferredLanguage) : undefined,
+      avatar: isSet(object.avatar) ? globalThis.String(object.avatar) : undefined,
     };
   },
 
@@ -2164,22 +2241,22 @@ export const UpdateProfileRequest: MessageFns<UpdateProfileRequest> = {
     if (message.userId !== "") {
       obj.userId = message.userId;
     }
-    if (message.username !== "") {
+    if (message.username !== undefined) {
       obj.username = message.username;
     }
-    if (message.firstName !== "") {
+    if (message.firstName !== undefined) {
       obj.firstName = message.firstName;
     }
-    if (message.lastName !== "") {
+    if (message.lastName !== undefined) {
       obj.lastName = message.lastName;
     }
-    if (message.country !== "") {
+    if (message.country !== undefined) {
       obj.country = message.country;
     }
-    if (message.preferredLanguage !== "") {
+    if (message.preferredLanguage !== undefined) {
       obj.preferredLanguage = message.preferredLanguage;
     }
-    if (message.avatar !== "") {
+    if (message.avatar !== undefined) {
       obj.avatar = message.avatar;
     }
     return obj;
@@ -2191,12 +2268,12 @@ export const UpdateProfileRequest: MessageFns<UpdateProfileRequest> = {
   fromPartial<I extends Exact<DeepPartial<UpdateProfileRequest>, I>>(object: I): UpdateProfileRequest {
     const message = createBaseUpdateProfileRequest();
     message.userId = object.userId ?? "";
-    message.username = object.username ?? "";
-    message.firstName = object.firstName ?? "";
-    message.lastName = object.lastName ?? "";
-    message.country = object.country ?? "";
-    message.preferredLanguage = object.preferredLanguage ?? "";
-    message.avatar = object.avatar ?? "";
+    message.username = object.username ?? undefined;
+    message.firstName = object.firstName ?? undefined;
+    message.lastName = object.lastName ?? undefined;
+    message.country = object.country ?? undefined;
+    message.preferredLanguage = object.preferredLanguage ?? undefined;
+    message.avatar = object.avatar ?? undefined;
     return message;
   },
 };
@@ -2255,6 +2332,358 @@ export const UpdateProfileResponse: MessageFns<UpdateProfileResponse> = {
   fromPartial<I extends Exact<DeepPartial<UpdateProfileResponse>, I>>(object: I): UpdateProfileResponse {
     const message = createBaseUpdateProfileResponse();
     message.message = object.message ?? "";
+    return message;
+  },
+};
+
+function createBaseChangeEmailRequest(): ChangeEmailRequest {
+  return { userId: "", newEmail: "", password: "" };
+}
+
+export const ChangeEmailRequest: MessageFns<ChangeEmailRequest> = {
+  encode(message: ChangeEmailRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.userId !== "") {
+      writer.uint32(10).string(message.userId);
+    }
+    if (message.newEmail !== "") {
+      writer.uint32(18).string(message.newEmail);
+    }
+    if (message.password !== "") {
+      writer.uint32(26).string(message.password);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ChangeEmailRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseChangeEmailRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.userId = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.newEmail = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.password = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ChangeEmailRequest {
+    return {
+      userId: isSet(object.userId) ? globalThis.String(object.userId) : "",
+      newEmail: isSet(object.newEmail) ? globalThis.String(object.newEmail) : "",
+      password: isSet(object.password) ? globalThis.String(object.password) : "",
+    };
+  },
+
+  toJSON(message: ChangeEmailRequest): unknown {
+    const obj: any = {};
+    if (message.userId !== "") {
+      obj.userId = message.userId;
+    }
+    if (message.newEmail !== "") {
+      obj.newEmail = message.newEmail;
+    }
+    if (message.password !== "") {
+      obj.password = message.password;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<ChangeEmailRequest>, I>>(base?: I): ChangeEmailRequest {
+    return ChangeEmailRequest.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<ChangeEmailRequest>, I>>(object: I): ChangeEmailRequest {
+    const message = createBaseChangeEmailRequest();
+    message.userId = object.userId ?? "";
+    message.newEmail = object.newEmail ?? "";
+    message.password = object.password ?? "";
+    return message;
+  },
+};
+
+function createBaseChangePasswordRequest(): ChangePasswordRequest {
+  return { userId: "", currPass: "", newPass: "" };
+}
+
+export const ChangePasswordRequest: MessageFns<ChangePasswordRequest> = {
+  encode(message: ChangePasswordRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.userId !== "") {
+      writer.uint32(10).string(message.userId);
+    }
+    if (message.currPass !== "") {
+      writer.uint32(18).string(message.currPass);
+    }
+    if (message.newPass !== "") {
+      writer.uint32(26).string(message.newPass);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ChangePasswordRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseChangePasswordRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.userId = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.currPass = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.newPass = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ChangePasswordRequest {
+    return {
+      userId: isSet(object.userId) ? globalThis.String(object.userId) : "",
+      currPass: isSet(object.currPass) ? globalThis.String(object.currPass) : "",
+      newPass: isSet(object.newPass) ? globalThis.String(object.newPass) : "",
+    };
+  },
+
+  toJSON(message: ChangePasswordRequest): unknown {
+    const obj: any = {};
+    if (message.userId !== "") {
+      obj.userId = message.userId;
+    }
+    if (message.currPass !== "") {
+      obj.currPass = message.currPass;
+    }
+    if (message.newPass !== "") {
+      obj.newPass = message.newPass;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<ChangePasswordRequest>, I>>(base?: I): ChangePasswordRequest {
+    return ChangePasswordRequest.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<ChangePasswordRequest>, I>>(object: I): ChangePasswordRequest {
+    const message = createBaseChangePasswordRequest();
+    message.userId = object.userId ?? "";
+    message.currPass = object.currPass ?? "";
+    message.newPass = object.newPass ?? "";
+    return message;
+  },
+};
+
+function createBaseDeleteAccountRequest(): DeleteAccountRequest {
+  return { userId: "", password: "" };
+}
+
+export const DeleteAccountRequest: MessageFns<DeleteAccountRequest> = {
+  encode(message: DeleteAccountRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.userId !== "") {
+      writer.uint32(10).string(message.userId);
+    }
+    if (message.password !== "") {
+      writer.uint32(18).string(message.password);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): DeleteAccountRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseDeleteAccountRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.userId = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.password = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): DeleteAccountRequest {
+    return {
+      userId: isSet(object.userId) ? globalThis.String(object.userId) : "",
+      password: isSet(object.password) ? globalThis.String(object.password) : "",
+    };
+  },
+
+  toJSON(message: DeleteAccountRequest): unknown {
+    const obj: any = {};
+    if (message.userId !== "") {
+      obj.userId = message.userId;
+    }
+    if (message.password !== "") {
+      obj.password = message.password;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<DeleteAccountRequest>, I>>(base?: I): DeleteAccountRequest {
+    return DeleteAccountRequest.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<DeleteAccountRequest>, I>>(object: I): DeleteAccountRequest {
+    const message = createBaseDeleteAccountRequest();
+    message.userId = object.userId ?? "";
+    message.password = object.password ?? "";
+    return message;
+  },
+};
+
+function createBaseVerifyNewEmailRequest(): VerifyNewEmailRequest {
+  return { userId: "", email: "", otp: "" };
+}
+
+export const VerifyNewEmailRequest: MessageFns<VerifyNewEmailRequest> = {
+  encode(message: VerifyNewEmailRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.userId !== "") {
+      writer.uint32(10).string(message.userId);
+    }
+    if (message.email !== "") {
+      writer.uint32(18).string(message.email);
+    }
+    if (message.otp !== "") {
+      writer.uint32(26).string(message.otp);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): VerifyNewEmailRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseVerifyNewEmailRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.userId = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.email = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.otp = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): VerifyNewEmailRequest {
+    return {
+      userId: isSet(object.userId) ? globalThis.String(object.userId) : "",
+      email: isSet(object.email) ? globalThis.String(object.email) : "",
+      otp: isSet(object.otp) ? globalThis.String(object.otp) : "",
+    };
+  },
+
+  toJSON(message: VerifyNewEmailRequest): unknown {
+    const obj: any = {};
+    if (message.userId !== "") {
+      obj.userId = message.userId;
+    }
+    if (message.email !== "") {
+      obj.email = message.email;
+    }
+    if (message.otp !== "") {
+      obj.otp = message.otp;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<VerifyNewEmailRequest>, I>>(base?: I): VerifyNewEmailRequest {
+    return VerifyNewEmailRequest.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<VerifyNewEmailRequest>, I>>(object: I): VerifyNewEmailRequest {
+    const message = createBaseVerifyNewEmailRequest();
+    message.userId = object.userId ?? "";
+    message.email = object.email ?? "";
+    message.otp = object.otp ?? "";
     return message;
   },
 };
@@ -2533,6 +2962,739 @@ export const AdminProfileResponse: MessageFns<AdminProfileResponse> = {
   },
 };
 
+function createBaseUserDetails(): UserDetails {
+  return {
+    userId: "",
+    username: "",
+    email: "",
+    firstName: "",
+    lastName: "",
+    avatar: "",
+    country: "",
+    preferredLanguage: "",
+    isArchived: false,
+    easySolved: 0,
+    mediumSolved: 0,
+    hardSolved: 0,
+    totalSubmission: 0,
+    streak: 0,
+    createdAt: "",
+    updatedAt: "",
+    isVerified: false,
+    authProvider: "",
+    isBlocked: false,
+  };
+}
+
+export const UserDetails: MessageFns<UserDetails> = {
+  encode(message: UserDetails, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.userId !== "") {
+      writer.uint32(10).string(message.userId);
+    }
+    if (message.username !== "") {
+      writer.uint32(18).string(message.username);
+    }
+    if (message.email !== "") {
+      writer.uint32(26).string(message.email);
+    }
+    if (message.firstName !== "") {
+      writer.uint32(34).string(message.firstName);
+    }
+    if (message.lastName !== "") {
+      writer.uint32(42).string(message.lastName);
+    }
+    if (message.avatar !== "") {
+      writer.uint32(50).string(message.avatar);
+    }
+    if (message.country !== "") {
+      writer.uint32(58).string(message.country);
+    }
+    if (message.preferredLanguage !== "") {
+      writer.uint32(66).string(message.preferredLanguage);
+    }
+    if (message.isArchived !== false) {
+      writer.uint32(72).bool(message.isArchived);
+    }
+    if (message.easySolved !== 0) {
+      writer.uint32(80).int32(message.easySolved);
+    }
+    if (message.mediumSolved !== 0) {
+      writer.uint32(88).int32(message.mediumSolved);
+    }
+    if (message.hardSolved !== 0) {
+      writer.uint32(96).int32(message.hardSolved);
+    }
+    if (message.totalSubmission !== 0) {
+      writer.uint32(104).int32(message.totalSubmission);
+    }
+    if (message.streak !== 0) {
+      writer.uint32(112).int32(message.streak);
+    }
+    if (message.createdAt !== "") {
+      writer.uint32(122).string(message.createdAt);
+    }
+    if (message.updatedAt !== "") {
+      writer.uint32(130).string(message.updatedAt);
+    }
+    if (message.isVerified !== false) {
+      writer.uint32(136).bool(message.isVerified);
+    }
+    if (message.authProvider !== "") {
+      writer.uint32(146).string(message.authProvider);
+    }
+    if (message.isBlocked !== false) {
+      writer.uint32(152).bool(message.isBlocked);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): UserDetails {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseUserDetails();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.userId = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.username = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.email = reader.string();
+          continue;
+        }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.firstName = reader.string();
+          continue;
+        }
+        case 5: {
+          if (tag !== 42) {
+            break;
+          }
+
+          message.lastName = reader.string();
+          continue;
+        }
+        case 6: {
+          if (tag !== 50) {
+            break;
+          }
+
+          message.avatar = reader.string();
+          continue;
+        }
+        case 7: {
+          if (tag !== 58) {
+            break;
+          }
+
+          message.country = reader.string();
+          continue;
+        }
+        case 8: {
+          if (tag !== 66) {
+            break;
+          }
+
+          message.preferredLanguage = reader.string();
+          continue;
+        }
+        case 9: {
+          if (tag !== 72) {
+            break;
+          }
+
+          message.isArchived = reader.bool();
+          continue;
+        }
+        case 10: {
+          if (tag !== 80) {
+            break;
+          }
+
+          message.easySolved = reader.int32();
+          continue;
+        }
+        case 11: {
+          if (tag !== 88) {
+            break;
+          }
+
+          message.mediumSolved = reader.int32();
+          continue;
+        }
+        case 12: {
+          if (tag !== 96) {
+            break;
+          }
+
+          message.hardSolved = reader.int32();
+          continue;
+        }
+        case 13: {
+          if (tag !== 104) {
+            break;
+          }
+
+          message.totalSubmission = reader.int32();
+          continue;
+        }
+        case 14: {
+          if (tag !== 112) {
+            break;
+          }
+
+          message.streak = reader.int32();
+          continue;
+        }
+        case 15: {
+          if (tag !== 122) {
+            break;
+          }
+
+          message.createdAt = reader.string();
+          continue;
+        }
+        case 16: {
+          if (tag !== 130) {
+            break;
+          }
+
+          message.updatedAt = reader.string();
+          continue;
+        }
+        case 17: {
+          if (tag !== 136) {
+            break;
+          }
+
+          message.isVerified = reader.bool();
+          continue;
+        }
+        case 18: {
+          if (tag !== 146) {
+            break;
+          }
+
+          message.authProvider = reader.string();
+          continue;
+        }
+        case 19: {
+          if (tag !== 152) {
+            break;
+          }
+
+          message.isBlocked = reader.bool();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): UserDetails {
+    return {
+      userId: isSet(object.userId) ? globalThis.String(object.userId) : "",
+      username: isSet(object.username) ? globalThis.String(object.username) : "",
+      email: isSet(object.email) ? globalThis.String(object.email) : "",
+      firstName: isSet(object.firstName) ? globalThis.String(object.firstName) : "",
+      lastName: isSet(object.lastName) ? globalThis.String(object.lastName) : "",
+      avatar: isSet(object.avatar) ? globalThis.String(object.avatar) : "",
+      country: isSet(object.country) ? globalThis.String(object.country) : "",
+      preferredLanguage: isSet(object.preferredLanguage) ? globalThis.String(object.preferredLanguage) : "",
+      isArchived: isSet(object.isArchived) ? globalThis.Boolean(object.isArchived) : false,
+      easySolved: isSet(object.easySolved) ? globalThis.Number(object.easySolved) : 0,
+      mediumSolved: isSet(object.mediumSolved) ? globalThis.Number(object.mediumSolved) : 0,
+      hardSolved: isSet(object.hardSolved) ? globalThis.Number(object.hardSolved) : 0,
+      totalSubmission: isSet(object.totalSubmission) ? globalThis.Number(object.totalSubmission) : 0,
+      streak: isSet(object.streak) ? globalThis.Number(object.streak) : 0,
+      createdAt: isSet(object.createdAt) ? globalThis.String(object.createdAt) : "",
+      updatedAt: isSet(object.updatedAt) ? globalThis.String(object.updatedAt) : "",
+      isVerified: isSet(object.isVerified) ? globalThis.Boolean(object.isVerified) : false,
+      authProvider: isSet(object.authProvider) ? globalThis.String(object.authProvider) : "",
+      isBlocked: isSet(object.isBlocked) ? globalThis.Boolean(object.isBlocked) : false,
+    };
+  },
+
+  toJSON(message: UserDetails): unknown {
+    const obj: any = {};
+    if (message.userId !== "") {
+      obj.userId = message.userId;
+    }
+    if (message.username !== "") {
+      obj.username = message.username;
+    }
+    if (message.email !== "") {
+      obj.email = message.email;
+    }
+    if (message.firstName !== "") {
+      obj.firstName = message.firstName;
+    }
+    if (message.lastName !== "") {
+      obj.lastName = message.lastName;
+    }
+    if (message.avatar !== "") {
+      obj.avatar = message.avatar;
+    }
+    if (message.country !== "") {
+      obj.country = message.country;
+    }
+    if (message.preferredLanguage !== "") {
+      obj.preferredLanguage = message.preferredLanguage;
+    }
+    if (message.isArchived !== false) {
+      obj.isArchived = message.isArchived;
+    }
+    if (message.easySolved !== 0) {
+      obj.easySolved = Math.round(message.easySolved);
+    }
+    if (message.mediumSolved !== 0) {
+      obj.mediumSolved = Math.round(message.mediumSolved);
+    }
+    if (message.hardSolved !== 0) {
+      obj.hardSolved = Math.round(message.hardSolved);
+    }
+    if (message.totalSubmission !== 0) {
+      obj.totalSubmission = Math.round(message.totalSubmission);
+    }
+    if (message.streak !== 0) {
+      obj.streak = Math.round(message.streak);
+    }
+    if (message.createdAt !== "") {
+      obj.createdAt = message.createdAt;
+    }
+    if (message.updatedAt !== "") {
+      obj.updatedAt = message.updatedAt;
+    }
+    if (message.isVerified !== false) {
+      obj.isVerified = message.isVerified;
+    }
+    if (message.authProvider !== "") {
+      obj.authProvider = message.authProvider;
+    }
+    if (message.isBlocked !== false) {
+      obj.isBlocked = message.isBlocked;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<UserDetails>, I>>(base?: I): UserDetails {
+    return UserDetails.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<UserDetails>, I>>(object: I): UserDetails {
+    const message = createBaseUserDetails();
+    message.userId = object.userId ?? "";
+    message.username = object.username ?? "";
+    message.email = object.email ?? "";
+    message.firstName = object.firstName ?? "";
+    message.lastName = object.lastName ?? "";
+    message.avatar = object.avatar ?? "";
+    message.country = object.country ?? "";
+    message.preferredLanguage = object.preferredLanguage ?? "";
+    message.isArchived = object.isArchived ?? false;
+    message.easySolved = object.easySolved ?? 0;
+    message.mediumSolved = object.mediumSolved ?? 0;
+    message.hardSolved = object.hardSolved ?? 0;
+    message.totalSubmission = object.totalSubmission ?? 0;
+    message.streak = object.streak ?? 0;
+    message.createdAt = object.createdAt ?? "";
+    message.updatedAt = object.updatedAt ?? "";
+    message.isVerified = object.isVerified ?? false;
+    message.authProvider = object.authProvider ?? "";
+    message.isBlocked = object.isBlocked ?? false;
+    return message;
+  },
+};
+
+function createBaseListUsersRequest(): ListUsersRequest {
+  return {
+    page: 0,
+    limit: 0,
+    search: undefined,
+    sort: undefined,
+    authProvider: undefined,
+    isArchived: undefined,
+    isVerified: undefined,
+    isBlocked: undefined,
+  };
+}
+
+export const ListUsersRequest: MessageFns<ListUsersRequest> = {
+  encode(message: ListUsersRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.page !== 0) {
+      writer.uint32(8).int32(message.page);
+    }
+    if (message.limit !== 0) {
+      writer.uint32(16).int32(message.limit);
+    }
+    if (message.search !== undefined) {
+      writer.uint32(26).string(message.search);
+    }
+    if (message.sort !== undefined) {
+      writer.uint32(34).string(message.sort);
+    }
+    if (message.authProvider !== undefined) {
+      writer.uint32(42).string(message.authProvider);
+    }
+    if (message.isArchived !== undefined) {
+      writer.uint32(48).bool(message.isArchived);
+    }
+    if (message.isVerified !== undefined) {
+      writer.uint32(56).bool(message.isVerified);
+    }
+    if (message.isBlocked !== undefined) {
+      writer.uint32(64).bool(message.isBlocked);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ListUsersRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseListUsersRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 8) {
+            break;
+          }
+
+          message.page = reader.int32();
+          continue;
+        }
+        case 2: {
+          if (tag !== 16) {
+            break;
+          }
+
+          message.limit = reader.int32();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.search = reader.string();
+          continue;
+        }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.sort = reader.string();
+          continue;
+        }
+        case 5: {
+          if (tag !== 42) {
+            break;
+          }
+
+          message.authProvider = reader.string();
+          continue;
+        }
+        case 6: {
+          if (tag !== 48) {
+            break;
+          }
+
+          message.isArchived = reader.bool();
+          continue;
+        }
+        case 7: {
+          if (tag !== 56) {
+            break;
+          }
+
+          message.isVerified = reader.bool();
+          continue;
+        }
+        case 8: {
+          if (tag !== 64) {
+            break;
+          }
+
+          message.isBlocked = reader.bool();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ListUsersRequest {
+    return {
+      page: isSet(object.page) ? globalThis.Number(object.page) : 0,
+      limit: isSet(object.limit) ? globalThis.Number(object.limit) : 0,
+      search: isSet(object.search) ? globalThis.String(object.search) : undefined,
+      sort: isSet(object.sort) ? globalThis.String(object.sort) : undefined,
+      authProvider: isSet(object.authProvider) ? globalThis.String(object.authProvider) : undefined,
+      isArchived: isSet(object.isArchived) ? globalThis.Boolean(object.isArchived) : undefined,
+      isVerified: isSet(object.isVerified) ? globalThis.Boolean(object.isVerified) : undefined,
+      isBlocked: isSet(object.isBlocked) ? globalThis.Boolean(object.isBlocked) : undefined,
+    };
+  },
+
+  toJSON(message: ListUsersRequest): unknown {
+    const obj: any = {};
+    if (message.page !== 0) {
+      obj.page = Math.round(message.page);
+    }
+    if (message.limit !== 0) {
+      obj.limit = Math.round(message.limit);
+    }
+    if (message.search !== undefined) {
+      obj.search = message.search;
+    }
+    if (message.sort !== undefined) {
+      obj.sort = message.sort;
+    }
+    if (message.authProvider !== undefined) {
+      obj.authProvider = message.authProvider;
+    }
+    if (message.isArchived !== undefined) {
+      obj.isArchived = message.isArchived;
+    }
+    if (message.isVerified !== undefined) {
+      obj.isVerified = message.isVerified;
+    }
+    if (message.isBlocked !== undefined) {
+      obj.isBlocked = message.isBlocked;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<ListUsersRequest>, I>>(base?: I): ListUsersRequest {
+    return ListUsersRequest.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<ListUsersRequest>, I>>(object: I): ListUsersRequest {
+    const message = createBaseListUsersRequest();
+    message.page = object.page ?? 0;
+    message.limit = object.limit ?? 0;
+    message.search = object.search ?? undefined;
+    message.sort = object.sort ?? undefined;
+    message.authProvider = object.authProvider ?? undefined;
+    message.isArchived = object.isArchived ?? undefined;
+    message.isVerified = object.isVerified ?? undefined;
+    message.isBlocked = object.isBlocked ?? undefined;
+    return message;
+  },
+};
+
+function createBaseListUsersResponse(): ListUsersResponse {
+  return { users: [], totalPage: 0, currentPage: 0, totalItems: 0 };
+}
+
+export const ListUsersResponse: MessageFns<ListUsersResponse> = {
+  encode(message: ListUsersResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    for (const v of message.users) {
+      UserDetails.encode(v!, writer.uint32(10).fork()).join();
+    }
+    if (message.totalPage !== 0) {
+      writer.uint32(16).int32(message.totalPage);
+    }
+    if (message.currentPage !== 0) {
+      writer.uint32(24).int32(message.currentPage);
+    }
+    if (message.totalItems !== 0) {
+      writer.uint32(32).int32(message.totalItems);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ListUsersResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseListUsersResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.users.push(UserDetails.decode(reader, reader.uint32()));
+          continue;
+        }
+        case 2: {
+          if (tag !== 16) {
+            break;
+          }
+
+          message.totalPage = reader.int32();
+          continue;
+        }
+        case 3: {
+          if (tag !== 24) {
+            break;
+          }
+
+          message.currentPage = reader.int32();
+          continue;
+        }
+        case 4: {
+          if (tag !== 32) {
+            break;
+          }
+
+          message.totalItems = reader.int32();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ListUsersResponse {
+    return {
+      users: globalThis.Array.isArray(object?.users) ? object.users.map((e: any) => UserDetails.fromJSON(e)) : [],
+      totalPage: isSet(object.totalPage) ? globalThis.Number(object.totalPage) : 0,
+      currentPage: isSet(object.currentPage) ? globalThis.Number(object.currentPage) : 0,
+      totalItems: isSet(object.totalItems) ? globalThis.Number(object.totalItems) : 0,
+    };
+  },
+
+  toJSON(message: ListUsersResponse): unknown {
+    const obj: any = {};
+    if (message.users?.length) {
+      obj.users = message.users.map((e) => UserDetails.toJSON(e));
+    }
+    if (message.totalPage !== 0) {
+      obj.totalPage = Math.round(message.totalPage);
+    }
+    if (message.currentPage !== 0) {
+      obj.currentPage = Math.round(message.currentPage);
+    }
+    if (message.totalItems !== 0) {
+      obj.totalItems = Math.round(message.totalItems);
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<ListUsersResponse>, I>>(base?: I): ListUsersResponse {
+    return ListUsersResponse.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<ListUsersResponse>, I>>(object: I): ListUsersResponse {
+    const message = createBaseListUsersResponse();
+    message.users = object.users?.map((e) => UserDetails.fromPartial(e)) || [];
+    message.totalPage = object.totalPage ?? 0;
+    message.currentPage = object.currentPage ?? 0;
+    message.totalItems = object.totalItems ?? 0;
+    return message;
+  },
+};
+
+function createBaseBlockUserRequest(): BlockUserRequest {
+  return { userId: "", block: false };
+}
+
+export const BlockUserRequest: MessageFns<BlockUserRequest> = {
+  encode(message: BlockUserRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.userId !== "") {
+      writer.uint32(10).string(message.userId);
+    }
+    if (message.block !== false) {
+      writer.uint32(16).bool(message.block);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): BlockUserRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseBlockUserRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.userId = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 16) {
+            break;
+          }
+
+          message.block = reader.bool();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): BlockUserRequest {
+    return {
+      userId: isSet(object.userId) ? globalThis.String(object.userId) : "",
+      block: isSet(object.block) ? globalThis.Boolean(object.block) : false,
+    };
+  },
+
+  toJSON(message: BlockUserRequest): unknown {
+    const obj: any = {};
+    if (message.userId !== "") {
+      obj.userId = message.userId;
+    }
+    if (message.block !== false) {
+      obj.block = message.block;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<BlockUserRequest>, I>>(base?: I): BlockUserRequest {
+    return BlockUserRequest.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<BlockUserRequest>, I>>(object: I): BlockUserRequest {
+    const message = createBaseBlockUserRequest();
+    message.userId = object.userId ?? "";
+    message.block = object.block ?? false;
+    return message;
+  },
+};
+
 export type AuthUserServiceService = typeof AuthUserServiceService;
 export const AuthUserServiceService = {
   signup: {
@@ -2630,6 +3792,44 @@ export const AuthUserServiceService = {
       Buffer.from(UpdateProfileResponse.encode(value).finish()),
     responseDeserialize: (value: Buffer): UpdateProfileResponse => UpdateProfileResponse.decode(value),
   },
+  changeEmail: {
+    path: "/auth_user.v1.AuthUserService/ChangeEmail",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: ChangeEmailRequest): Buffer => Buffer.from(ChangeEmailRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): ChangeEmailRequest => ChangeEmailRequest.decode(value),
+    responseSerialize: (value: Empty): Buffer => Buffer.from(Empty.encode(value).finish()),
+    responseDeserialize: (value: Buffer): Empty => Empty.decode(value),
+  },
+  verifyNewEmail: {
+    path: "/auth_user.v1.AuthUserService/VerifyNewEmail",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: VerifyNewEmailRequest): Buffer =>
+      Buffer.from(VerifyNewEmailRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): VerifyNewEmailRequest => VerifyNewEmailRequest.decode(value),
+    responseSerialize: (value: Empty): Buffer => Buffer.from(Empty.encode(value).finish()),
+    responseDeserialize: (value: Buffer): Empty => Empty.decode(value),
+  },
+  changePassword: {
+    path: "/auth_user.v1.AuthUserService/ChangePassword",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: ChangePasswordRequest): Buffer =>
+      Buffer.from(ChangePasswordRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): ChangePasswordRequest => ChangePasswordRequest.decode(value),
+    responseSerialize: (value: Empty): Buffer => Buffer.from(Empty.encode(value).finish()),
+    responseDeserialize: (value: Buffer): Empty => Empty.decode(value),
+  },
+  deleteAccount: {
+    path: "/auth_user.v1.AuthUserService/DeleteAccount",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: DeleteAccountRequest): Buffer => Buffer.from(DeleteAccountRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): DeleteAccountRequest => DeleteAccountRequest.decode(value),
+    responseSerialize: (value: Empty): Buffer => Buffer.from(Empty.encode(value).finish()),
+    responseDeserialize: (value: Buffer): Empty => Empty.decode(value),
+  },
 } as const;
 
 export interface AuthUserServiceServer extends UntypedServiceImplementation {
@@ -2643,6 +3843,10 @@ export interface AuthUserServiceServer extends UntypedServiceImplementation {
   refreshToken: handleUnaryCall<RefreshTokenRequest, RefreshTokenResponse>;
   profile: handleUnaryCall<UserProfileRequest, UserProfileResponse>;
   updateProfile: handleUnaryCall<UpdateProfileRequest, UpdateProfileResponse>;
+  changeEmail: handleUnaryCall<ChangeEmailRequest, Empty>;
+  verifyNewEmail: handleUnaryCall<VerifyNewEmailRequest, Empty>;
+  changePassword: handleUnaryCall<ChangePasswordRequest, Empty>;
+  deleteAccount: handleUnaryCall<DeleteAccountRequest, Empty>;
 }
 
 export interface AuthUserServiceClient extends Client {
@@ -2796,6 +4000,66 @@ export interface AuthUserServiceClient extends Client {
     options: Partial<CallOptions>,
     callback: (error: ServiceError | null, response: UpdateProfileResponse) => void,
   ): ClientUnaryCall;
+  changeEmail(
+    request: ChangeEmailRequest,
+    callback: (error: ServiceError | null, response: Empty) => void,
+  ): ClientUnaryCall;
+  changeEmail(
+    request: ChangeEmailRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: Empty) => void,
+  ): ClientUnaryCall;
+  changeEmail(
+    request: ChangeEmailRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: Empty) => void,
+  ): ClientUnaryCall;
+  verifyNewEmail(
+    request: VerifyNewEmailRequest,
+    callback: (error: ServiceError | null, response: Empty) => void,
+  ): ClientUnaryCall;
+  verifyNewEmail(
+    request: VerifyNewEmailRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: Empty) => void,
+  ): ClientUnaryCall;
+  verifyNewEmail(
+    request: VerifyNewEmailRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: Empty) => void,
+  ): ClientUnaryCall;
+  changePassword(
+    request: ChangePasswordRequest,
+    callback: (error: ServiceError | null, response: Empty) => void,
+  ): ClientUnaryCall;
+  changePassword(
+    request: ChangePasswordRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: Empty) => void,
+  ): ClientUnaryCall;
+  changePassword(
+    request: ChangePasswordRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: Empty) => void,
+  ): ClientUnaryCall;
+  deleteAccount(
+    request: DeleteAccountRequest,
+    callback: (error: ServiceError | null, response: Empty) => void,
+  ): ClientUnaryCall;
+  deleteAccount(
+    request: DeleteAccountRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: Empty) => void,
+  ): ClientUnaryCall;
+  deleteAccount(
+    request: DeleteAccountRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: Empty) => void,
+  ): ClientUnaryCall;
 }
 
 export const AuthUserServiceClient = makeGenericClientConstructor(
@@ -2848,6 +4112,24 @@ export const AuthAdminServiceService = {
       Buffer.from(UpdateProfileResponse.encode(value).finish()),
     responseDeserialize: (value: Buffer): UpdateProfileResponse => UpdateProfileResponse.decode(value),
   },
+  listUsers: {
+    path: "/auth_user.v1.AuthAdminService/ListUsers",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: ListUsersRequest): Buffer => Buffer.from(ListUsersRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): ListUsersRequest => ListUsersRequest.decode(value),
+    responseSerialize: (value: ListUsersResponse): Buffer => Buffer.from(ListUsersResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): ListUsersResponse => ListUsersResponse.decode(value),
+  },
+  blockUser: {
+    path: "/auth_user.v1.AuthAdminService/BlockUser",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: BlockUserRequest): Buffer => Buffer.from(BlockUserRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): BlockUserRequest => BlockUserRequest.decode(value),
+    responseSerialize: (value: Empty): Buffer => Buffer.from(Empty.encode(value).finish()),
+    responseDeserialize: (value: Buffer): Empty => Empty.decode(value),
+  },
 } as const;
 
 export interface AuthAdminServiceServer extends UntypedServiceImplementation {
@@ -2855,6 +4137,8 @@ export interface AuthAdminServiceServer extends UntypedServiceImplementation {
   refreshToken: handleUnaryCall<RefreshTokenRequest, RefreshTokenResponse>;
   profile: handleUnaryCall<AdminProfileRequest, AdminProfileResponse>;
   updateProfile: handleUnaryCall<UpdateProfileRequest, UpdateProfileResponse>;
+  listUsers: handleUnaryCall<ListUsersRequest, ListUsersResponse>;
+  blockUser: handleUnaryCall<BlockUserRequest, Empty>;
 }
 
 export interface AuthAdminServiceClient extends Client {
@@ -2917,6 +4201,36 @@ export interface AuthAdminServiceClient extends Client {
     metadata: Metadata,
     options: Partial<CallOptions>,
     callback: (error: ServiceError | null, response: UpdateProfileResponse) => void,
+  ): ClientUnaryCall;
+  listUsers(
+    request: ListUsersRequest,
+    callback: (error: ServiceError | null, response: ListUsersResponse) => void,
+  ): ClientUnaryCall;
+  listUsers(
+    request: ListUsersRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: ListUsersResponse) => void,
+  ): ClientUnaryCall;
+  listUsers(
+    request: ListUsersRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: ListUsersResponse) => void,
+  ): ClientUnaryCall;
+  blockUser(
+    request: BlockUserRequest,
+    callback: (error: ServiceError | null, response: Empty) => void,
+  ): ClientUnaryCall;
+  blockUser(
+    request: BlockUserRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: Empty) => void,
+  ): ClientUnaryCall;
+  blockUser(
+    request: BlockUserRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: Empty) => void,
   ): ClientUnaryCall;
 }
 

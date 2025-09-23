@@ -1,0 +1,108 @@
+syntax = "proto3";
+
+package code_manage.v1;
+
+import "google/protobuf/empty.proto";
+
+
+enum Language {
+  LANGUAGE_UNSPECIFIED = 0;
+  JAVASCRIPT = 1;
+  PYTHON = 2;
+  GO = 3;
+}
+
+message TestCase {
+    string _id = 1;
+    string input = 2;
+    string output = 3;
+}
+
+message Stats {
+    int32 totalTestCase = 1;
+    int32 passedTestCase = 2;
+    int32 failedTestCase = 3;
+}
+
+message FailedTestCase {
+    int32 index = 1;
+    string input = 2;
+    string output = 3;
+    string expectedOutput = 4;
+}
+
+message ExecutionResult {
+    Stats stats = 1;
+    optional FailedTestCase failedTestCase = 2;
+}
+
+service CodeManageService {
+    rpc SubmitCodeExec(SubmitCodeExecRequest) returns (SubmitCodeExecResponse);
+    rpc RunCodeExec(RunCodeExecRequest) returns (google.protobuf.Empty);
+    rpc CustomCodeExec(CustomCodeExecRequest) returns (google.protobuf.Empty);
+    rpc SubmitCodeResult(SubmitCodeResultRequest) returns (SubmitCodeResultResponse);
+    rpc RunCodeResult(RunCodeResultRequest) returns (RunCodeResultResponse);
+    rpc CustomCodeResult(CustomCodeResultRequest) returns (CustomCodeResultResponse);
+}
+
+message SubmitCodeExecRequest{
+    string problemId = 1;
+    string userId = 2;
+    optional string country = 3;
+    string userCode = 4;
+    Language language = 5;
+}
+
+message SubmitCodeExecResponse{ 
+    string submissionId = 1;
+}
+
+message RunCodeExecRequest {
+    string problemId = 1;
+    string tempId = 2;
+    Language language = 3;
+    string userCode = 4;
+    repeated TestCase testCases = 5;
+}
+
+message CustomCodeExecRequest {
+    string tempId = 1;
+    string userCode = 2;
+    Language language = 3;
+}
+
+message SubmitCodeResultRequest {
+    string userId = 1;
+    string submissionId = 2;
+    string problemId = 3;
+}
+
+message SubmitCodeResultResponse {
+    ExecutionResult executionResult = 1;
+    int32 executionTime = 2;
+    int32 memoryUsage = 3;
+    string status = 4;
+}
+
+message RunCodeResultRequest {
+    string tempId = 1;
+    string problemId = 2;
+}
+
+message RunCodeResultResponse {
+    ExecutionResult executionResult = 1;
+    int32 executionTime = 2;
+    int32 memoryUsage = 3;
+    string status = 4;
+    optional string stdOut = 5;
+}
+
+message CustomCodeResultRequest {
+    string tempId = 1;
+}
+
+message CustomCodeResultResponse{
+    int32 executionTime = 2;
+    int32 memoryUsage = 3;
+    string stdOut = 5;
+}

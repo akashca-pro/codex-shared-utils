@@ -46,6 +46,7 @@ message SignupResponse {
 
 message ResendOtpRequest {
   string email = 1;
+  string otpType = 2;
 }
 
 message ResendOtpResponse {

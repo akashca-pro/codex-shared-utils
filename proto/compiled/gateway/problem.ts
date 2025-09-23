@@ -26,6 +26,7 @@ export enum Language {
   LANGUAGE_UNSPECIFIED = 0,
   JAVASCRIPT = 1,
   PYTHON = 2,
+  GO = 3,
   UNRECOGNIZED = -1,
 }
 
@@ -40,6 +41,9 @@ export function languageFromJSON(object: any): Language {
     case 2:
     case "PYTHON":
       return Language.PYTHON;
+    case 3:
+    case "GO":
+      return Language.GO;
     case -1:
     case "UNRECOGNIZED":
     default:
@@ -55,6 +59,8 @@ export function languageToJSON(object: Language): string {
       return "JAVASCRIPT";
     case Language.PYTHON:
       return "PYTHON";
+    case Language.GO:
+      return "GO";
     case Language.UNRECOGNIZED:
     default:
       return "UNRECOGNIZED";
@@ -177,6 +183,12 @@ export interface SolutionCode {
   memoryTaken: number;
 }
 
+export interface TemplateCode {
+  Id?: string | undefined;
+  language: Language;
+  wrappedCode: string;
+}
+
 export interface UpdateSolutionCode {
   language?: Language | undefined;
   code?: string | undefined;
@@ -197,6 +209,7 @@ export interface Problem {
   examples: Example[];
   active: boolean;
   solutionCodes: SolutionCode[];
+  templateCode: TemplateCode[];
   createdAt: string;
   updatedAt: string;
 }
@@ -305,6 +318,27 @@ export interface UpdateSolutionCodeRequest {
 export interface RemoveSolutionCodeRequest {
   Id: string;
   solutionCodeId: string;
+}
+
+export interface AddTemplateCodeRequest {
+  Id: string;
+  templateCode?: TemplateCode | undefined;
+}
+
+export interface UpdateTemplateCode {
+  language?: Language | undefined;
+  wrappedCode?: string | undefined;
+}
+
+export interface UpdateTemplateCodeRequest {
+  Id: string;
+  templateCodeId: string;
+  updatedTemplateCode?: UpdateTemplateCode | undefined;
+}
+
+export interface RemoveTemplateCodeRequest {
+  Id: string;
+  templateCodeId: string;
 }
 
 export interface CheckQuestionIdRequest {
@@ -880,6 +914,98 @@ export const SolutionCode: MessageFns<SolutionCode> = {
   },
 };
 
+function createBaseTemplateCode(): TemplateCode {
+  return { Id: undefined, language: 0, wrappedCode: "" };
+}
+
+export const TemplateCode: MessageFns<TemplateCode> = {
+  encode(message: TemplateCode, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.Id !== undefined) {
+      writer.uint32(10).string(message.Id);
+    }
+    if (message.language !== 0) {
+      writer.uint32(16).int32(message.language);
+    }
+    if (message.wrappedCode !== "") {
+      writer.uint32(26).string(message.wrappedCode);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): TemplateCode {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseTemplateCode();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.Id = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 16) {
+            break;
+          }
+
+          message.language = reader.int32() as any;
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.wrappedCode = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): TemplateCode {
+    return {
+      Id: isSet(object.Id) ? globalThis.String(object.Id) : undefined,
+      language: isSet(object.language) ? languageFromJSON(object.language) : 0,
+      wrappedCode: isSet(object.wrappedCode) ? globalThis.String(object.wrappedCode) : "",
+    };
+  },
+
+  toJSON(message: TemplateCode): unknown {
+    const obj: any = {};
+    if (message.Id !== undefined) {
+      obj.Id = message.Id;
+    }
+    if (message.language !== 0) {
+      obj.language = languageToJSON(message.language);
+    }
+    if (message.wrappedCode !== "") {
+      obj.wrappedCode = message.wrappedCode;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<TemplateCode>, I>>(base?: I): TemplateCode {
+    return TemplateCode.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<TemplateCode>, I>>(object: I): TemplateCode {
+    const message = createBaseTemplateCode();
+    message.Id = object.Id ?? undefined;
+    message.language = object.language ?? 0;
+    message.wrappedCode = object.wrappedCode ?? "";
+    return message;
+  },
+};
+
 function createBaseUpdateSolutionCode(): UpdateSolutionCode {
   return { language: undefined, code: undefined, executionTime: undefined, memoryTaken: undefined };
 }
@@ -1002,6 +1128,7 @@ function createBaseProblem(): Problem {
     examples: [],
     active: false,
     solutionCodes: [],
+    templateCode: [],
     createdAt: "",
     updatedAt: "",
   };
@@ -1045,11 +1172,14 @@ export const Problem: MessageFns<Problem> = {
     for (const v of message.solutionCodes) {
       SolutionCode.encode(v!, writer.uint32(98).fork()).join();
     }
+    for (const v of message.templateCode) {
+      TemplateCode.encode(v!, writer.uint32(106).fork()).join();
+    }
     if (message.createdAt !== "") {
-      writer.uint32(106).string(message.createdAt);
+      writer.uint32(114).string(message.createdAt);
     }
     if (message.updatedAt !== "") {
-      writer.uint32(114).string(message.updatedAt);
+      writer.uint32(122).string(message.updatedAt);
     }
     return writer;
   },
@@ -1162,11 +1292,19 @@ export const Problem: MessageFns<Problem> = {
             break;
           }
 
-          message.createdAt = reader.string();
+          message.templateCode.push(TemplateCode.decode(reader, reader.uint32()));
           continue;
         }
         case 14: {
           if (tag !== 114) {
+            break;
+          }
+
+          message.createdAt = reader.string();
+          continue;
+        }
+        case 15: {
+          if (tag !== 122) {
             break;
           }
 
@@ -1203,6 +1341,9 @@ export const Problem: MessageFns<Problem> = {
       active: isSet(object.active) ? globalThis.Boolean(object.active) : false,
       solutionCodes: globalThis.Array.isArray(object?.solutionCodes)
         ? object.solutionCodes.map((e: any) => SolutionCode.fromJSON(e))
+        : [],
+      templateCode: globalThis.Array.isArray(object?.templateCode)
+        ? object.templateCode.map((e: any) => TemplateCode.fromJSON(e))
         : [],
       createdAt: isSet(object.createdAt) ? globalThis.String(object.createdAt) : "",
       updatedAt: isSet(object.updatedAt) ? globalThis.String(object.updatedAt) : "",
@@ -1247,6 +1388,9 @@ export const Problem: MessageFns<Problem> = {
     if (message.solutionCodes?.length) {
       obj.solutionCodes = message.solutionCodes.map((e) => SolutionCode.toJSON(e));
     }
+    if (message.templateCode?.length) {
+      obj.templateCode = message.templateCode.map((e) => TemplateCode.toJSON(e));
+    }
     if (message.createdAt !== "") {
       obj.createdAt = message.createdAt;
     }
@@ -1275,6 +1419,7 @@ export const Problem: MessageFns<Problem> = {
     message.examples = object.examples?.map((e) => Example.fromPartial(e)) || [];
     message.active = object.active ?? false;
     message.solutionCodes = object.solutionCodes?.map((e) => SolutionCode.fromPartial(e)) || [];
+    message.templateCode = object.templateCode?.map((e) => TemplateCode.fromPartial(e)) || [];
     message.createdAt = object.createdAt ?? "";
     message.updatedAt = object.updatedAt ?? "";
     return message;
@@ -2968,6 +3113,332 @@ export const RemoveSolutionCodeRequest: MessageFns<RemoveSolutionCodeRequest> = 
   },
 };
 
+function createBaseAddTemplateCodeRequest(): AddTemplateCodeRequest {
+  return { Id: "", templateCode: undefined };
+}
+
+export const AddTemplateCodeRequest: MessageFns<AddTemplateCodeRequest> = {
+  encode(message: AddTemplateCodeRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.Id !== "") {
+      writer.uint32(10).string(message.Id);
+    }
+    if (message.templateCode !== undefined) {
+      TemplateCode.encode(message.templateCode, writer.uint32(18).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): AddTemplateCodeRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseAddTemplateCodeRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.Id = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.templateCode = TemplateCode.decode(reader, reader.uint32());
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): AddTemplateCodeRequest {
+    return {
+      Id: isSet(object.Id) ? globalThis.String(object.Id) : "",
+      templateCode: isSet(object.templateCode) ? TemplateCode.fromJSON(object.templateCode) : undefined,
+    };
+  },
+
+  toJSON(message: AddTemplateCodeRequest): unknown {
+    const obj: any = {};
+    if (message.Id !== "") {
+      obj.Id = message.Id;
+    }
+    if (message.templateCode !== undefined) {
+      obj.templateCode = TemplateCode.toJSON(message.templateCode);
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<AddTemplateCodeRequest>, I>>(base?: I): AddTemplateCodeRequest {
+    return AddTemplateCodeRequest.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<AddTemplateCodeRequest>, I>>(object: I): AddTemplateCodeRequest {
+    const message = createBaseAddTemplateCodeRequest();
+    message.Id = object.Id ?? "";
+    message.templateCode = (object.templateCode !== undefined && object.templateCode !== null)
+      ? TemplateCode.fromPartial(object.templateCode)
+      : undefined;
+    return message;
+  },
+};
+
+function createBaseUpdateTemplateCode(): UpdateTemplateCode {
+  return { language: undefined, wrappedCode: undefined };
+}
+
+export const UpdateTemplateCode: MessageFns<UpdateTemplateCode> = {
+  encode(message: UpdateTemplateCode, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.language !== undefined) {
+      writer.uint32(8).int32(message.language);
+    }
+    if (message.wrappedCode !== undefined) {
+      writer.uint32(18).string(message.wrappedCode);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): UpdateTemplateCode {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseUpdateTemplateCode();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 8) {
+            break;
+          }
+
+          message.language = reader.int32() as any;
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.wrappedCode = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): UpdateTemplateCode {
+    return {
+      language: isSet(object.language) ? languageFromJSON(object.language) : undefined,
+      wrappedCode: isSet(object.wrappedCode) ? globalThis.String(object.wrappedCode) : undefined,
+    };
+  },
+
+  toJSON(message: UpdateTemplateCode): unknown {
+    const obj: any = {};
+    if (message.language !== undefined) {
+      obj.language = languageToJSON(message.language);
+    }
+    if (message.wrappedCode !== undefined) {
+      obj.wrappedCode = message.wrappedCode;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<UpdateTemplateCode>, I>>(base?: I): UpdateTemplateCode {
+    return UpdateTemplateCode.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<UpdateTemplateCode>, I>>(object: I): UpdateTemplateCode {
+    const message = createBaseUpdateTemplateCode();
+    message.language = object.language ?? undefined;
+    message.wrappedCode = object.wrappedCode ?? undefined;
+    return message;
+  },
+};
+
+function createBaseUpdateTemplateCodeRequest(): UpdateTemplateCodeRequest {
+  return { Id: "", templateCodeId: "", updatedTemplateCode: undefined };
+}
+
+export const UpdateTemplateCodeRequest: MessageFns<UpdateTemplateCodeRequest> = {
+  encode(message: UpdateTemplateCodeRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.Id !== "") {
+      writer.uint32(10).string(message.Id);
+    }
+    if (message.templateCodeId !== "") {
+      writer.uint32(18).string(message.templateCodeId);
+    }
+    if (message.updatedTemplateCode !== undefined) {
+      UpdateTemplateCode.encode(message.updatedTemplateCode, writer.uint32(26).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): UpdateTemplateCodeRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseUpdateTemplateCodeRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.Id = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.templateCodeId = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.updatedTemplateCode = UpdateTemplateCode.decode(reader, reader.uint32());
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): UpdateTemplateCodeRequest {
+    return {
+      Id: isSet(object.Id) ? globalThis.String(object.Id) : "",
+      templateCodeId: isSet(object.templateCodeId) ? globalThis.String(object.templateCodeId) : "",
+      updatedTemplateCode: isSet(object.updatedTemplateCode)
+        ? UpdateTemplateCode.fromJSON(object.updatedTemplateCode)
+        : undefined,
+    };
+  },
+
+  toJSON(message: UpdateTemplateCodeRequest): unknown {
+    const obj: any = {};
+    if (message.Id !== "") {
+      obj.Id = message.Id;
+    }
+    if (message.templateCodeId !== "") {
+      obj.templateCodeId = message.templateCodeId;
+    }
+    if (message.updatedTemplateCode !== undefined) {
+      obj.updatedTemplateCode = UpdateTemplateCode.toJSON(message.updatedTemplateCode);
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<UpdateTemplateCodeRequest>, I>>(base?: I): UpdateTemplateCodeRequest {
+    return UpdateTemplateCodeRequest.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<UpdateTemplateCodeRequest>, I>>(object: I): UpdateTemplateCodeRequest {
+    const message = createBaseUpdateTemplateCodeRequest();
+    message.Id = object.Id ?? "";
+    message.templateCodeId = object.templateCodeId ?? "";
+    message.updatedTemplateCode = (object.updatedTemplateCode !== undefined && object.updatedTemplateCode !== null)
+      ? UpdateTemplateCode.fromPartial(object.updatedTemplateCode)
+      : undefined;
+    return message;
+  },
+};
+
+function createBaseRemoveTemplateCodeRequest(): RemoveTemplateCodeRequest {
+  return { Id: "", templateCodeId: "" };
+}
+
+export const RemoveTemplateCodeRequest: MessageFns<RemoveTemplateCodeRequest> = {
+  encode(message: RemoveTemplateCodeRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.Id !== "") {
+      writer.uint32(10).string(message.Id);
+    }
+    if (message.templateCodeId !== "") {
+      writer.uint32(18).string(message.templateCodeId);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): RemoveTemplateCodeRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseRemoveTemplateCodeRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.Id = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.templateCodeId = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): RemoveTemplateCodeRequest {
+    return {
+      Id: isSet(object.Id) ? globalThis.String(object.Id) : "",
+      templateCodeId: isSet(object.templateCodeId) ? globalThis.String(object.templateCodeId) : "",
+    };
+  },
+
+  toJSON(message: RemoveTemplateCodeRequest): unknown {
+    const obj: any = {};
+    if (message.Id !== "") {
+      obj.Id = message.Id;
+    }
+    if (message.templateCodeId !== "") {
+      obj.templateCodeId = message.templateCodeId;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<RemoveTemplateCodeRequest>, I>>(base?: I): RemoveTemplateCodeRequest {
+    return RemoveTemplateCodeRequest.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<RemoveTemplateCodeRequest>, I>>(object: I): RemoveTemplateCodeRequest {
+    const message = createBaseRemoveTemplateCodeRequest();
+    message.Id = object.Id ?? "";
+    message.templateCodeId = object.templateCodeId ?? "";
+    return message;
+  },
+};
+
 function createBaseCheckQuestionIdRequest(): CheckQuestionIdRequest {
   return { questionId: "" };
 }
@@ -4364,6 +4835,36 @@ export const ProblemServiceService = {
     responseSerialize: (value: Empty): Buffer => Buffer.from(Empty.encode(value).finish()),
     responseDeserialize: (value: Buffer): Empty => Empty.decode(value),
   },
+  addTemplateCode: {
+    path: "/problem.v1.ProblemService/AddTemplateCode",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: AddTemplateCodeRequest): Buffer =>
+      Buffer.from(AddTemplateCodeRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): AddTemplateCodeRequest => AddTemplateCodeRequest.decode(value),
+    responseSerialize: (value: Empty): Buffer => Buffer.from(Empty.encode(value).finish()),
+    responseDeserialize: (value: Buffer): Empty => Empty.decode(value),
+  },
+  updateTemplateCode: {
+    path: "/problem.v1.ProblemService/UpdateTemplateCode",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: UpdateTemplateCodeRequest): Buffer =>
+      Buffer.from(UpdateTemplateCodeRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): UpdateTemplateCodeRequest => UpdateTemplateCodeRequest.decode(value),
+    responseSerialize: (value: Empty): Buffer => Buffer.from(Empty.encode(value).finish()),
+    responseDeserialize: (value: Buffer): Empty => Empty.decode(value),
+  },
+  removeTemplateCode: {
+    path: "/problem.v1.ProblemService/RemoveTemplateCode",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: RemoveTemplateCodeRequest): Buffer =>
+      Buffer.from(RemoveTemplateCodeRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): RemoveTemplateCodeRequest => RemoveTemplateCodeRequest.decode(value),
+    responseSerialize: (value: Empty): Buffer => Buffer.from(Empty.encode(value).finish()),
+    responseDeserialize: (value: Buffer): Empty => Empty.decode(value),
+  },
   checkQuestionIdAvailability: {
     path: "/problem.v1.ProblemService/CheckQuestionIdAvailability",
     requestStream: false,
@@ -4398,6 +4899,9 @@ export interface ProblemServiceServer extends UntypedServiceImplementation {
   addSolutionCode: handleUnaryCall<AddSolutionCodeRequest, Empty>;
   updateSolutionCode: handleUnaryCall<UpdateSolutionCodeRequest, Empty>;
   removeSolutionCode: handleUnaryCall<RemoveSolutionCodeRequest, Empty>;
+  addTemplateCode: handleUnaryCall<AddTemplateCodeRequest, Empty>;
+  updateTemplateCode: handleUnaryCall<UpdateTemplateCodeRequest, Empty>;
+  removeTemplateCode: handleUnaryCall<RemoveTemplateCodeRequest, Empty>;
   checkQuestionIdAvailability: handleUnaryCall<CheckQuestionIdRequest, Empty>;
   checkProblemTitle: handleUnaryCall<CheckProblemTitleRequest, Empty>;
 }
@@ -4564,6 +5068,51 @@ export interface ProblemServiceClient extends Client {
   ): ClientUnaryCall;
   removeSolutionCode(
     request: RemoveSolutionCodeRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: Empty) => void,
+  ): ClientUnaryCall;
+  addTemplateCode(
+    request: AddTemplateCodeRequest,
+    callback: (error: ServiceError | null, response: Empty) => void,
+  ): ClientUnaryCall;
+  addTemplateCode(
+    request: AddTemplateCodeRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: Empty) => void,
+  ): ClientUnaryCall;
+  addTemplateCode(
+    request: AddTemplateCodeRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: Empty) => void,
+  ): ClientUnaryCall;
+  updateTemplateCode(
+    request: UpdateTemplateCodeRequest,
+    callback: (error: ServiceError | null, response: Empty) => void,
+  ): ClientUnaryCall;
+  updateTemplateCode(
+    request: UpdateTemplateCodeRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: Empty) => void,
+  ): ClientUnaryCall;
+  updateTemplateCode(
+    request: UpdateTemplateCodeRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: Empty) => void,
+  ): ClientUnaryCall;
+  removeTemplateCode(
+    request: RemoveTemplateCodeRequest,
+    callback: (error: ServiceError | null, response: Empty) => void,
+  ): ClientUnaryCall;
+  removeTemplateCode(
+    request: RemoveTemplateCodeRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: Empty) => void,
+  ): ClientUnaryCall;
+  removeTemplateCode(
+    request: RemoveTemplateCodeRequest,
     metadata: Metadata,
     options: Partial<CallOptions>,
     callback: (error: ServiceError | null, response: Empty) => void,

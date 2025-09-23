@@ -9,6 +9,7 @@ enum Language {
   LANGUAGE_UNSPECIFIED = 0;
   JAVASCRIPT = 1;
   PYTHON = 2;
+  GO = 3;
 }
 
 enum Difficulty {
@@ -58,6 +59,12 @@ message SolutionCode {
     int32 memoryTaken = 5;
 }
 
+message TemplateCode {
+    optional string _id = 1;
+    Language language = 2;
+    string wrappedCode = 3;
+}
+
 message UpdateSolutionCode {
     optional Language language = 2;
     optional string code = 3;
@@ -80,8 +87,9 @@ message Problem {
     repeated Example examples = 10;
     bool active = 11;
     repeated SolutionCode solutionCodes = 12;
-    string createdAt = 13;
-    string updatedAt = 14;
+    repeated TemplateCode templateCode = 13;
+    string createdAt = 14;
+    string updatedAt = 15;
 }
 
 message ListProblemDetails {
@@ -110,6 +118,9 @@ service ProblemService {
     rpc AddSolutionCode(AddSolutionCodeRequest) returns (google.protobuf.Empty);
     rpc UpdateSolutionCode(UpdateSolutionCodeRequest) returns (google.protobuf.Empty);
     rpc RemoveSolutionCode(RemoveSolutionCodeRequest) returns (google.protobuf.Empty);
+    rpc AddTemplateCode(AddTemplateCodeRequest) returns (google.protobuf.Empty);
+    rpc UpdateTemplateCode(UpdateTemplateCodeRequest) returns (google.protobuf.Empty);
+    rpc RemoveTemplateCode(RemoveTemplateCodeRequest) returns (google.protobuf.Empty);
     rpc CheckQuestionIdAvailability(CheckQuestionIdRequest) returns (google.protobuf.Empty);
     rpc CheckProblemTitle(CheckProblemTitleRequest) returns (google.protobuf.Empty);
 }
@@ -209,6 +220,27 @@ message UpdateSolutionCodeRequest {
 message RemoveSolutionCodeRequest {
     string _id = 1;
     string solutionCodeId = 2;
+}
+
+message AddTemplateCodeRequest {
+    string _id = 1;
+    TemplateCode templateCode = 2;
+}
+
+message UpdateTemplateCode {
+    optional Language language = 1;
+    optional string wrappedCode = 2;
+}
+
+message UpdateTemplateCodeRequest{
+    string _id = 1;
+    string templateCodeId = 2;
+    UpdateTemplateCode updatedTemplateCode = 3;
+}
+
+message RemoveTemplateCodeRequest{
+    string _id = 1;
+    string templateCodeId = 2;
 }
 
 message CheckQuestionIdRequest {

@@ -45,6 +45,7 @@ export interface SignupResponse {
 
 export interface ResendOtpRequest {
   email: string;
+  otpType: string;
 }
 
 export interface ResendOtpResponse {
@@ -565,13 +566,16 @@ export const SignupResponse: MessageFns<SignupResponse> = {
 };
 
 function createBaseResendOtpRequest(): ResendOtpRequest {
-  return { email: "" };
+  return { email: "", otpType: "" };
 }
 
 export const ResendOtpRequest: MessageFns<ResendOtpRequest> = {
   encode(message: ResendOtpRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
     if (message.email !== "") {
       writer.uint32(10).string(message.email);
+    }
+    if (message.otpType !== "") {
+      writer.uint32(18).string(message.otpType);
     }
     return writer;
   },
@@ -591,6 +595,14 @@ export const ResendOtpRequest: MessageFns<ResendOtpRequest> = {
           message.email = reader.string();
           continue;
         }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.otpType = reader.string();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -601,13 +613,19 @@ export const ResendOtpRequest: MessageFns<ResendOtpRequest> = {
   },
 
   fromJSON(object: any): ResendOtpRequest {
-    return { email: isSet(object.email) ? globalThis.String(object.email) : "" };
+    return {
+      email: isSet(object.email) ? globalThis.String(object.email) : "",
+      otpType: isSet(object.otpType) ? globalThis.String(object.otpType) : "",
+    };
   },
 
   toJSON(message: ResendOtpRequest): unknown {
     const obj: any = {};
     if (message.email !== "") {
       obj.email = message.email;
+    }
+    if (message.otpType !== "") {
+      obj.otpType = message.otpType;
     }
     return obj;
   },
@@ -618,6 +636,7 @@ export const ResendOtpRequest: MessageFns<ResendOtpRequest> = {
   fromPartial<I extends Exact<DeepPartial<ResendOtpRequest>, I>>(object: I): ResendOtpRequest {
     const message = createBaseResendOtpRequest();
     message.email = object.email ?? "";
+    message.otpType = object.otpType ?? "";
     return message;
   },
 };

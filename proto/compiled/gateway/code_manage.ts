@@ -18,7 +18,6 @@ import {
   type ServiceError,
   type UntypedServiceImplementation,
 } from "@grpc/grpc-js";
-import { Empty } from "../google/protobuf/empty";
 
 export const protobufPackage = "code_manage.v1";
 
@@ -73,27 +72,10 @@ export interface TestCase {
   output: string;
 }
 
-export interface Stats {
-  totalTestCase: number;
-  passedTestCase: number;
-  failedTestCase: number;
-}
-
-export interface FailedTestCase {
-  index: number;
-  input: string;
-  output: string;
-  expectedOutput: string;
-}
-
-export interface ExecutionResult {
-  stats?: Stats | undefined;
-  failedTestCase?: FailedTestCase | undefined;
-}
-
 export interface SubmitCodeExecRequest {
   problemId: string;
   userId: string;
+  username: string;
   country?: string | undefined;
   userCode: string;
   language: Language;
@@ -105,52 +87,22 @@ export interface SubmitCodeExecResponse {
 
 export interface RunCodeExecRequest {
   problemId: string;
-  tempId: string;
   language: Language;
   userCode: string;
   testCases: TestCase[];
 }
 
-export interface CustomCodeExecRequest {
+export interface RunCodeExecResponse {
   tempId: string;
+}
+
+export interface CustomCodeExecRequest {
   userCode: string;
   language: Language;
 }
 
-export interface SubmitCodeResultRequest {
-  userId: string;
-  submissionId: string;
-  problemId: string;
-}
-
-export interface SubmitCodeResultResponse {
-  executionResult?: ExecutionResult | undefined;
-  executionTime: number;
-  memoryUsage: number;
-  status: string;
-}
-
-export interface RunCodeResultRequest {
+export interface CustomCodeExecResponse {
   tempId: string;
-  problemId: string;
-}
-
-export interface RunCodeResultResponse {
-  executionResult?: ExecutionResult | undefined;
-  executionTime: number;
-  memoryUsage: number;
-  status: string;
-  stdOut?: string | undefined;
-}
-
-export interface CustomCodeResultRequest {
-  tempId: string;
-}
-
-export interface CustomCodeResultResponse {
-  executionTime: number;
-  memoryUsage: number;
-  stdOut: string;
 }
 
 function createBaseTestCase(): TestCase {
@@ -245,286 +197,8 @@ export const TestCase: MessageFns<TestCase> = {
   },
 };
 
-function createBaseStats(): Stats {
-  return { totalTestCase: 0, passedTestCase: 0, failedTestCase: 0 };
-}
-
-export const Stats: MessageFns<Stats> = {
-  encode(message: Stats, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.totalTestCase !== 0) {
-      writer.uint32(8).int32(message.totalTestCase);
-    }
-    if (message.passedTestCase !== 0) {
-      writer.uint32(16).int32(message.passedTestCase);
-    }
-    if (message.failedTestCase !== 0) {
-      writer.uint32(24).int32(message.failedTestCase);
-    }
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): Stats {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseStats();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1: {
-          if (tag !== 8) {
-            break;
-          }
-
-          message.totalTestCase = reader.int32();
-          continue;
-        }
-        case 2: {
-          if (tag !== 16) {
-            break;
-          }
-
-          message.passedTestCase = reader.int32();
-          continue;
-        }
-        case 3: {
-          if (tag !== 24) {
-            break;
-          }
-
-          message.failedTestCase = reader.int32();
-          continue;
-        }
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
-
-  fromJSON(object: any): Stats {
-    return {
-      totalTestCase: isSet(object.totalTestCase) ? globalThis.Number(object.totalTestCase) : 0,
-      passedTestCase: isSet(object.passedTestCase) ? globalThis.Number(object.passedTestCase) : 0,
-      failedTestCase: isSet(object.failedTestCase) ? globalThis.Number(object.failedTestCase) : 0,
-    };
-  },
-
-  toJSON(message: Stats): unknown {
-    const obj: any = {};
-    if (message.totalTestCase !== 0) {
-      obj.totalTestCase = Math.round(message.totalTestCase);
-    }
-    if (message.passedTestCase !== 0) {
-      obj.passedTestCase = Math.round(message.passedTestCase);
-    }
-    if (message.failedTestCase !== 0) {
-      obj.failedTestCase = Math.round(message.failedTestCase);
-    }
-    return obj;
-  },
-
-  create<I extends Exact<DeepPartial<Stats>, I>>(base?: I): Stats {
-    return Stats.fromPartial(base ?? ({} as any));
-  },
-  fromPartial<I extends Exact<DeepPartial<Stats>, I>>(object: I): Stats {
-    const message = createBaseStats();
-    message.totalTestCase = object.totalTestCase ?? 0;
-    message.passedTestCase = object.passedTestCase ?? 0;
-    message.failedTestCase = object.failedTestCase ?? 0;
-    return message;
-  },
-};
-
-function createBaseFailedTestCase(): FailedTestCase {
-  return { index: 0, input: "", output: "", expectedOutput: "" };
-}
-
-export const FailedTestCase: MessageFns<FailedTestCase> = {
-  encode(message: FailedTestCase, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.index !== 0) {
-      writer.uint32(8).int32(message.index);
-    }
-    if (message.input !== "") {
-      writer.uint32(18).string(message.input);
-    }
-    if (message.output !== "") {
-      writer.uint32(26).string(message.output);
-    }
-    if (message.expectedOutput !== "") {
-      writer.uint32(34).string(message.expectedOutput);
-    }
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): FailedTestCase {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseFailedTestCase();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1: {
-          if (tag !== 8) {
-            break;
-          }
-
-          message.index = reader.int32();
-          continue;
-        }
-        case 2: {
-          if (tag !== 18) {
-            break;
-          }
-
-          message.input = reader.string();
-          continue;
-        }
-        case 3: {
-          if (tag !== 26) {
-            break;
-          }
-
-          message.output = reader.string();
-          continue;
-        }
-        case 4: {
-          if (tag !== 34) {
-            break;
-          }
-
-          message.expectedOutput = reader.string();
-          continue;
-        }
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
-
-  fromJSON(object: any): FailedTestCase {
-    return {
-      index: isSet(object.index) ? globalThis.Number(object.index) : 0,
-      input: isSet(object.input) ? globalThis.String(object.input) : "",
-      output: isSet(object.output) ? globalThis.String(object.output) : "",
-      expectedOutput: isSet(object.expectedOutput) ? globalThis.String(object.expectedOutput) : "",
-    };
-  },
-
-  toJSON(message: FailedTestCase): unknown {
-    const obj: any = {};
-    if (message.index !== 0) {
-      obj.index = Math.round(message.index);
-    }
-    if (message.input !== "") {
-      obj.input = message.input;
-    }
-    if (message.output !== "") {
-      obj.output = message.output;
-    }
-    if (message.expectedOutput !== "") {
-      obj.expectedOutput = message.expectedOutput;
-    }
-    return obj;
-  },
-
-  create<I extends Exact<DeepPartial<FailedTestCase>, I>>(base?: I): FailedTestCase {
-    return FailedTestCase.fromPartial(base ?? ({} as any));
-  },
-  fromPartial<I extends Exact<DeepPartial<FailedTestCase>, I>>(object: I): FailedTestCase {
-    const message = createBaseFailedTestCase();
-    message.index = object.index ?? 0;
-    message.input = object.input ?? "";
-    message.output = object.output ?? "";
-    message.expectedOutput = object.expectedOutput ?? "";
-    return message;
-  },
-};
-
-function createBaseExecutionResult(): ExecutionResult {
-  return { stats: undefined, failedTestCase: undefined };
-}
-
-export const ExecutionResult: MessageFns<ExecutionResult> = {
-  encode(message: ExecutionResult, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.stats !== undefined) {
-      Stats.encode(message.stats, writer.uint32(10).fork()).join();
-    }
-    if (message.failedTestCase !== undefined) {
-      FailedTestCase.encode(message.failedTestCase, writer.uint32(18).fork()).join();
-    }
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): ExecutionResult {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseExecutionResult();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1: {
-          if (tag !== 10) {
-            break;
-          }
-
-          message.stats = Stats.decode(reader, reader.uint32());
-          continue;
-        }
-        case 2: {
-          if (tag !== 18) {
-            break;
-          }
-
-          message.failedTestCase = FailedTestCase.decode(reader, reader.uint32());
-          continue;
-        }
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
-
-  fromJSON(object: any): ExecutionResult {
-    return {
-      stats: isSet(object.stats) ? Stats.fromJSON(object.stats) : undefined,
-      failedTestCase: isSet(object.failedTestCase) ? FailedTestCase.fromJSON(object.failedTestCase) : undefined,
-    };
-  },
-
-  toJSON(message: ExecutionResult): unknown {
-    const obj: any = {};
-    if (message.stats !== undefined) {
-      obj.stats = Stats.toJSON(message.stats);
-    }
-    if (message.failedTestCase !== undefined) {
-      obj.failedTestCase = FailedTestCase.toJSON(message.failedTestCase);
-    }
-    return obj;
-  },
-
-  create<I extends Exact<DeepPartial<ExecutionResult>, I>>(base?: I): ExecutionResult {
-    return ExecutionResult.fromPartial(base ?? ({} as any));
-  },
-  fromPartial<I extends Exact<DeepPartial<ExecutionResult>, I>>(object: I): ExecutionResult {
-    const message = createBaseExecutionResult();
-    message.stats = (object.stats !== undefined && object.stats !== null) ? Stats.fromPartial(object.stats) : undefined;
-    message.failedTestCase = (object.failedTestCase !== undefined && object.failedTestCase !== null)
-      ? FailedTestCase.fromPartial(object.failedTestCase)
-      : undefined;
-    return message;
-  },
-};
-
 function createBaseSubmitCodeExecRequest(): SubmitCodeExecRequest {
-  return { problemId: "", userId: "", country: undefined, userCode: "", language: 0 };
+  return { problemId: "", userId: "", username: "", country: undefined, userCode: "", language: 0 };
 }
 
 export const SubmitCodeExecRequest: MessageFns<SubmitCodeExecRequest> = {
@@ -535,14 +209,17 @@ export const SubmitCodeExecRequest: MessageFns<SubmitCodeExecRequest> = {
     if (message.userId !== "") {
       writer.uint32(18).string(message.userId);
     }
+    if (message.username !== "") {
+      writer.uint32(26).string(message.username);
+    }
     if (message.country !== undefined) {
-      writer.uint32(26).string(message.country);
+      writer.uint32(34).string(message.country);
     }
     if (message.userCode !== "") {
-      writer.uint32(34).string(message.userCode);
+      writer.uint32(42).string(message.userCode);
     }
     if (message.language !== 0) {
-      writer.uint32(40).int32(message.language);
+      writer.uint32(48).int32(message.language);
     }
     return writer;
   },
@@ -575,7 +252,7 @@ export const SubmitCodeExecRequest: MessageFns<SubmitCodeExecRequest> = {
             break;
           }
 
-          message.country = reader.string();
+          message.username = reader.string();
           continue;
         }
         case 4: {
@@ -583,11 +260,19 @@ export const SubmitCodeExecRequest: MessageFns<SubmitCodeExecRequest> = {
             break;
           }
 
-          message.userCode = reader.string();
+          message.country = reader.string();
           continue;
         }
         case 5: {
-          if (tag !== 40) {
+          if (tag !== 42) {
+            break;
+          }
+
+          message.userCode = reader.string();
+          continue;
+        }
+        case 6: {
+          if (tag !== 48) {
             break;
           }
 
@@ -607,6 +292,7 @@ export const SubmitCodeExecRequest: MessageFns<SubmitCodeExecRequest> = {
     return {
       problemId: isSet(object.problemId) ? globalThis.String(object.problemId) : "",
       userId: isSet(object.userId) ? globalThis.String(object.userId) : "",
+      username: isSet(object.username) ? globalThis.String(object.username) : "",
       country: isSet(object.country) ? globalThis.String(object.country) : undefined,
       userCode: isSet(object.userCode) ? globalThis.String(object.userCode) : "",
       language: isSet(object.language) ? languageFromJSON(object.language) : 0,
@@ -620,6 +306,9 @@ export const SubmitCodeExecRequest: MessageFns<SubmitCodeExecRequest> = {
     }
     if (message.userId !== "") {
       obj.userId = message.userId;
+    }
+    if (message.username !== "") {
+      obj.username = message.username;
     }
     if (message.country !== undefined) {
       obj.country = message.country;
@@ -640,6 +329,7 @@ export const SubmitCodeExecRequest: MessageFns<SubmitCodeExecRequest> = {
     const message = createBaseSubmitCodeExecRequest();
     message.problemId = object.problemId ?? "";
     message.userId = object.userId ?? "";
+    message.username = object.username ?? "";
     message.country = object.country ?? undefined;
     message.userCode = object.userCode ?? "";
     message.language = object.language ?? 0;
@@ -706,16 +396,13 @@ export const SubmitCodeExecResponse: MessageFns<SubmitCodeExecResponse> = {
 };
 
 function createBaseRunCodeExecRequest(): RunCodeExecRequest {
-  return { problemId: "", tempId: "", language: 0, userCode: "", testCases: [] };
+  return { problemId: "", language: 0, userCode: "", testCases: [] };
 }
 
 export const RunCodeExecRequest: MessageFns<RunCodeExecRequest> = {
   encode(message: RunCodeExecRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
     if (message.problemId !== "") {
       writer.uint32(10).string(message.problemId);
-    }
-    if (message.tempId !== "") {
-      writer.uint32(18).string(message.tempId);
     }
     if (message.language !== 0) {
       writer.uint32(24).int32(message.language);
@@ -742,14 +429,6 @@ export const RunCodeExecRequest: MessageFns<RunCodeExecRequest> = {
           }
 
           message.problemId = reader.string();
-          continue;
-        }
-        case 2: {
-          if (tag !== 18) {
-            break;
-          }
-
-          message.tempId = reader.string();
           continue;
         }
         case 3: {
@@ -788,7 +467,6 @@ export const RunCodeExecRequest: MessageFns<RunCodeExecRequest> = {
   fromJSON(object: any): RunCodeExecRequest {
     return {
       problemId: isSet(object.problemId) ? globalThis.String(object.problemId) : "",
-      tempId: isSet(object.tempId) ? globalThis.String(object.tempId) : "",
       language: isSet(object.language) ? languageFromJSON(object.language) : 0,
       userCode: isSet(object.userCode) ? globalThis.String(object.userCode) : "",
       testCases: globalThis.Array.isArray(object?.testCases)
@@ -801,9 +479,6 @@ export const RunCodeExecRequest: MessageFns<RunCodeExecRequest> = {
     const obj: any = {};
     if (message.problemId !== "") {
       obj.problemId = message.problemId;
-    }
-    if (message.tempId !== "") {
-      obj.tempId = message.tempId;
     }
     if (message.language !== 0) {
       obj.language = languageToJSON(message.language);
@@ -823,7 +498,6 @@ export const RunCodeExecRequest: MessageFns<RunCodeExecRequest> = {
   fromPartial<I extends Exact<DeepPartial<RunCodeExecRequest>, I>>(object: I): RunCodeExecRequest {
     const message = createBaseRunCodeExecRequest();
     message.problemId = object.problemId ?? "";
-    message.tempId = object.tempId ?? "";
     message.language = object.language ?? 0;
     message.userCode = object.userCode ?? "";
     message.testCases = object.testCases?.map((e) => TestCase.fromPartial(e)) || [];
@@ -831,15 +505,70 @@ export const RunCodeExecRequest: MessageFns<RunCodeExecRequest> = {
   },
 };
 
+function createBaseRunCodeExecResponse(): RunCodeExecResponse {
+  return { tempId: "" };
+}
+
+export const RunCodeExecResponse: MessageFns<RunCodeExecResponse> = {
+  encode(message: RunCodeExecResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.tempId !== "") {
+      writer.uint32(10).string(message.tempId);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): RunCodeExecResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseRunCodeExecResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.tempId = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): RunCodeExecResponse {
+    return { tempId: isSet(object.tempId) ? globalThis.String(object.tempId) : "" };
+  },
+
+  toJSON(message: RunCodeExecResponse): unknown {
+    const obj: any = {};
+    if (message.tempId !== "") {
+      obj.tempId = message.tempId;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<RunCodeExecResponse>, I>>(base?: I): RunCodeExecResponse {
+    return RunCodeExecResponse.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<RunCodeExecResponse>, I>>(object: I): RunCodeExecResponse {
+    const message = createBaseRunCodeExecResponse();
+    message.tempId = object.tempId ?? "";
+    return message;
+  },
+};
+
 function createBaseCustomCodeExecRequest(): CustomCodeExecRequest {
-  return { tempId: "", userCode: "", language: 0 };
+  return { userCode: "", language: 0 };
 }
 
 export const CustomCodeExecRequest: MessageFns<CustomCodeExecRequest> = {
   encode(message: CustomCodeExecRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.tempId !== "") {
-      writer.uint32(10).string(message.tempId);
-    }
     if (message.userCode !== "") {
       writer.uint32(18).string(message.userCode);
     }
@@ -856,14 +585,6 @@ export const CustomCodeExecRequest: MessageFns<CustomCodeExecRequest> = {
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
-        case 1: {
-          if (tag !== 10) {
-            break;
-          }
-
-          message.tempId = reader.string();
-          continue;
-        }
         case 2: {
           if (tag !== 18) {
             break;
@@ -891,7 +612,6 @@ export const CustomCodeExecRequest: MessageFns<CustomCodeExecRequest> = {
 
   fromJSON(object: any): CustomCodeExecRequest {
     return {
-      tempId: isSet(object.tempId) ? globalThis.String(object.tempId) : "",
       userCode: isSet(object.userCode) ? globalThis.String(object.userCode) : "",
       language: isSet(object.language) ? languageFromJSON(object.language) : 0,
     };
@@ -899,9 +619,6 @@ export const CustomCodeExecRequest: MessageFns<CustomCodeExecRequest> = {
 
   toJSON(message: CustomCodeExecRequest): unknown {
     const obj: any = {};
-    if (message.tempId !== "") {
-      obj.tempId = message.tempId;
-    }
     if (message.userCode !== "") {
       obj.userCode = message.userCode;
     }
@@ -916,433 +633,28 @@ export const CustomCodeExecRequest: MessageFns<CustomCodeExecRequest> = {
   },
   fromPartial<I extends Exact<DeepPartial<CustomCodeExecRequest>, I>>(object: I): CustomCodeExecRequest {
     const message = createBaseCustomCodeExecRequest();
-    message.tempId = object.tempId ?? "";
     message.userCode = object.userCode ?? "";
     message.language = object.language ?? 0;
     return message;
   },
 };
 
-function createBaseSubmitCodeResultRequest(): SubmitCodeResultRequest {
-  return { userId: "", submissionId: "", problemId: "" };
-}
-
-export const SubmitCodeResultRequest: MessageFns<SubmitCodeResultRequest> = {
-  encode(message: SubmitCodeResultRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.userId !== "") {
-      writer.uint32(10).string(message.userId);
-    }
-    if (message.submissionId !== "") {
-      writer.uint32(18).string(message.submissionId);
-    }
-    if (message.problemId !== "") {
-      writer.uint32(26).string(message.problemId);
-    }
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): SubmitCodeResultRequest {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseSubmitCodeResultRequest();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1: {
-          if (tag !== 10) {
-            break;
-          }
-
-          message.userId = reader.string();
-          continue;
-        }
-        case 2: {
-          if (tag !== 18) {
-            break;
-          }
-
-          message.submissionId = reader.string();
-          continue;
-        }
-        case 3: {
-          if (tag !== 26) {
-            break;
-          }
-
-          message.problemId = reader.string();
-          continue;
-        }
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
-
-  fromJSON(object: any): SubmitCodeResultRequest {
-    return {
-      userId: isSet(object.userId) ? globalThis.String(object.userId) : "",
-      submissionId: isSet(object.submissionId) ? globalThis.String(object.submissionId) : "",
-      problemId: isSet(object.problemId) ? globalThis.String(object.problemId) : "",
-    };
-  },
-
-  toJSON(message: SubmitCodeResultRequest): unknown {
-    const obj: any = {};
-    if (message.userId !== "") {
-      obj.userId = message.userId;
-    }
-    if (message.submissionId !== "") {
-      obj.submissionId = message.submissionId;
-    }
-    if (message.problemId !== "") {
-      obj.problemId = message.problemId;
-    }
-    return obj;
-  },
-
-  create<I extends Exact<DeepPartial<SubmitCodeResultRequest>, I>>(base?: I): SubmitCodeResultRequest {
-    return SubmitCodeResultRequest.fromPartial(base ?? ({} as any));
-  },
-  fromPartial<I extends Exact<DeepPartial<SubmitCodeResultRequest>, I>>(object: I): SubmitCodeResultRequest {
-    const message = createBaseSubmitCodeResultRequest();
-    message.userId = object.userId ?? "";
-    message.submissionId = object.submissionId ?? "";
-    message.problemId = object.problemId ?? "";
-    return message;
-  },
-};
-
-function createBaseSubmitCodeResultResponse(): SubmitCodeResultResponse {
-  return { executionResult: undefined, executionTime: 0, memoryUsage: 0, status: "" };
-}
-
-export const SubmitCodeResultResponse: MessageFns<SubmitCodeResultResponse> = {
-  encode(message: SubmitCodeResultResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.executionResult !== undefined) {
-      ExecutionResult.encode(message.executionResult, writer.uint32(10).fork()).join();
-    }
-    if (message.executionTime !== 0) {
-      writer.uint32(16).int32(message.executionTime);
-    }
-    if (message.memoryUsage !== 0) {
-      writer.uint32(24).int32(message.memoryUsage);
-    }
-    if (message.status !== "") {
-      writer.uint32(34).string(message.status);
-    }
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): SubmitCodeResultResponse {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseSubmitCodeResultResponse();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1: {
-          if (tag !== 10) {
-            break;
-          }
-
-          message.executionResult = ExecutionResult.decode(reader, reader.uint32());
-          continue;
-        }
-        case 2: {
-          if (tag !== 16) {
-            break;
-          }
-
-          message.executionTime = reader.int32();
-          continue;
-        }
-        case 3: {
-          if (tag !== 24) {
-            break;
-          }
-
-          message.memoryUsage = reader.int32();
-          continue;
-        }
-        case 4: {
-          if (tag !== 34) {
-            break;
-          }
-
-          message.status = reader.string();
-          continue;
-        }
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
-
-  fromJSON(object: any): SubmitCodeResultResponse {
-    return {
-      executionResult: isSet(object.executionResult) ? ExecutionResult.fromJSON(object.executionResult) : undefined,
-      executionTime: isSet(object.executionTime) ? globalThis.Number(object.executionTime) : 0,
-      memoryUsage: isSet(object.memoryUsage) ? globalThis.Number(object.memoryUsage) : 0,
-      status: isSet(object.status) ? globalThis.String(object.status) : "",
-    };
-  },
-
-  toJSON(message: SubmitCodeResultResponse): unknown {
-    const obj: any = {};
-    if (message.executionResult !== undefined) {
-      obj.executionResult = ExecutionResult.toJSON(message.executionResult);
-    }
-    if (message.executionTime !== 0) {
-      obj.executionTime = Math.round(message.executionTime);
-    }
-    if (message.memoryUsage !== 0) {
-      obj.memoryUsage = Math.round(message.memoryUsage);
-    }
-    if (message.status !== "") {
-      obj.status = message.status;
-    }
-    return obj;
-  },
-
-  create<I extends Exact<DeepPartial<SubmitCodeResultResponse>, I>>(base?: I): SubmitCodeResultResponse {
-    return SubmitCodeResultResponse.fromPartial(base ?? ({} as any));
-  },
-  fromPartial<I extends Exact<DeepPartial<SubmitCodeResultResponse>, I>>(object: I): SubmitCodeResultResponse {
-    const message = createBaseSubmitCodeResultResponse();
-    message.executionResult = (object.executionResult !== undefined && object.executionResult !== null)
-      ? ExecutionResult.fromPartial(object.executionResult)
-      : undefined;
-    message.executionTime = object.executionTime ?? 0;
-    message.memoryUsage = object.memoryUsage ?? 0;
-    message.status = object.status ?? "";
-    return message;
-  },
-};
-
-function createBaseRunCodeResultRequest(): RunCodeResultRequest {
-  return { tempId: "", problemId: "" };
-}
-
-export const RunCodeResultRequest: MessageFns<RunCodeResultRequest> = {
-  encode(message: RunCodeResultRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.tempId !== "") {
-      writer.uint32(10).string(message.tempId);
-    }
-    if (message.problemId !== "") {
-      writer.uint32(18).string(message.problemId);
-    }
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): RunCodeResultRequest {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseRunCodeResultRequest();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1: {
-          if (tag !== 10) {
-            break;
-          }
-
-          message.tempId = reader.string();
-          continue;
-        }
-        case 2: {
-          if (tag !== 18) {
-            break;
-          }
-
-          message.problemId = reader.string();
-          continue;
-        }
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
-
-  fromJSON(object: any): RunCodeResultRequest {
-    return {
-      tempId: isSet(object.tempId) ? globalThis.String(object.tempId) : "",
-      problemId: isSet(object.problemId) ? globalThis.String(object.problemId) : "",
-    };
-  },
-
-  toJSON(message: RunCodeResultRequest): unknown {
-    const obj: any = {};
-    if (message.tempId !== "") {
-      obj.tempId = message.tempId;
-    }
-    if (message.problemId !== "") {
-      obj.problemId = message.problemId;
-    }
-    return obj;
-  },
-
-  create<I extends Exact<DeepPartial<RunCodeResultRequest>, I>>(base?: I): RunCodeResultRequest {
-    return RunCodeResultRequest.fromPartial(base ?? ({} as any));
-  },
-  fromPartial<I extends Exact<DeepPartial<RunCodeResultRequest>, I>>(object: I): RunCodeResultRequest {
-    const message = createBaseRunCodeResultRequest();
-    message.tempId = object.tempId ?? "";
-    message.problemId = object.problemId ?? "";
-    return message;
-  },
-};
-
-function createBaseRunCodeResultResponse(): RunCodeResultResponse {
-  return { executionResult: undefined, executionTime: 0, memoryUsage: 0, status: "", stdOut: undefined };
-}
-
-export const RunCodeResultResponse: MessageFns<RunCodeResultResponse> = {
-  encode(message: RunCodeResultResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.executionResult !== undefined) {
-      ExecutionResult.encode(message.executionResult, writer.uint32(10).fork()).join();
-    }
-    if (message.executionTime !== 0) {
-      writer.uint32(16).int32(message.executionTime);
-    }
-    if (message.memoryUsage !== 0) {
-      writer.uint32(24).int32(message.memoryUsage);
-    }
-    if (message.status !== "") {
-      writer.uint32(34).string(message.status);
-    }
-    if (message.stdOut !== undefined) {
-      writer.uint32(42).string(message.stdOut);
-    }
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): RunCodeResultResponse {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseRunCodeResultResponse();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1: {
-          if (tag !== 10) {
-            break;
-          }
-
-          message.executionResult = ExecutionResult.decode(reader, reader.uint32());
-          continue;
-        }
-        case 2: {
-          if (tag !== 16) {
-            break;
-          }
-
-          message.executionTime = reader.int32();
-          continue;
-        }
-        case 3: {
-          if (tag !== 24) {
-            break;
-          }
-
-          message.memoryUsage = reader.int32();
-          continue;
-        }
-        case 4: {
-          if (tag !== 34) {
-            break;
-          }
-
-          message.status = reader.string();
-          continue;
-        }
-        case 5: {
-          if (tag !== 42) {
-            break;
-          }
-
-          message.stdOut = reader.string();
-          continue;
-        }
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
-
-  fromJSON(object: any): RunCodeResultResponse {
-    return {
-      executionResult: isSet(object.executionResult) ? ExecutionResult.fromJSON(object.executionResult) : undefined,
-      executionTime: isSet(object.executionTime) ? globalThis.Number(object.executionTime) : 0,
-      memoryUsage: isSet(object.memoryUsage) ? globalThis.Number(object.memoryUsage) : 0,
-      status: isSet(object.status) ? globalThis.String(object.status) : "",
-      stdOut: isSet(object.stdOut) ? globalThis.String(object.stdOut) : undefined,
-    };
-  },
-
-  toJSON(message: RunCodeResultResponse): unknown {
-    const obj: any = {};
-    if (message.executionResult !== undefined) {
-      obj.executionResult = ExecutionResult.toJSON(message.executionResult);
-    }
-    if (message.executionTime !== 0) {
-      obj.executionTime = Math.round(message.executionTime);
-    }
-    if (message.memoryUsage !== 0) {
-      obj.memoryUsage = Math.round(message.memoryUsage);
-    }
-    if (message.status !== "") {
-      obj.status = message.status;
-    }
-    if (message.stdOut !== undefined) {
-      obj.stdOut = message.stdOut;
-    }
-    return obj;
-  },
-
-  create<I extends Exact<DeepPartial<RunCodeResultResponse>, I>>(base?: I): RunCodeResultResponse {
-    return RunCodeResultResponse.fromPartial(base ?? ({} as any));
-  },
-  fromPartial<I extends Exact<DeepPartial<RunCodeResultResponse>, I>>(object: I): RunCodeResultResponse {
-    const message = createBaseRunCodeResultResponse();
-    message.executionResult = (object.executionResult !== undefined && object.executionResult !== null)
-      ? ExecutionResult.fromPartial(object.executionResult)
-      : undefined;
-    message.executionTime = object.executionTime ?? 0;
-    message.memoryUsage = object.memoryUsage ?? 0;
-    message.status = object.status ?? "";
-    message.stdOut = object.stdOut ?? undefined;
-    return message;
-  },
-};
-
-function createBaseCustomCodeResultRequest(): CustomCodeResultRequest {
+function createBaseCustomCodeExecResponse(): CustomCodeExecResponse {
   return { tempId: "" };
 }
 
-export const CustomCodeResultRequest: MessageFns<CustomCodeResultRequest> = {
-  encode(message: CustomCodeResultRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+export const CustomCodeExecResponse: MessageFns<CustomCodeExecResponse> = {
+  encode(message: CustomCodeExecResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
     if (message.tempId !== "") {
       writer.uint32(10).string(message.tempId);
     }
     return writer;
   },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): CustomCodeResultRequest {
+  decode(input: BinaryReader | Uint8Array, length?: number): CustomCodeExecResponse {
     const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseCustomCodeResultRequest();
+    const message = createBaseCustomCodeExecResponse();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -1363,11 +675,11 @@ export const CustomCodeResultRequest: MessageFns<CustomCodeResultRequest> = {
     return message;
   },
 
-  fromJSON(object: any): CustomCodeResultRequest {
+  fromJSON(object: any): CustomCodeExecResponse {
     return { tempId: isSet(object.tempId) ? globalThis.String(object.tempId) : "" };
   },
 
-  toJSON(message: CustomCodeResultRequest): unknown {
+  toJSON(message: CustomCodeExecResponse): unknown {
     const obj: any = {};
     if (message.tempId !== "") {
       obj.tempId = message.tempId;
@@ -1375,104 +687,12 @@ export const CustomCodeResultRequest: MessageFns<CustomCodeResultRequest> = {
     return obj;
   },
 
-  create<I extends Exact<DeepPartial<CustomCodeResultRequest>, I>>(base?: I): CustomCodeResultRequest {
-    return CustomCodeResultRequest.fromPartial(base ?? ({} as any));
+  create<I extends Exact<DeepPartial<CustomCodeExecResponse>, I>>(base?: I): CustomCodeExecResponse {
+    return CustomCodeExecResponse.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<CustomCodeResultRequest>, I>>(object: I): CustomCodeResultRequest {
-    const message = createBaseCustomCodeResultRequest();
+  fromPartial<I extends Exact<DeepPartial<CustomCodeExecResponse>, I>>(object: I): CustomCodeExecResponse {
+    const message = createBaseCustomCodeExecResponse();
     message.tempId = object.tempId ?? "";
-    return message;
-  },
-};
-
-function createBaseCustomCodeResultResponse(): CustomCodeResultResponse {
-  return { executionTime: 0, memoryUsage: 0, stdOut: "" };
-}
-
-export const CustomCodeResultResponse: MessageFns<CustomCodeResultResponse> = {
-  encode(message: CustomCodeResultResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.executionTime !== 0) {
-      writer.uint32(16).int32(message.executionTime);
-    }
-    if (message.memoryUsage !== 0) {
-      writer.uint32(24).int32(message.memoryUsage);
-    }
-    if (message.stdOut !== "") {
-      writer.uint32(42).string(message.stdOut);
-    }
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): CustomCodeResultResponse {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseCustomCodeResultResponse();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 2: {
-          if (tag !== 16) {
-            break;
-          }
-
-          message.executionTime = reader.int32();
-          continue;
-        }
-        case 3: {
-          if (tag !== 24) {
-            break;
-          }
-
-          message.memoryUsage = reader.int32();
-          continue;
-        }
-        case 5: {
-          if (tag !== 42) {
-            break;
-          }
-
-          message.stdOut = reader.string();
-          continue;
-        }
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
-
-  fromJSON(object: any): CustomCodeResultResponse {
-    return {
-      executionTime: isSet(object.executionTime) ? globalThis.Number(object.executionTime) : 0,
-      memoryUsage: isSet(object.memoryUsage) ? globalThis.Number(object.memoryUsage) : 0,
-      stdOut: isSet(object.stdOut) ? globalThis.String(object.stdOut) : "",
-    };
-  },
-
-  toJSON(message: CustomCodeResultResponse): unknown {
-    const obj: any = {};
-    if (message.executionTime !== 0) {
-      obj.executionTime = Math.round(message.executionTime);
-    }
-    if (message.memoryUsage !== 0) {
-      obj.memoryUsage = Math.round(message.memoryUsage);
-    }
-    if (message.stdOut !== "") {
-      obj.stdOut = message.stdOut;
-    }
-    return obj;
-  },
-
-  create<I extends Exact<DeepPartial<CustomCodeResultResponse>, I>>(base?: I): CustomCodeResultResponse {
-    return CustomCodeResultResponse.fromPartial(base ?? ({} as any));
-  },
-  fromPartial<I extends Exact<DeepPartial<CustomCodeResultResponse>, I>>(object: I): CustomCodeResultResponse {
-    const message = createBaseCustomCodeResultResponse();
-    message.executionTime = object.executionTime ?? 0;
-    message.memoryUsage = object.memoryUsage ?? 0;
-    message.stdOut = object.stdOut ?? "";
     return message;
   },
 };
@@ -1496,8 +716,8 @@ export const CodeManageServiceService = {
     responseStream: false,
     requestSerialize: (value: RunCodeExecRequest): Buffer => Buffer.from(RunCodeExecRequest.encode(value).finish()),
     requestDeserialize: (value: Buffer): RunCodeExecRequest => RunCodeExecRequest.decode(value),
-    responseSerialize: (value: Empty): Buffer => Buffer.from(Empty.encode(value).finish()),
-    responseDeserialize: (value: Buffer): Empty => Empty.decode(value),
+    responseSerialize: (value: RunCodeExecResponse): Buffer => Buffer.from(RunCodeExecResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): RunCodeExecResponse => RunCodeExecResponse.decode(value),
   },
   customCodeExec: {
     path: "/code_manage.v1.CodeManageService/CustomCodeExec",
@@ -1506,50 +726,16 @@ export const CodeManageServiceService = {
     requestSerialize: (value: CustomCodeExecRequest): Buffer =>
       Buffer.from(CustomCodeExecRequest.encode(value).finish()),
     requestDeserialize: (value: Buffer): CustomCodeExecRequest => CustomCodeExecRequest.decode(value),
-    responseSerialize: (value: Empty): Buffer => Buffer.from(Empty.encode(value).finish()),
-    responseDeserialize: (value: Buffer): Empty => Empty.decode(value),
-  },
-  submitCodeResult: {
-    path: "/code_manage.v1.CodeManageService/SubmitCodeResult",
-    requestStream: false,
-    responseStream: false,
-    requestSerialize: (value: SubmitCodeResultRequest): Buffer =>
-      Buffer.from(SubmitCodeResultRequest.encode(value).finish()),
-    requestDeserialize: (value: Buffer): SubmitCodeResultRequest => SubmitCodeResultRequest.decode(value),
-    responseSerialize: (value: SubmitCodeResultResponse): Buffer =>
-      Buffer.from(SubmitCodeResultResponse.encode(value).finish()),
-    responseDeserialize: (value: Buffer): SubmitCodeResultResponse => SubmitCodeResultResponse.decode(value),
-  },
-  runCodeResult: {
-    path: "/code_manage.v1.CodeManageService/RunCodeResult",
-    requestStream: false,
-    responseStream: false,
-    requestSerialize: (value: RunCodeResultRequest): Buffer => Buffer.from(RunCodeResultRequest.encode(value).finish()),
-    requestDeserialize: (value: Buffer): RunCodeResultRequest => RunCodeResultRequest.decode(value),
-    responseSerialize: (value: RunCodeResultResponse): Buffer =>
-      Buffer.from(RunCodeResultResponse.encode(value).finish()),
-    responseDeserialize: (value: Buffer): RunCodeResultResponse => RunCodeResultResponse.decode(value),
-  },
-  customCodeResult: {
-    path: "/code_manage.v1.CodeManageService/CustomCodeResult",
-    requestStream: false,
-    responseStream: false,
-    requestSerialize: (value: CustomCodeResultRequest): Buffer =>
-      Buffer.from(CustomCodeResultRequest.encode(value).finish()),
-    requestDeserialize: (value: Buffer): CustomCodeResultRequest => CustomCodeResultRequest.decode(value),
-    responseSerialize: (value: CustomCodeResultResponse): Buffer =>
-      Buffer.from(CustomCodeResultResponse.encode(value).finish()),
-    responseDeserialize: (value: Buffer): CustomCodeResultResponse => CustomCodeResultResponse.decode(value),
+    responseSerialize: (value: CustomCodeExecResponse): Buffer =>
+      Buffer.from(CustomCodeExecResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): CustomCodeExecResponse => CustomCodeExecResponse.decode(value),
   },
 } as const;
 
 export interface CodeManageServiceServer extends UntypedServiceImplementation {
   submitCodeExec: handleUnaryCall<SubmitCodeExecRequest, SubmitCodeExecResponse>;
-  runCodeExec: handleUnaryCall<RunCodeExecRequest, Empty>;
-  customCodeExec: handleUnaryCall<CustomCodeExecRequest, Empty>;
-  submitCodeResult: handleUnaryCall<SubmitCodeResultRequest, SubmitCodeResultResponse>;
-  runCodeResult: handleUnaryCall<RunCodeResultRequest, RunCodeResultResponse>;
-  customCodeResult: handleUnaryCall<CustomCodeResultRequest, CustomCodeResultResponse>;
+  runCodeExec: handleUnaryCall<RunCodeExecRequest, RunCodeExecResponse>;
+  customCodeExec: handleUnaryCall<CustomCodeExecRequest, CustomCodeExecResponse>;
 }
 
 export interface CodeManageServiceClient extends Client {
@@ -1570,78 +756,33 @@ export interface CodeManageServiceClient extends Client {
   ): ClientUnaryCall;
   runCodeExec(
     request: RunCodeExecRequest,
-    callback: (error: ServiceError | null, response: Empty) => void,
+    callback: (error: ServiceError | null, response: RunCodeExecResponse) => void,
   ): ClientUnaryCall;
   runCodeExec(
     request: RunCodeExecRequest,
     metadata: Metadata,
-    callback: (error: ServiceError | null, response: Empty) => void,
+    callback: (error: ServiceError | null, response: RunCodeExecResponse) => void,
   ): ClientUnaryCall;
   runCodeExec(
     request: RunCodeExecRequest,
     metadata: Metadata,
     options: Partial<CallOptions>,
-    callback: (error: ServiceError | null, response: Empty) => void,
+    callback: (error: ServiceError | null, response: RunCodeExecResponse) => void,
   ): ClientUnaryCall;
   customCodeExec(
     request: CustomCodeExecRequest,
-    callback: (error: ServiceError | null, response: Empty) => void,
-  ): ClientUnaryCall;
-  customCodeExec(
-    request: CustomCodeExecRequest,
-    metadata: Metadata,
-    callback: (error: ServiceError | null, response: Empty) => void,
+    callback: (error: ServiceError | null, response: CustomCodeExecResponse) => void,
   ): ClientUnaryCall;
   customCodeExec(
     request: CustomCodeExecRequest,
     metadata: Metadata,
-    options: Partial<CallOptions>,
-    callback: (error: ServiceError | null, response: Empty) => void,
+    callback: (error: ServiceError | null, response: CustomCodeExecResponse) => void,
   ): ClientUnaryCall;
-  submitCodeResult(
-    request: SubmitCodeResultRequest,
-    callback: (error: ServiceError | null, response: SubmitCodeResultResponse) => void,
-  ): ClientUnaryCall;
-  submitCodeResult(
-    request: SubmitCodeResultRequest,
-    metadata: Metadata,
-    callback: (error: ServiceError | null, response: SubmitCodeResultResponse) => void,
-  ): ClientUnaryCall;
-  submitCodeResult(
-    request: SubmitCodeResultRequest,
+  customCodeExec(
+    request: CustomCodeExecRequest,
     metadata: Metadata,
     options: Partial<CallOptions>,
-    callback: (error: ServiceError | null, response: SubmitCodeResultResponse) => void,
-  ): ClientUnaryCall;
-  runCodeResult(
-    request: RunCodeResultRequest,
-    callback: (error: ServiceError | null, response: RunCodeResultResponse) => void,
-  ): ClientUnaryCall;
-  runCodeResult(
-    request: RunCodeResultRequest,
-    metadata: Metadata,
-    callback: (error: ServiceError | null, response: RunCodeResultResponse) => void,
-  ): ClientUnaryCall;
-  runCodeResult(
-    request: RunCodeResultRequest,
-    metadata: Metadata,
-    options: Partial<CallOptions>,
-    callback: (error: ServiceError | null, response: RunCodeResultResponse) => void,
-  ): ClientUnaryCall;
-  customCodeResult(
-    request: CustomCodeResultRequest,
-    callback: (error: ServiceError | null, response: CustomCodeResultResponse) => void,
-  ): ClientUnaryCall;
-  customCodeResult(
-    request: CustomCodeResultRequest,
-    metadata: Metadata,
-    callback: (error: ServiceError | null, response: CustomCodeResultResponse) => void,
-  ): ClientUnaryCall;
-  customCodeResult(
-    request: CustomCodeResultRequest,
-    metadata: Metadata,
-    options: Partial<CallOptions>,
-    callback: (error: ServiceError | null, response: CustomCodeResultResponse) => void,
+    callback: (error: ServiceError | null, response: CustomCodeExecResponse) => void,
   ): ClientUnaryCall;
 }
 

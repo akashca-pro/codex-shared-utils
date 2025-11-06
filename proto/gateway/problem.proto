@@ -51,26 +51,13 @@ message StarterCode {
   string code = 3;
 }
 
-message SolutionCode {
-    string _id = 1;
-    Language language = 2;
-    string code = 3;
-    int32 executionTime = 4;
-    int32 memoryTaken = 5;
-}
-
 message TemplateCode {
     optional string _id = 1;
     Language language = 2;
-    string wrappedCode = 3;
+    string submitWrapperCode = 3;
+    string runWrapperCode = 4;
 }
 
-message UpdateSolutionCode {
-    optional Language language = 2;
-    optional string code = 3;
-    optional int32 executionTime = 4;
-    optional int32 memoryTaken = 5;
-}
 
 // main problem message for admin.
 
@@ -86,10 +73,9 @@ message Problem {
     TestCaseCollection testcaseCollection = 9;
     repeated Example examples = 10;
     bool active = 11;
-    repeated SolutionCode solutionCodes = 12;
-    repeated TemplateCode templateCode = 13;
-    string createdAt = 14;
-    string updatedAt = 15;
+    repeated TemplateCode templateCodes = 12;
+    string createdAt = 13;
+    string updatedAt = 14;
 }
 
 message ListProblemDetails {
@@ -115,12 +101,7 @@ service ProblemService {
     rpc AddTestCase(AddTestCaseRequest) returns (google.protobuf.Empty);
     rpc BulkUploadTestCases(BulkUploadTestCasesRequest) returns (google.protobuf.Empty);
     rpc RemoveTestCase(RemoveTestCaseRequest) returns (google.protobuf.Empty);
-    rpc AddSolutionCode(AddSolutionCodeRequest) returns (google.protobuf.Empty);
-    rpc UpdateSolutionCode(UpdateSolutionCodeRequest) returns (google.protobuf.Empty);
-    rpc RemoveSolutionCode(RemoveSolutionCodeRequest) returns (google.protobuf.Empty);
-    rpc AddTemplateCode(AddTemplateCodeRequest) returns (google.protobuf.Empty);
     rpc UpdateTemplateCode(UpdateTemplateCodeRequest) returns (google.protobuf.Empty);
-    rpc RemoveTemplateCode(RemoveTemplateCodeRequest) returns (google.protobuf.Empty);
     rpc CheckQuestionIdAvailability(CheckQuestionIdRequest) returns (google.protobuf.Empty);
     rpc CheckProblemTitle(CheckProblemTitleRequest) returns (google.protobuf.Empty);
 }
@@ -206,41 +187,16 @@ message RemoveTestCaseRequest {
     TestCaseCollectionType testCaseCollectionType = 3;
 }
 
-message AddSolutionCodeRequest {
-    string _id = 1;
-    SolutionCode solutionCode = 2;
-}
-
-message UpdateSolutionCodeRequest {
-    string _id = 1;
-    string solutionCodeId = 2;
-    UpdateSolutionCode solutionCode = 3;
-}
-
-message RemoveSolutionCodeRequest {
-    string _id = 1;
-    string solutionCodeId = 2;
-}
-
-message AddTemplateCodeRequest {
-    string _id = 1;
-    TemplateCode templateCode = 2;
-}
-
 message UpdateTemplateCode {
     optional Language language = 1;
-    optional string wrappedCode = 2;
+    optional string submitWrapperCode = 2;
+    optional string runWrapperCode = 3;
 }
 
 message UpdateTemplateCodeRequest{
     string _id = 1;
     string templateCodeId = 2;
     UpdateTemplateCode updatedTemplateCode = 3;
-}
-
-message RemoveTemplateCodeRequest{
-    string _id = 1;
-    string templateCodeId = 2;
 }
 
 message CheckQuestionIdRequest {
@@ -257,6 +213,8 @@ message Stats {
     int32 totalTestCase = 1;
     int32 passedTestCase = 2;
     int32 failedTestCase = 3;
+    double executionTimeMs = 4;
+    double memoryMB = 5;
 }
 
 message FailedTestCase {
@@ -275,20 +233,19 @@ message Submission {
     string _id = 1;
     string problemId = 2;
     string userId = 3;
-    string country = 4;
-    string title = 5;
-    optional string battleId = 6;
-    int32 score = 7;
-    string status = 8;
-    Language language = 9;
-    string userCode = 10;
-    ExecutionResult executionResult = 11;
-    optional int32 executionTime = 12;
-    optional int32 memoryUsage = 13;
-    Difficulty difficulty = 14;
-    bool isFirst = 15;
-    string updatedAt = 16;
-    string createdAt = 17;
+    string username = 4;
+    string country = 5;
+    string title = 6;
+    optional string battleId = 7;
+    int32 score = 8;
+    string status = 9;
+    Language language = 10;
+    string userCode = 11;
+    optional ExecutionResult executionResult = 12;
+    Difficulty difficulty = 13;
+    bool isFirst = 14;
+    string updatedAt = 15;
+    string createdAt = 16;
 }
 
 // --- Service Definition ---
@@ -296,27 +253,31 @@ message Submission {
 service SubmissionService {
     rpc CreateSubmission(CreateSubmissionRequest) returns (Submission);
     rpc UpdateSubmission(UpdateSubmissionRequest) returns (google.protobuf.Empty);
+    rpc ListProblemSpecificSubmission(ListProblemSpecificSubmissionRequest) returns (ListProblemSpecificSubmissionResponse);
     rpc GetSubmissions(GetSubmissionsRequest) returns (GetSubmissionsResponse);
+    rpc ListTopKGlobalLeaderboard(ListTopKGlobalLeaderboardRequest) returns (ListTopKGlobalLeaderboardResponse);
+    rpc ListTopKCountryLeaderboard(ListTopKCountryLeaderboardRequest) returns (ListTopKCountryLeaderboardResponse);
+    rpc GetDashboardStats(GetDashboardStatsRequest) returns (GetDashboardStatsResponse);
+    rpc UpdateCountryInLeaderboard(UpdateCountryRequest) returns (google.protobuf.Empty);
+    rpc RemoveUserInLeaderboard(RemoveUserRequest) returns (google.protobuf.Empty);
 }
 
 message CreateSubmissionRequest {
     string problemId = 1;
     string userId = 2;
-    optional string battleId = 3;
-    optional string country = 4;
-    string title = 5;
-    Language language = 6;
-    string userCode = 7;
-    Difficulty difficulty = 8;
+    string username = 3;
+    optional string battleId = 4;
+    optional string country = 5;
+    string title = 6;
+    Language language = 7;
+    string userCode = 8;
+    Difficulty difficulty = 9;
 }
 
 message UpdateSubmissionRequest {
     string _id = 1;
-    ExecutionResult executionResult = 2;
-    int32 executionTime = 3;
-    int32 memoryUsage = 4;
-    int32 score = 5;
-    string status = 6;
+    string status = 3;
+    ExecutionResult executionResult = 4;
 }
 
 message GetSubmissionsRequest {
@@ -335,5 +296,91 @@ message GetSubmissionsResponse {
     int32 totalItems = 4;
 }
 
+message ListProblemSpecificSubmissionRequest {
+    string userId = 1;
+    string problemId = 2;
+    int32 limit = 3;
+    optional string nextCursor = 4;
+}
 
+message ProblemSpecificSubmissions {
+    string _id = 1;
+    string status = 2;
+    Language language = 3;
+    ExecutionResult executionResult = 4;
+    string userCode = 5;
+    string createdAt = 6;
+}
 
+message ListProblemSpecificSubmissionResponse {
+    repeated ProblemSpecificSubmissions submissions = 1;
+    string nextCursor = 2;
+    bool hasMore = 3;
+}
+
+message ListTopKGlobalLeaderboardRequest {
+    int32 k = 1;
+}
+message LeaderboardUser {
+    string id = 1;
+    optional string entity = 2;
+    int32 score = 3;
+    string username = 4;
+    optional int32 problemsSolved = 5;
+}
+
+message ListTopKGlobalLeaderboardResponse {
+    repeated LeaderboardUser users = 1;
+}
+
+message ListTopKCountryLeaderboardRequest {
+    string country = 1;
+    int32 k = 2;
+}
+
+message ListTopKCountryLeaderboardResponse {
+    repeated LeaderboardUser users = 1;
+}
+
+message GetDashboardStatsRequest {
+    string userId = 1;
+    string userTimezone = 2;
+}
+
+message Activity {
+    string date = 1;
+    int32 count = 2;
+}
+
+message RecentActivity {
+    string title = 1;
+    string difficulty = 2;
+    string status = 3;
+    string timeAgo = 4;
+}
+
+message LeaderboardData {
+    string userId = 1;
+    string username = 2;
+    int32 score = 3;
+    string entity = 4;
+    int32 globalRank = 5;
+    int32 entityRank = 6;
+}
+
+message GetDashboardStatsResponse {
+    repeated Activity heatmap = 1;
+    int32 currentStreak = 2;
+    LeaderboardData leaderboadDetails = 3;
+    int32 problemsSolved = 4;
+    repeated RecentActivity recentActivities = 5;
+}
+
+message UpdateCountryRequest {
+    string userId = 1;
+    string country = 2;
+}
+
+message RemoveUserRequest {
+    string userId = 1;
+}

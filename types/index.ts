@@ -2,6 +2,7 @@ declare module 'express' {
   interface Request {
     userId?: string;
     role?: string;
+    username?:string;
     email?: string;
     accessTokenId?:string;
     refreshTokenId?:string;
@@ -15,6 +16,7 @@ declare module 'express' {
 
 export interface CustomJwtPayload {
     userId : string;
+    username? : string;
     email : string;
     role : string;
     tokenId : string;

@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package collab.v1;
+
+service SessionManager {
+  rpc CreateSession(CreateSessionRequest) returns (CreateSessionResponse);
+}
+
+message Session {
+  string Id = 1;
+  string ownerId = 3;
+  repeated string participants = 4;
+  string createdAt = 5;
+  string updatedAt = 6;
+  string endedAt = 7;
+  string status = 8;
+  string language = 9;
+}
+
+message CreateSessionRequest {
+  string ownerId = 1;
+}
+
+message CreateSessionResponse {
+  string inviteToken = 1;
+}

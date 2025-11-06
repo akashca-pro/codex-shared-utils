@@ -25,10 +25,12 @@ service AuthUserService {
 
 message UserInfo {
   string userId = 1;
-  string username = 2;
-  string email = 3;
-  string role = 4;
-  string avatar = 5;
+  string firstName = 2;
+  string username = 3;
+  string email = 4;
+  string role = 5;
+  string avatar = 6;
+  optional string country = 7;
 }
 
 message SignupRequest {
@@ -136,8 +138,9 @@ message UserProfileResponse {
 
 message RefreshTokenRequest {
   string userId = 1;
-  string email = 2;
-  string role = 3;
+  string username = 2;
+  string email = 3;
+  string role = 4;
 }
 
 message RefreshTokenResponse {

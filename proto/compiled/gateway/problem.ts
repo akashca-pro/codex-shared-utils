@@ -175,25 +175,11 @@ export interface StarterCode {
   code: string;
 }
 
-export interface SolutionCode {
-  Id: string;
-  language: Language;
-  code: string;
-  executionTime: number;
-  memoryTaken: number;
-}
-
 export interface TemplateCode {
   Id?: string | undefined;
   language: Language;
-  wrappedCode: string;
-}
-
-export interface UpdateSolutionCode {
-  language?: Language | undefined;
-  code?: string | undefined;
-  executionTime?: number | undefined;
-  memoryTaken?: number | undefined;
+  submitWrapperCode: string;
+  runWrapperCode: string;
 }
 
 export interface Problem {
@@ -208,8 +194,7 @@ export interface Problem {
   testcaseCollection?: TestCaseCollection | undefined;
   examples: Example[];
   active: boolean;
-  solutionCodes: SolutionCode[];
-  templateCode: TemplateCode[];
+  templateCodes: TemplateCode[];
   createdAt: string;
   updatedAt: string;
 }
@@ -304,41 +289,16 @@ export interface RemoveTestCaseRequest {
   testCaseCollectionType: TestCaseCollectionType;
 }
 
-export interface AddSolutionCodeRequest {
-  Id: string;
-  solutionCode?: SolutionCode | undefined;
-}
-
-export interface UpdateSolutionCodeRequest {
-  Id: string;
-  solutionCodeId: string;
-  solutionCode?: UpdateSolutionCode | undefined;
-}
-
-export interface RemoveSolutionCodeRequest {
-  Id: string;
-  solutionCodeId: string;
-}
-
-export interface AddTemplateCodeRequest {
-  Id: string;
-  templateCode?: TemplateCode | undefined;
-}
-
 export interface UpdateTemplateCode {
   language?: Language | undefined;
-  wrappedCode?: string | undefined;
+  submitWrapperCode?: string | undefined;
+  runWrapperCode?: string | undefined;
 }
 
 export interface UpdateTemplateCodeRequest {
   Id: string;
   templateCodeId: string;
   updatedTemplateCode?: UpdateTemplateCode | undefined;
-}
-
-export interface RemoveTemplateCodeRequest {
-  Id: string;
-  templateCodeId: string;
 }
 
 export interface CheckQuestionIdRequest {
@@ -353,6 +313,8 @@ export interface Stats {
   totalTestCase: number;
   passedTestCase: number;
   failedTestCase: number;
+  executionTimeMs: number;
+  memoryMB: number;
 }
 
 export interface FailedTestCase {
@@ -371,6 +333,7 @@ export interface Submission {
   Id: string;
   problemId: string;
   userId: string;
+  username: string;
   country: string;
   title: string;
   battleId?: string | undefined;
@@ -379,8 +342,6 @@ export interface Submission {
   language: Language;
   userCode: string;
   executionResult?: ExecutionResult | undefined;
-  executionTime?: number | undefined;
-  memoryUsage?: number | undefined;
   difficulty: Difficulty;
   isFirst: boolean;
   updatedAt: string;
@@ -390,6 +351,7 @@ export interface Submission {
 export interface CreateSubmissionRequest {
   problemId: string;
   userId: string;
+  username: string;
   battleId?: string | undefined;
   country?: string | undefined;
   title: string;
@@ -400,11 +362,8 @@ export interface CreateSubmissionRequest {
 
 export interface UpdateSubmissionRequest {
   Id: string;
-  executionResult?: ExecutionResult | undefined;
-  executionTime: number;
-  memoryUsage: number;
-  score: number;
   status: string;
+  executionResult?: ExecutionResult | undefined;
 }
 
 export interface GetSubmissionsRequest {
@@ -420,6 +379,96 @@ export interface GetSubmissionsResponse {
   totalPage: number;
   currentPage: number;
   totalItems: number;
+}
+
+export interface ListProblemSpecificSubmissionRequest {
+  userId: string;
+  problemId: string;
+  limit: number;
+  nextCursor?: string | undefined;
+}
+
+export interface ProblemSpecificSubmissions {
+  Id: string;
+  status: string;
+  language: Language;
+  executionResult?: ExecutionResult | undefined;
+  userCode: string;
+  createdAt: string;
+}
+
+export interface ListProblemSpecificSubmissionResponse {
+  submissions: ProblemSpecificSubmissions[];
+  nextCursor: string;
+  hasMore: boolean;
+}
+
+export interface ListTopKGlobalLeaderboardRequest {
+  k: number;
+}
+
+export interface LeaderboardUser {
+  id: string;
+  entity?: string | undefined;
+  score: number;
+  username: string;
+  problemsSolved?: number | undefined;
+}
+
+export interface ListTopKGlobalLeaderboardResponse {
+  users: LeaderboardUser[];
+}
+
+export interface ListTopKCountryLeaderboardRequest {
+  country: string;
+  k: number;
+}
+
+export interface ListTopKCountryLeaderboardResponse {
+  users: LeaderboardUser[];
+}
+
+export interface GetDashboardStatsRequest {
+  userId: string;
+  userTimezone: string;
+}
+
+export interface Activity {
+  date: string;
+  count: number;
+}
+
+export interface RecentActivity {
+  title: string;
+  difficulty: string;
+  status: string;
+  timeAgo: string;
+}
+
+export interface LeaderboardData {
+  userId: string;
+  username: string;
+  score: number;
+  entity: string;
+  globalRank: number;
+  entityRank: number;
+}
+
+export interface GetDashboardStatsResponse {
+  heatmap: Activity[];
+  currentStreak: number;
+  leaderboadDetails?: LeaderboardData | undefined;
+  problemsSolved: number;
+  recentActivities: RecentActivity[];
+}
+
+export interface UpdateCountryRequest {
+  userId: string;
+  country: string;
+}
+
+export interface RemoveUserRequest {
+  userId: string;
 }
 
 function createBaseTestCase(): TestCase {
@@ -790,132 +839,8 @@ export const StarterCode: MessageFns<StarterCode> = {
   },
 };
 
-function createBaseSolutionCode(): SolutionCode {
-  return { Id: "", language: 0, code: "", executionTime: 0, memoryTaken: 0 };
-}
-
-export const SolutionCode: MessageFns<SolutionCode> = {
-  encode(message: SolutionCode, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.Id !== "") {
-      writer.uint32(10).string(message.Id);
-    }
-    if (message.language !== 0) {
-      writer.uint32(16).int32(message.language);
-    }
-    if (message.code !== "") {
-      writer.uint32(26).string(message.code);
-    }
-    if (message.executionTime !== 0) {
-      writer.uint32(32).int32(message.executionTime);
-    }
-    if (message.memoryTaken !== 0) {
-      writer.uint32(40).int32(message.memoryTaken);
-    }
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): SolutionCode {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseSolutionCode();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1: {
-          if (tag !== 10) {
-            break;
-          }
-
-          message.Id = reader.string();
-          continue;
-        }
-        case 2: {
-          if (tag !== 16) {
-            break;
-          }
-
-          message.language = reader.int32() as any;
-          continue;
-        }
-        case 3: {
-          if (tag !== 26) {
-            break;
-          }
-
-          message.code = reader.string();
-          continue;
-        }
-        case 4: {
-          if (tag !== 32) {
-            break;
-          }
-
-          message.executionTime = reader.int32();
-          continue;
-        }
-        case 5: {
-          if (tag !== 40) {
-            break;
-          }
-
-          message.memoryTaken = reader.int32();
-          continue;
-        }
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
-
-  fromJSON(object: any): SolutionCode {
-    return {
-      Id: isSet(object.Id) ? globalThis.String(object.Id) : "",
-      language: isSet(object.language) ? languageFromJSON(object.language) : 0,
-      code: isSet(object.code) ? globalThis.String(object.code) : "",
-      executionTime: isSet(object.executionTime) ? globalThis.Number(object.executionTime) : 0,
-      memoryTaken: isSet(object.memoryTaken) ? globalThis.Number(object.memoryTaken) : 0,
-    };
-  },
-
-  toJSON(message: SolutionCode): unknown {
-    const obj: any = {};
-    if (message.Id !== "") {
-      obj.Id = message.Id;
-    }
-    if (message.language !== 0) {
-      obj.language = languageToJSON(message.language);
-    }
-    if (message.code !== "") {
-      obj.code = message.code;
-    }
-    if (message.executionTime !== 0) {
-      obj.executionTime = Math.round(message.executionTime);
-    }
-    if (message.memoryTaken !== 0) {
-      obj.memoryTaken = Math.round(message.memoryTaken);
-    }
-    return obj;
-  },
-
-  create<I extends Exact<DeepPartial<SolutionCode>, I>>(base?: I): SolutionCode {
-    return SolutionCode.fromPartial(base ?? ({} as any));
-  },
-  fromPartial<I extends Exact<DeepPartial<SolutionCode>, I>>(object: I): SolutionCode {
-    const message = createBaseSolutionCode();
-    message.Id = object.Id ?? "";
-    message.language = object.language ?? 0;
-    message.code = object.code ?? "";
-    message.executionTime = object.executionTime ?? 0;
-    message.memoryTaken = object.memoryTaken ?? 0;
-    return message;
-  },
-};
-
 function createBaseTemplateCode(): TemplateCode {
-  return { Id: undefined, language: 0, wrappedCode: "" };
+  return { Id: undefined, language: 0, submitWrapperCode: "", runWrapperCode: "" };
 }
 
 export const TemplateCode: MessageFns<TemplateCode> = {
@@ -926,8 +851,11 @@ export const TemplateCode: MessageFns<TemplateCode> = {
     if (message.language !== 0) {
       writer.uint32(16).int32(message.language);
     }
-    if (message.wrappedCode !== "") {
-      writer.uint32(26).string(message.wrappedCode);
+    if (message.submitWrapperCode !== "") {
+      writer.uint32(26).string(message.submitWrapperCode);
+    }
+    if (message.runWrapperCode !== "") {
+      writer.uint32(34).string(message.runWrapperCode);
     }
     return writer;
   },
@@ -960,7 +888,15 @@ export const TemplateCode: MessageFns<TemplateCode> = {
             break;
           }
 
-          message.wrappedCode = reader.string();
+          message.submitWrapperCode = reader.string();
+          continue;
+        }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.runWrapperCode = reader.string();
           continue;
         }
       }
@@ -976,7 +912,8 @@ export const TemplateCode: MessageFns<TemplateCode> = {
     return {
       Id: isSet(object.Id) ? globalThis.String(object.Id) : undefined,
       language: isSet(object.language) ? languageFromJSON(object.language) : 0,
-      wrappedCode: isSet(object.wrappedCode) ? globalThis.String(object.wrappedCode) : "",
+      submitWrapperCode: isSet(object.submitWrapperCode) ? globalThis.String(object.submitWrapperCode) : "",
+      runWrapperCode: isSet(object.runWrapperCode) ? globalThis.String(object.runWrapperCode) : "",
     };
   },
 
@@ -988,8 +925,11 @@ export const TemplateCode: MessageFns<TemplateCode> = {
     if (message.language !== 0) {
       obj.language = languageToJSON(message.language);
     }
-    if (message.wrappedCode !== "") {
-      obj.wrappedCode = message.wrappedCode;
+    if (message.submitWrapperCode !== "") {
+      obj.submitWrapperCode = message.submitWrapperCode;
+    }
+    if (message.runWrapperCode !== "") {
+      obj.runWrapperCode = message.runWrapperCode;
     }
     return obj;
   },
@@ -1001,115 +941,8 @@ export const TemplateCode: MessageFns<TemplateCode> = {
     const message = createBaseTemplateCode();
     message.Id = object.Id ?? undefined;
     message.language = object.language ?? 0;
-    message.wrappedCode = object.wrappedCode ?? "";
-    return message;
-  },
-};
-
-function createBaseUpdateSolutionCode(): UpdateSolutionCode {
-  return { language: undefined, code: undefined, executionTime: undefined, memoryTaken: undefined };
-}
-
-export const UpdateSolutionCode: MessageFns<UpdateSolutionCode> = {
-  encode(message: UpdateSolutionCode, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.language !== undefined) {
-      writer.uint32(16).int32(message.language);
-    }
-    if (message.code !== undefined) {
-      writer.uint32(26).string(message.code);
-    }
-    if (message.executionTime !== undefined) {
-      writer.uint32(32).int32(message.executionTime);
-    }
-    if (message.memoryTaken !== undefined) {
-      writer.uint32(40).int32(message.memoryTaken);
-    }
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): UpdateSolutionCode {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseUpdateSolutionCode();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 2: {
-          if (tag !== 16) {
-            break;
-          }
-
-          message.language = reader.int32() as any;
-          continue;
-        }
-        case 3: {
-          if (tag !== 26) {
-            break;
-          }
-
-          message.code = reader.string();
-          continue;
-        }
-        case 4: {
-          if (tag !== 32) {
-            break;
-          }
-
-          message.executionTime = reader.int32();
-          continue;
-        }
-        case 5: {
-          if (tag !== 40) {
-            break;
-          }
-
-          message.memoryTaken = reader.int32();
-          continue;
-        }
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
-
-  fromJSON(object: any): UpdateSolutionCode {
-    return {
-      language: isSet(object.language) ? languageFromJSON(object.language) : undefined,
-      code: isSet(object.code) ? globalThis.String(object.code) : undefined,
-      executionTime: isSet(object.executionTime) ? globalThis.Number(object.executionTime) : undefined,
-      memoryTaken: isSet(object.memoryTaken) ? globalThis.Number(object.memoryTaken) : undefined,
-    };
-  },
-
-  toJSON(message: UpdateSolutionCode): unknown {
-    const obj: any = {};
-    if (message.language !== undefined) {
-      obj.language = languageToJSON(message.language);
-    }
-    if (message.code !== undefined) {
-      obj.code = message.code;
-    }
-    if (message.executionTime !== undefined) {
-      obj.executionTime = Math.round(message.executionTime);
-    }
-    if (message.memoryTaken !== undefined) {
-      obj.memoryTaken = Math.round(message.memoryTaken);
-    }
-    return obj;
-  },
-
-  create<I extends Exact<DeepPartial<UpdateSolutionCode>, I>>(base?: I): UpdateSolutionCode {
-    return UpdateSolutionCode.fromPartial(base ?? ({} as any));
-  },
-  fromPartial<I extends Exact<DeepPartial<UpdateSolutionCode>, I>>(object: I): UpdateSolutionCode {
-    const message = createBaseUpdateSolutionCode();
-    message.language = object.language ?? undefined;
-    message.code = object.code ?? undefined;
-    message.executionTime = object.executionTime ?? undefined;
-    message.memoryTaken = object.memoryTaken ?? undefined;
+    message.submitWrapperCode = object.submitWrapperCode ?? "";
+    message.runWrapperCode = object.runWrapperCode ?? "";
     return message;
   },
 };
@@ -1127,8 +960,7 @@ function createBaseProblem(): Problem {
     testcaseCollection: undefined,
     examples: [],
     active: false,
-    solutionCodes: [],
-    templateCode: [],
+    templateCodes: [],
     createdAt: "",
     updatedAt: "",
   };
@@ -1169,17 +1001,14 @@ export const Problem: MessageFns<Problem> = {
     if (message.active !== false) {
       writer.uint32(88).bool(message.active);
     }
-    for (const v of message.solutionCodes) {
-      SolutionCode.encode(v!, writer.uint32(98).fork()).join();
-    }
-    for (const v of message.templateCode) {
-      TemplateCode.encode(v!, writer.uint32(106).fork()).join();
+    for (const v of message.templateCodes) {
+      TemplateCode.encode(v!, writer.uint32(98).fork()).join();
     }
     if (message.createdAt !== "") {
-      writer.uint32(114).string(message.createdAt);
+      writer.uint32(106).string(message.createdAt);
     }
     if (message.updatedAt !== "") {
-      writer.uint32(122).string(message.updatedAt);
+      writer.uint32(114).string(message.updatedAt);
     }
     return writer;
   },
@@ -1284,7 +1113,7 @@ export const Problem: MessageFns<Problem> = {
             break;
           }
 
-          message.solutionCodes.push(SolutionCode.decode(reader, reader.uint32()));
+          message.templateCodes.push(TemplateCode.decode(reader, reader.uint32()));
           continue;
         }
         case 13: {
@@ -1292,19 +1121,11 @@ export const Problem: MessageFns<Problem> = {
             break;
           }
 
-          message.templateCode.push(TemplateCode.decode(reader, reader.uint32()));
+          message.createdAt = reader.string();
           continue;
         }
         case 14: {
           if (tag !== 114) {
-            break;
-          }
-
-          message.createdAt = reader.string();
-          continue;
-        }
-        case 15: {
-          if (tag !== 122) {
             break;
           }
 
@@ -1339,11 +1160,8 @@ export const Problem: MessageFns<Problem> = {
         : undefined,
       examples: globalThis.Array.isArray(object?.examples) ? object.examples.map((e: any) => Example.fromJSON(e)) : [],
       active: isSet(object.active) ? globalThis.Boolean(object.active) : false,
-      solutionCodes: globalThis.Array.isArray(object?.solutionCodes)
-        ? object.solutionCodes.map((e: any) => SolutionCode.fromJSON(e))
-        : [],
-      templateCode: globalThis.Array.isArray(object?.templateCode)
-        ? object.templateCode.map((e: any) => TemplateCode.fromJSON(e))
+      templateCodes: globalThis.Array.isArray(object?.templateCodes)
+        ? object.templateCodes.map((e: any) => TemplateCode.fromJSON(e))
         : [],
       createdAt: isSet(object.createdAt) ? globalThis.String(object.createdAt) : "",
       updatedAt: isSet(object.updatedAt) ? globalThis.String(object.updatedAt) : "",
@@ -1385,11 +1203,8 @@ export const Problem: MessageFns<Problem> = {
     if (message.active !== false) {
       obj.active = message.active;
     }
-    if (message.solutionCodes?.length) {
-      obj.solutionCodes = message.solutionCodes.map((e) => SolutionCode.toJSON(e));
-    }
-    if (message.templateCode?.length) {
-      obj.templateCode = message.templateCode.map((e) => TemplateCode.toJSON(e));
+    if (message.templateCodes?.length) {
+      obj.templateCodes = message.templateCodes.map((e) => TemplateCode.toJSON(e));
     }
     if (message.createdAt !== "") {
       obj.createdAt = message.createdAt;
@@ -1418,8 +1233,7 @@ export const Problem: MessageFns<Problem> = {
       : undefined;
     message.examples = object.examples?.map((e) => Example.fromPartial(e)) || [];
     message.active = object.active ?? false;
-    message.solutionCodes = object.solutionCodes?.map((e) => SolutionCode.fromPartial(e)) || [];
-    message.templateCode = object.templateCode?.map((e) => TemplateCode.fromPartial(e)) || [];
+    message.templateCodes = object.templateCodes?.map((e) => TemplateCode.fromPartial(e)) || [];
     message.createdAt = object.createdAt ?? "";
     message.updatedAt = object.updatedAt ?? "";
     return message;
@@ -2865,334 +2679,8 @@ export const RemoveTestCaseRequest: MessageFns<RemoveTestCaseRequest> = {
   },
 };
 
-function createBaseAddSolutionCodeRequest(): AddSolutionCodeRequest {
-  return { Id: "", solutionCode: undefined };
-}
-
-export const AddSolutionCodeRequest: MessageFns<AddSolutionCodeRequest> = {
-  encode(message: AddSolutionCodeRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.Id !== "") {
-      writer.uint32(10).string(message.Id);
-    }
-    if (message.solutionCode !== undefined) {
-      SolutionCode.encode(message.solutionCode, writer.uint32(18).fork()).join();
-    }
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): AddSolutionCodeRequest {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseAddSolutionCodeRequest();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1: {
-          if (tag !== 10) {
-            break;
-          }
-
-          message.Id = reader.string();
-          continue;
-        }
-        case 2: {
-          if (tag !== 18) {
-            break;
-          }
-
-          message.solutionCode = SolutionCode.decode(reader, reader.uint32());
-          continue;
-        }
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
-
-  fromJSON(object: any): AddSolutionCodeRequest {
-    return {
-      Id: isSet(object.Id) ? globalThis.String(object.Id) : "",
-      solutionCode: isSet(object.solutionCode) ? SolutionCode.fromJSON(object.solutionCode) : undefined,
-    };
-  },
-
-  toJSON(message: AddSolutionCodeRequest): unknown {
-    const obj: any = {};
-    if (message.Id !== "") {
-      obj.Id = message.Id;
-    }
-    if (message.solutionCode !== undefined) {
-      obj.solutionCode = SolutionCode.toJSON(message.solutionCode);
-    }
-    return obj;
-  },
-
-  create<I extends Exact<DeepPartial<AddSolutionCodeRequest>, I>>(base?: I): AddSolutionCodeRequest {
-    return AddSolutionCodeRequest.fromPartial(base ?? ({} as any));
-  },
-  fromPartial<I extends Exact<DeepPartial<AddSolutionCodeRequest>, I>>(object: I): AddSolutionCodeRequest {
-    const message = createBaseAddSolutionCodeRequest();
-    message.Id = object.Id ?? "";
-    message.solutionCode = (object.solutionCode !== undefined && object.solutionCode !== null)
-      ? SolutionCode.fromPartial(object.solutionCode)
-      : undefined;
-    return message;
-  },
-};
-
-function createBaseUpdateSolutionCodeRequest(): UpdateSolutionCodeRequest {
-  return { Id: "", solutionCodeId: "", solutionCode: undefined };
-}
-
-export const UpdateSolutionCodeRequest: MessageFns<UpdateSolutionCodeRequest> = {
-  encode(message: UpdateSolutionCodeRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.Id !== "") {
-      writer.uint32(10).string(message.Id);
-    }
-    if (message.solutionCodeId !== "") {
-      writer.uint32(18).string(message.solutionCodeId);
-    }
-    if (message.solutionCode !== undefined) {
-      UpdateSolutionCode.encode(message.solutionCode, writer.uint32(26).fork()).join();
-    }
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): UpdateSolutionCodeRequest {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseUpdateSolutionCodeRequest();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1: {
-          if (tag !== 10) {
-            break;
-          }
-
-          message.Id = reader.string();
-          continue;
-        }
-        case 2: {
-          if (tag !== 18) {
-            break;
-          }
-
-          message.solutionCodeId = reader.string();
-          continue;
-        }
-        case 3: {
-          if (tag !== 26) {
-            break;
-          }
-
-          message.solutionCode = UpdateSolutionCode.decode(reader, reader.uint32());
-          continue;
-        }
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
-
-  fromJSON(object: any): UpdateSolutionCodeRequest {
-    return {
-      Id: isSet(object.Id) ? globalThis.String(object.Id) : "",
-      solutionCodeId: isSet(object.solutionCodeId) ? globalThis.String(object.solutionCodeId) : "",
-      solutionCode: isSet(object.solutionCode) ? UpdateSolutionCode.fromJSON(object.solutionCode) : undefined,
-    };
-  },
-
-  toJSON(message: UpdateSolutionCodeRequest): unknown {
-    const obj: any = {};
-    if (message.Id !== "") {
-      obj.Id = message.Id;
-    }
-    if (message.solutionCodeId !== "") {
-      obj.solutionCodeId = message.solutionCodeId;
-    }
-    if (message.solutionCode !== undefined) {
-      obj.solutionCode = UpdateSolutionCode.toJSON(message.solutionCode);
-    }
-    return obj;
-  },
-
-  create<I extends Exact<DeepPartial<UpdateSolutionCodeRequest>, I>>(base?: I): UpdateSolutionCodeRequest {
-    return UpdateSolutionCodeRequest.fromPartial(base ?? ({} as any));
-  },
-  fromPartial<I extends Exact<DeepPartial<UpdateSolutionCodeRequest>, I>>(object: I): UpdateSolutionCodeRequest {
-    const message = createBaseUpdateSolutionCodeRequest();
-    message.Id = object.Id ?? "";
-    message.solutionCodeId = object.solutionCodeId ?? "";
-    message.solutionCode = (object.solutionCode !== undefined && object.solutionCode !== null)
-      ? UpdateSolutionCode.fromPartial(object.solutionCode)
-      : undefined;
-    return message;
-  },
-};
-
-function createBaseRemoveSolutionCodeRequest(): RemoveSolutionCodeRequest {
-  return { Id: "", solutionCodeId: "" };
-}
-
-export const RemoveSolutionCodeRequest: MessageFns<RemoveSolutionCodeRequest> = {
-  encode(message: RemoveSolutionCodeRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.Id !== "") {
-      writer.uint32(10).string(message.Id);
-    }
-    if (message.solutionCodeId !== "") {
-      writer.uint32(18).string(message.solutionCodeId);
-    }
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): RemoveSolutionCodeRequest {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseRemoveSolutionCodeRequest();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1: {
-          if (tag !== 10) {
-            break;
-          }
-
-          message.Id = reader.string();
-          continue;
-        }
-        case 2: {
-          if (tag !== 18) {
-            break;
-          }
-
-          message.solutionCodeId = reader.string();
-          continue;
-        }
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
-
-  fromJSON(object: any): RemoveSolutionCodeRequest {
-    return {
-      Id: isSet(object.Id) ? globalThis.String(object.Id) : "",
-      solutionCodeId: isSet(object.solutionCodeId) ? globalThis.String(object.solutionCodeId) : "",
-    };
-  },
-
-  toJSON(message: RemoveSolutionCodeRequest): unknown {
-    const obj: any = {};
-    if (message.Id !== "") {
-      obj.Id = message.Id;
-    }
-    if (message.solutionCodeId !== "") {
-      obj.solutionCodeId = message.solutionCodeId;
-    }
-    return obj;
-  },
-
-  create<I extends Exact<DeepPartial<RemoveSolutionCodeRequest>, I>>(base?: I): RemoveSolutionCodeRequest {
-    return RemoveSolutionCodeRequest.fromPartial(base ?? ({} as any));
-  },
-  fromPartial<I extends Exact<DeepPartial<RemoveSolutionCodeRequest>, I>>(object: I): RemoveSolutionCodeRequest {
-    const message = createBaseRemoveSolutionCodeRequest();
-    message.Id = object.Id ?? "";
-    message.solutionCodeId = object.solutionCodeId ?? "";
-    return message;
-  },
-};
-
-function createBaseAddTemplateCodeRequest(): AddTemplateCodeRequest {
-  return { Id: "", templateCode: undefined };
-}
-
-export const AddTemplateCodeRequest: MessageFns<AddTemplateCodeRequest> = {
-  encode(message: AddTemplateCodeRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.Id !== "") {
-      writer.uint32(10).string(message.Id);
-    }
-    if (message.templateCode !== undefined) {
-      TemplateCode.encode(message.templateCode, writer.uint32(18).fork()).join();
-    }
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): AddTemplateCodeRequest {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseAddTemplateCodeRequest();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1: {
-          if (tag !== 10) {
-            break;
-          }
-
-          message.Id = reader.string();
-          continue;
-        }
-        case 2: {
-          if (tag !== 18) {
-            break;
-          }
-
-          message.templateCode = TemplateCode.decode(reader, reader.uint32());
-          continue;
-        }
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
-
-  fromJSON(object: any): AddTemplateCodeRequest {
-    return {
-      Id: isSet(object.Id) ? globalThis.String(object.Id) : "",
-      templateCode: isSet(object.templateCode) ? TemplateCode.fromJSON(object.templateCode) : undefined,
-    };
-  },
-
-  toJSON(message: AddTemplateCodeRequest): unknown {
-    const obj: any = {};
-    if (message.Id !== "") {
-      obj.Id = message.Id;
-    }
-    if (message.templateCode !== undefined) {
-      obj.templateCode = TemplateCode.toJSON(message.templateCode);
-    }
-    return obj;
-  },
-
-  create<I extends Exact<DeepPartial<AddTemplateCodeRequest>, I>>(base?: I): AddTemplateCodeRequest {
-    return AddTemplateCodeRequest.fromPartial(base ?? ({} as any));
-  },
-  fromPartial<I extends Exact<DeepPartial<AddTemplateCodeRequest>, I>>(object: I): AddTemplateCodeRequest {
-    const message = createBaseAddTemplateCodeRequest();
-    message.Id = object.Id ?? "";
-    message.templateCode = (object.templateCode !== undefined && object.templateCode !== null)
-      ? TemplateCode.fromPartial(object.templateCode)
-      : undefined;
-    return message;
-  },
-};
-
 function createBaseUpdateTemplateCode(): UpdateTemplateCode {
-  return { language: undefined, wrappedCode: undefined };
+  return { language: undefined, submitWrapperCode: undefined, runWrapperCode: undefined };
 }
 
 export const UpdateTemplateCode: MessageFns<UpdateTemplateCode> = {
@@ -3200,8 +2688,11 @@ export const UpdateTemplateCode: MessageFns<UpdateTemplateCode> = {
     if (message.language !== undefined) {
       writer.uint32(8).int32(message.language);
     }
-    if (message.wrappedCode !== undefined) {
-      writer.uint32(18).string(message.wrappedCode);
+    if (message.submitWrapperCode !== undefined) {
+      writer.uint32(18).string(message.submitWrapperCode);
+    }
+    if (message.runWrapperCode !== undefined) {
+      writer.uint32(26).string(message.runWrapperCode);
     }
     return writer;
   },
@@ -3226,7 +2717,15 @@ export const UpdateTemplateCode: MessageFns<UpdateTemplateCode> = {
             break;
           }
 
-          message.wrappedCode = reader.string();
+          message.submitWrapperCode = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.runWrapperCode = reader.string();
           continue;
         }
       }
@@ -3241,7 +2740,8 @@ export const UpdateTemplateCode: MessageFns<UpdateTemplateCode> = {
   fromJSON(object: any): UpdateTemplateCode {
     return {
       language: isSet(object.language) ? languageFromJSON(object.language) : undefined,
-      wrappedCode: isSet(object.wrappedCode) ? globalThis.String(object.wrappedCode) : undefined,
+      submitWrapperCode: isSet(object.submitWrapperCode) ? globalThis.String(object.submitWrapperCode) : undefined,
+      runWrapperCode: isSet(object.runWrapperCode) ? globalThis.String(object.runWrapperCode) : undefined,
     };
   },
 
@@ -3250,8 +2750,11 @@ export const UpdateTemplateCode: MessageFns<UpdateTemplateCode> = {
     if (message.language !== undefined) {
       obj.language = languageToJSON(message.language);
     }
-    if (message.wrappedCode !== undefined) {
-      obj.wrappedCode = message.wrappedCode;
+    if (message.submitWrapperCode !== undefined) {
+      obj.submitWrapperCode = message.submitWrapperCode;
+    }
+    if (message.runWrapperCode !== undefined) {
+      obj.runWrapperCode = message.runWrapperCode;
     }
     return obj;
   },
@@ -3262,7 +2765,8 @@ export const UpdateTemplateCode: MessageFns<UpdateTemplateCode> = {
   fromPartial<I extends Exact<DeepPartial<UpdateTemplateCode>, I>>(object: I): UpdateTemplateCode {
     const message = createBaseUpdateTemplateCode();
     message.language = object.language ?? undefined;
-    message.wrappedCode = object.wrappedCode ?? undefined;
+    message.submitWrapperCode = object.submitWrapperCode ?? undefined;
+    message.runWrapperCode = object.runWrapperCode ?? undefined;
     return message;
   },
 };
@@ -3359,82 +2863,6 @@ export const UpdateTemplateCodeRequest: MessageFns<UpdateTemplateCodeRequest> = 
     message.updatedTemplateCode = (object.updatedTemplateCode !== undefined && object.updatedTemplateCode !== null)
       ? UpdateTemplateCode.fromPartial(object.updatedTemplateCode)
       : undefined;
-    return message;
-  },
-};
-
-function createBaseRemoveTemplateCodeRequest(): RemoveTemplateCodeRequest {
-  return { Id: "", templateCodeId: "" };
-}
-
-export const RemoveTemplateCodeRequest: MessageFns<RemoveTemplateCodeRequest> = {
-  encode(message: RemoveTemplateCodeRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.Id !== "") {
-      writer.uint32(10).string(message.Id);
-    }
-    if (message.templateCodeId !== "") {
-      writer.uint32(18).string(message.templateCodeId);
-    }
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): RemoveTemplateCodeRequest {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseRemoveTemplateCodeRequest();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1: {
-          if (tag !== 10) {
-            break;
-          }
-
-          message.Id = reader.string();
-          continue;
-        }
-        case 2: {
-          if (tag !== 18) {
-            break;
-          }
-
-          message.templateCodeId = reader.string();
-          continue;
-        }
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
-
-  fromJSON(object: any): RemoveTemplateCodeRequest {
-    return {
-      Id: isSet(object.Id) ? globalThis.String(object.Id) : "",
-      templateCodeId: isSet(object.templateCodeId) ? globalThis.String(object.templateCodeId) : "",
-    };
-  },
-
-  toJSON(message: RemoveTemplateCodeRequest): unknown {
-    const obj: any = {};
-    if (message.Id !== "") {
-      obj.Id = message.Id;
-    }
-    if (message.templateCodeId !== "") {
-      obj.templateCodeId = message.templateCodeId;
-    }
-    return obj;
-  },
-
-  create<I extends Exact<DeepPartial<RemoveTemplateCodeRequest>, I>>(base?: I): RemoveTemplateCodeRequest {
-    return RemoveTemplateCodeRequest.fromPartial(base ?? ({} as any));
-  },
-  fromPartial<I extends Exact<DeepPartial<RemoveTemplateCodeRequest>, I>>(object: I): RemoveTemplateCodeRequest {
-    const message = createBaseRemoveTemplateCodeRequest();
-    message.Id = object.Id ?? "";
-    message.templateCodeId = object.templateCodeId ?? "";
     return message;
   },
 };
@@ -3556,7 +2984,7 @@ export const CheckProblemTitleRequest: MessageFns<CheckProblemTitleRequest> = {
 };
 
 function createBaseStats(): Stats {
-  return { totalTestCase: 0, passedTestCase: 0, failedTestCase: 0 };
+  return { totalTestCase: 0, passedTestCase: 0, failedTestCase: 0, executionTimeMs: 0, memoryMB: 0 };
 }
 
 export const Stats: MessageFns<Stats> = {
@@ -3569,6 +2997,12 @@ export const Stats: MessageFns<Stats> = {
     }
     if (message.failedTestCase !== 0) {
       writer.uint32(24).int32(message.failedTestCase);
+    }
+    if (message.executionTimeMs !== 0) {
+      writer.uint32(33).double(message.executionTimeMs);
+    }
+    if (message.memoryMB !== 0) {
+      writer.uint32(41).double(message.memoryMB);
     }
     return writer;
   },
@@ -3604,6 +3038,22 @@ export const Stats: MessageFns<Stats> = {
           message.failedTestCase = reader.int32();
           continue;
         }
+        case 4: {
+          if (tag !== 33) {
+            break;
+          }
+
+          message.executionTimeMs = reader.double();
+          continue;
+        }
+        case 5: {
+          if (tag !== 41) {
+            break;
+          }
+
+          message.memoryMB = reader.double();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -3618,6 +3068,8 @@ export const Stats: MessageFns<Stats> = {
       totalTestCase: isSet(object.totalTestCase) ? globalThis.Number(object.totalTestCase) : 0,
       passedTestCase: isSet(object.passedTestCase) ? globalThis.Number(object.passedTestCase) : 0,
       failedTestCase: isSet(object.failedTestCase) ? globalThis.Number(object.failedTestCase) : 0,
+      executionTimeMs: isSet(object.executionTimeMs) ? globalThis.Number(object.executionTimeMs) : 0,
+      memoryMB: isSet(object.memoryMB) ? globalThis.Number(object.memoryMB) : 0,
     };
   },
 
@@ -3632,6 +3084,12 @@ export const Stats: MessageFns<Stats> = {
     if (message.failedTestCase !== 0) {
       obj.failedTestCase = Math.round(message.failedTestCase);
     }
+    if (message.executionTimeMs !== 0) {
+      obj.executionTimeMs = message.executionTimeMs;
+    }
+    if (message.memoryMB !== 0) {
+      obj.memoryMB = message.memoryMB;
+    }
     return obj;
   },
 
@@ -3643,6 +3101,8 @@ export const Stats: MessageFns<Stats> = {
     message.totalTestCase = object.totalTestCase ?? 0;
     message.passedTestCase = object.passedTestCase ?? 0;
     message.failedTestCase = object.failedTestCase ?? 0;
+    message.executionTimeMs = object.executionTimeMs ?? 0;
+    message.memoryMB = object.memoryMB ?? 0;
     return message;
   },
 };
@@ -3838,6 +3298,7 @@ function createBaseSubmission(): Submission {
     Id: "",
     problemId: "",
     userId: "",
+    username: "",
     country: "",
     title: "",
     battleId: undefined,
@@ -3846,8 +3307,6 @@ function createBaseSubmission(): Submission {
     language: 0,
     userCode: "",
     executionResult: undefined,
-    executionTime: undefined,
-    memoryUsage: undefined,
     difficulty: 0,
     isFirst: false,
     updatedAt: "",
@@ -3866,47 +3325,44 @@ export const Submission: MessageFns<Submission> = {
     if (message.userId !== "") {
       writer.uint32(26).string(message.userId);
     }
+    if (message.username !== "") {
+      writer.uint32(34).string(message.username);
+    }
     if (message.country !== "") {
-      writer.uint32(34).string(message.country);
+      writer.uint32(42).string(message.country);
     }
     if (message.title !== "") {
-      writer.uint32(42).string(message.title);
+      writer.uint32(50).string(message.title);
     }
     if (message.battleId !== undefined) {
-      writer.uint32(50).string(message.battleId);
+      writer.uint32(58).string(message.battleId);
     }
     if (message.score !== 0) {
-      writer.uint32(56).int32(message.score);
+      writer.uint32(64).int32(message.score);
     }
     if (message.status !== "") {
-      writer.uint32(66).string(message.status);
+      writer.uint32(74).string(message.status);
     }
     if (message.language !== 0) {
-      writer.uint32(72).int32(message.language);
+      writer.uint32(80).int32(message.language);
     }
     if (message.userCode !== "") {
-      writer.uint32(82).string(message.userCode);
+      writer.uint32(90).string(message.userCode);
     }
     if (message.executionResult !== undefined) {
-      ExecutionResult.encode(message.executionResult, writer.uint32(90).fork()).join();
-    }
-    if (message.executionTime !== undefined) {
-      writer.uint32(96).int32(message.executionTime);
-    }
-    if (message.memoryUsage !== undefined) {
-      writer.uint32(104).int32(message.memoryUsage);
+      ExecutionResult.encode(message.executionResult, writer.uint32(98).fork()).join();
     }
     if (message.difficulty !== 0) {
-      writer.uint32(112).int32(message.difficulty);
+      writer.uint32(104).int32(message.difficulty);
     }
     if (message.isFirst !== false) {
-      writer.uint32(120).bool(message.isFirst);
+      writer.uint32(112).bool(message.isFirst);
     }
     if (message.updatedAt !== "") {
-      writer.uint32(130).string(message.updatedAt);
+      writer.uint32(122).string(message.updatedAt);
     }
     if (message.createdAt !== "") {
-      writer.uint32(138).string(message.createdAt);
+      writer.uint32(130).string(message.createdAt);
     }
     return writer;
   },
@@ -3947,7 +3403,7 @@ export const Submission: MessageFns<Submission> = {
             break;
           }
 
-          message.country = reader.string();
+          message.username = reader.string();
           continue;
         }
         case 5: {
@@ -3955,7 +3411,7 @@ export const Submission: MessageFns<Submission> = {
             break;
           }
 
-          message.title = reader.string();
+          message.country = reader.string();
           continue;
         }
         case 6: {
@@ -3963,39 +3419,39 @@ export const Submission: MessageFns<Submission> = {
             break;
           }
 
-          message.battleId = reader.string();
+          message.title = reader.string();
           continue;
         }
         case 7: {
-          if (tag !== 56) {
+          if (tag !== 58) {
+            break;
+          }
+
+          message.battleId = reader.string();
+          continue;
+        }
+        case 8: {
+          if (tag !== 64) {
             break;
           }
 
           message.score = reader.int32();
           continue;
         }
-        case 8: {
-          if (tag !== 66) {
+        case 9: {
+          if (tag !== 74) {
             break;
           }
 
           message.status = reader.string();
           continue;
         }
-        case 9: {
-          if (tag !== 72) {
+        case 10: {
+          if (tag !== 80) {
             break;
           }
 
           message.language = reader.int32() as any;
-          continue;
-        }
-        case 10: {
-          if (tag !== 82) {
-            break;
-          }
-
-          message.userCode = reader.string();
           continue;
         }
         case 11: {
@@ -4003,15 +3459,15 @@ export const Submission: MessageFns<Submission> = {
             break;
           }
 
-          message.executionResult = ExecutionResult.decode(reader, reader.uint32());
+          message.userCode = reader.string();
           continue;
         }
         case 12: {
-          if (tag !== 96) {
+          if (tag !== 98) {
             break;
           }
 
-          message.executionTime = reader.int32();
+          message.executionResult = ExecutionResult.decode(reader, reader.uint32());
           continue;
         }
         case 13: {
@@ -4019,7 +3475,7 @@ export const Submission: MessageFns<Submission> = {
             break;
           }
 
-          message.memoryUsage = reader.int32();
+          message.difficulty = reader.int32() as any;
           continue;
         }
         case 14: {
@@ -4027,27 +3483,19 @@ export const Submission: MessageFns<Submission> = {
             break;
           }
 
-          message.difficulty = reader.int32() as any;
-          continue;
-        }
-        case 15: {
-          if (tag !== 120) {
-            break;
-          }
-
           message.isFirst = reader.bool();
           continue;
         }
-        case 16: {
-          if (tag !== 130) {
+        case 15: {
+          if (tag !== 122) {
             break;
           }
 
           message.updatedAt = reader.string();
           continue;
         }
-        case 17: {
-          if (tag !== 138) {
+        case 16: {
+          if (tag !== 130) {
             break;
           }
 
@@ -4068,6 +3516,7 @@ export const Submission: MessageFns<Submission> = {
       Id: isSet(object.Id) ? globalThis.String(object.Id) : "",
       problemId: isSet(object.problemId) ? globalThis.String(object.problemId) : "",
       userId: isSet(object.userId) ? globalThis.String(object.userId) : "",
+      username: isSet(object.username) ? globalThis.String(object.username) : "",
       country: isSet(object.country) ? globalThis.String(object.country) : "",
       title: isSet(object.title) ? globalThis.String(object.title) : "",
       battleId: isSet(object.battleId) ? globalThis.String(object.battleId) : undefined,
@@ -4076,8 +3525,6 @@ export const Submission: MessageFns<Submission> = {
       language: isSet(object.language) ? languageFromJSON(object.language) : 0,
       userCode: isSet(object.userCode) ? globalThis.String(object.userCode) : "",
       executionResult: isSet(object.executionResult) ? ExecutionResult.fromJSON(object.executionResult) : undefined,
-      executionTime: isSet(object.executionTime) ? globalThis.Number(object.executionTime) : undefined,
-      memoryUsage: isSet(object.memoryUsage) ? globalThis.Number(object.memoryUsage) : undefined,
       difficulty: isSet(object.difficulty) ? difficultyFromJSON(object.difficulty) : 0,
       isFirst: isSet(object.isFirst) ? globalThis.Boolean(object.isFirst) : false,
       updatedAt: isSet(object.updatedAt) ? globalThis.String(object.updatedAt) : "",
@@ -4095,6 +3542,9 @@ export const Submission: MessageFns<Submission> = {
     }
     if (message.userId !== "") {
       obj.userId = message.userId;
+    }
+    if (message.username !== "") {
+      obj.username = message.username;
     }
     if (message.country !== "") {
       obj.country = message.country;
@@ -4120,12 +3570,6 @@ export const Submission: MessageFns<Submission> = {
     if (message.executionResult !== undefined) {
       obj.executionResult = ExecutionResult.toJSON(message.executionResult);
     }
-    if (message.executionTime !== undefined) {
-      obj.executionTime = Math.round(message.executionTime);
-    }
-    if (message.memoryUsage !== undefined) {
-      obj.memoryUsage = Math.round(message.memoryUsage);
-    }
     if (message.difficulty !== 0) {
       obj.difficulty = difficultyToJSON(message.difficulty);
     }
@@ -4149,6 +3593,7 @@ export const Submission: MessageFns<Submission> = {
     message.Id = object.Id ?? "";
     message.problemId = object.problemId ?? "";
     message.userId = object.userId ?? "";
+    message.username = object.username ?? "";
     message.country = object.country ?? "";
     message.title = object.title ?? "";
     message.battleId = object.battleId ?? undefined;
@@ -4159,8 +3604,6 @@ export const Submission: MessageFns<Submission> = {
     message.executionResult = (object.executionResult !== undefined && object.executionResult !== null)
       ? ExecutionResult.fromPartial(object.executionResult)
       : undefined;
-    message.executionTime = object.executionTime ?? undefined;
-    message.memoryUsage = object.memoryUsage ?? undefined;
     message.difficulty = object.difficulty ?? 0;
     message.isFirst = object.isFirst ?? false;
     message.updatedAt = object.updatedAt ?? "";
@@ -4173,6 +3616,7 @@ function createBaseCreateSubmissionRequest(): CreateSubmissionRequest {
   return {
     problemId: "",
     userId: "",
+    username: "",
     battleId: undefined,
     country: undefined,
     title: "",
@@ -4190,23 +3634,26 @@ export const CreateSubmissionRequest: MessageFns<CreateSubmissionRequest> = {
     if (message.userId !== "") {
       writer.uint32(18).string(message.userId);
     }
+    if (message.username !== "") {
+      writer.uint32(26).string(message.username);
+    }
     if (message.battleId !== undefined) {
-      writer.uint32(26).string(message.battleId);
+      writer.uint32(34).string(message.battleId);
     }
     if (message.country !== undefined) {
-      writer.uint32(34).string(message.country);
+      writer.uint32(42).string(message.country);
     }
     if (message.title !== "") {
-      writer.uint32(42).string(message.title);
+      writer.uint32(50).string(message.title);
     }
     if (message.language !== 0) {
-      writer.uint32(48).int32(message.language);
+      writer.uint32(56).int32(message.language);
     }
     if (message.userCode !== "") {
-      writer.uint32(58).string(message.userCode);
+      writer.uint32(66).string(message.userCode);
     }
     if (message.difficulty !== 0) {
-      writer.uint32(64).int32(message.difficulty);
+      writer.uint32(72).int32(message.difficulty);
     }
     return writer;
   },
@@ -4239,7 +3686,7 @@ export const CreateSubmissionRequest: MessageFns<CreateSubmissionRequest> = {
             break;
           }
 
-          message.battleId = reader.string();
+          message.username = reader.string();
           continue;
         }
         case 4: {
@@ -4247,7 +3694,7 @@ export const CreateSubmissionRequest: MessageFns<CreateSubmissionRequest> = {
             break;
           }
 
-          message.country = reader.string();
+          message.battleId = reader.string();
           continue;
         }
         case 5: {
@@ -4255,27 +3702,35 @@ export const CreateSubmissionRequest: MessageFns<CreateSubmissionRequest> = {
             break;
           }
 
-          message.title = reader.string();
+          message.country = reader.string();
           continue;
         }
         case 6: {
-          if (tag !== 48) {
+          if (tag !== 50) {
+            break;
+          }
+
+          message.title = reader.string();
+          continue;
+        }
+        case 7: {
+          if (tag !== 56) {
             break;
           }
 
           message.language = reader.int32() as any;
           continue;
         }
-        case 7: {
-          if (tag !== 58) {
+        case 8: {
+          if (tag !== 66) {
             break;
           }
 
           message.userCode = reader.string();
           continue;
         }
-        case 8: {
-          if (tag !== 64) {
+        case 9: {
+          if (tag !== 72) {
             break;
           }
 
@@ -4295,6 +3750,7 @@ export const CreateSubmissionRequest: MessageFns<CreateSubmissionRequest> = {
     return {
       problemId: isSet(object.problemId) ? globalThis.String(object.problemId) : "",
       userId: isSet(object.userId) ? globalThis.String(object.userId) : "",
+      username: isSet(object.username) ? globalThis.String(object.username) : "",
       battleId: isSet(object.battleId) ? globalThis.String(object.battleId) : undefined,
       country: isSet(object.country) ? globalThis.String(object.country) : undefined,
       title: isSet(object.title) ? globalThis.String(object.title) : "",
@@ -4311,6 +3767,9 @@ export const CreateSubmissionRequest: MessageFns<CreateSubmissionRequest> = {
     }
     if (message.userId !== "") {
       obj.userId = message.userId;
+    }
+    if (message.username !== "") {
+      obj.username = message.username;
     }
     if (message.battleId !== undefined) {
       obj.battleId = message.battleId;
@@ -4340,6 +3799,7 @@ export const CreateSubmissionRequest: MessageFns<CreateSubmissionRequest> = {
     const message = createBaseCreateSubmissionRequest();
     message.problemId = object.problemId ?? "";
     message.userId = object.userId ?? "";
+    message.username = object.username ?? "";
     message.battleId = object.battleId ?? undefined;
     message.country = object.country ?? undefined;
     message.title = object.title ?? "";
@@ -4351,7 +3811,7 @@ export const CreateSubmissionRequest: MessageFns<CreateSubmissionRequest> = {
 };
 
 function createBaseUpdateSubmissionRequest(): UpdateSubmissionRequest {
-  return { Id: "", executionResult: undefined, executionTime: 0, memoryUsage: 0, score: 0, status: "" };
+  return { Id: "", status: "", executionResult: undefined };
 }
 
 export const UpdateSubmissionRequest: MessageFns<UpdateSubmissionRequest> = {
@@ -4359,20 +3819,11 @@ export const UpdateSubmissionRequest: MessageFns<UpdateSubmissionRequest> = {
     if (message.Id !== "") {
       writer.uint32(10).string(message.Id);
     }
-    if (message.executionResult !== undefined) {
-      ExecutionResult.encode(message.executionResult, writer.uint32(18).fork()).join();
-    }
-    if (message.executionTime !== 0) {
-      writer.uint32(24).int32(message.executionTime);
-    }
-    if (message.memoryUsage !== 0) {
-      writer.uint32(32).int32(message.memoryUsage);
-    }
-    if (message.score !== 0) {
-      writer.uint32(40).int32(message.score);
-    }
     if (message.status !== "") {
-      writer.uint32(50).string(message.status);
+      writer.uint32(26).string(message.status);
+    }
+    if (message.executionResult !== undefined) {
+      ExecutionResult.encode(message.executionResult, writer.uint32(34).fork()).join();
     }
     return writer;
   },
@@ -4392,44 +3843,20 @@ export const UpdateSubmissionRequest: MessageFns<UpdateSubmissionRequest> = {
           message.Id = reader.string();
           continue;
         }
-        case 2: {
-          if (tag !== 18) {
-            break;
-          }
-
-          message.executionResult = ExecutionResult.decode(reader, reader.uint32());
-          continue;
-        }
         case 3: {
-          if (tag !== 24) {
-            break;
-          }
-
-          message.executionTime = reader.int32();
-          continue;
-        }
-        case 4: {
-          if (tag !== 32) {
-            break;
-          }
-
-          message.memoryUsage = reader.int32();
-          continue;
-        }
-        case 5: {
-          if (tag !== 40) {
-            break;
-          }
-
-          message.score = reader.int32();
-          continue;
-        }
-        case 6: {
-          if (tag !== 50) {
+          if (tag !== 26) {
             break;
           }
 
           message.status = reader.string();
+          continue;
+        }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.executionResult = ExecutionResult.decode(reader, reader.uint32());
           continue;
         }
       }
@@ -4444,11 +3871,8 @@ export const UpdateSubmissionRequest: MessageFns<UpdateSubmissionRequest> = {
   fromJSON(object: any): UpdateSubmissionRequest {
     return {
       Id: isSet(object.Id) ? globalThis.String(object.Id) : "",
-      executionResult: isSet(object.executionResult) ? ExecutionResult.fromJSON(object.executionResult) : undefined,
-      executionTime: isSet(object.executionTime) ? globalThis.Number(object.executionTime) : 0,
-      memoryUsage: isSet(object.memoryUsage) ? globalThis.Number(object.memoryUsage) : 0,
-      score: isSet(object.score) ? globalThis.Number(object.score) : 0,
       status: isSet(object.status) ? globalThis.String(object.status) : "",
+      executionResult: isSet(object.executionResult) ? ExecutionResult.fromJSON(object.executionResult) : undefined,
     };
   },
 
@@ -4457,20 +3881,11 @@ export const UpdateSubmissionRequest: MessageFns<UpdateSubmissionRequest> = {
     if (message.Id !== "") {
       obj.Id = message.Id;
     }
-    if (message.executionResult !== undefined) {
-      obj.executionResult = ExecutionResult.toJSON(message.executionResult);
-    }
-    if (message.executionTime !== 0) {
-      obj.executionTime = Math.round(message.executionTime);
-    }
-    if (message.memoryUsage !== 0) {
-      obj.memoryUsage = Math.round(message.memoryUsage);
-    }
-    if (message.score !== 0) {
-      obj.score = Math.round(message.score);
-    }
     if (message.status !== "") {
       obj.status = message.status;
+    }
+    if (message.executionResult !== undefined) {
+      obj.executionResult = ExecutionResult.toJSON(message.executionResult);
     }
     return obj;
   },
@@ -4481,13 +3896,10 @@ export const UpdateSubmissionRequest: MessageFns<UpdateSubmissionRequest> = {
   fromPartial<I extends Exact<DeepPartial<UpdateSubmissionRequest>, I>>(object: I): UpdateSubmissionRequest {
     const message = createBaseUpdateSubmissionRequest();
     message.Id = object.Id ?? "";
+    message.status = object.status ?? "";
     message.executionResult = (object.executionResult !== undefined && object.executionResult !== null)
       ? ExecutionResult.fromPartial(object.executionResult)
       : undefined;
-    message.executionTime = object.executionTime ?? 0;
-    message.memoryUsage = object.memoryUsage ?? 0;
-    message.score = object.score ?? 0;
-    message.status = object.status ?? "";
     return message;
   },
 };
@@ -4726,6 +4138,1416 @@ export const GetSubmissionsResponse: MessageFns<GetSubmissionsResponse> = {
   },
 };
 
+function createBaseListProblemSpecificSubmissionRequest(): ListProblemSpecificSubmissionRequest {
+  return { userId: "", problemId: "", limit: 0, nextCursor: undefined };
+}
+
+export const ListProblemSpecificSubmissionRequest: MessageFns<ListProblemSpecificSubmissionRequest> = {
+  encode(message: ListProblemSpecificSubmissionRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.userId !== "") {
+      writer.uint32(10).string(message.userId);
+    }
+    if (message.problemId !== "") {
+      writer.uint32(18).string(message.problemId);
+    }
+    if (message.limit !== 0) {
+      writer.uint32(24).int32(message.limit);
+    }
+    if (message.nextCursor !== undefined) {
+      writer.uint32(34).string(message.nextCursor);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ListProblemSpecificSubmissionRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseListProblemSpecificSubmissionRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.userId = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.problemId = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 24) {
+            break;
+          }
+
+          message.limit = reader.int32();
+          continue;
+        }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.nextCursor = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ListProblemSpecificSubmissionRequest {
+    return {
+      userId: isSet(object.userId) ? globalThis.String(object.userId) : "",
+      problemId: isSet(object.problemId) ? globalThis.String(object.problemId) : "",
+      limit: isSet(object.limit) ? globalThis.Number(object.limit) : 0,
+      nextCursor: isSet(object.nextCursor) ? globalThis.String(object.nextCursor) : undefined,
+    };
+  },
+
+  toJSON(message: ListProblemSpecificSubmissionRequest): unknown {
+    const obj: any = {};
+    if (message.userId !== "") {
+      obj.userId = message.userId;
+    }
+    if (message.problemId !== "") {
+      obj.problemId = message.problemId;
+    }
+    if (message.limit !== 0) {
+      obj.limit = Math.round(message.limit);
+    }
+    if (message.nextCursor !== undefined) {
+      obj.nextCursor = message.nextCursor;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<ListProblemSpecificSubmissionRequest>, I>>(
+    base?: I,
+  ): ListProblemSpecificSubmissionRequest {
+    return ListProblemSpecificSubmissionRequest.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<ListProblemSpecificSubmissionRequest>, I>>(
+    object: I,
+  ): ListProblemSpecificSubmissionRequest {
+    const message = createBaseListProblemSpecificSubmissionRequest();
+    message.userId = object.userId ?? "";
+    message.problemId = object.problemId ?? "";
+    message.limit = object.limit ?? 0;
+    message.nextCursor = object.nextCursor ?? undefined;
+    return message;
+  },
+};
+
+function createBaseProblemSpecificSubmissions(): ProblemSpecificSubmissions {
+  return { Id: "", status: "", language: 0, executionResult: undefined, userCode: "", createdAt: "" };
+}
+
+export const ProblemSpecificSubmissions: MessageFns<ProblemSpecificSubmissions> = {
+  encode(message: ProblemSpecificSubmissions, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.Id !== "") {
+      writer.uint32(10).string(message.Id);
+    }
+    if (message.status !== "") {
+      writer.uint32(18).string(message.status);
+    }
+    if (message.language !== 0) {
+      writer.uint32(24).int32(message.language);
+    }
+    if (message.executionResult !== undefined) {
+      ExecutionResult.encode(message.executionResult, writer.uint32(34).fork()).join();
+    }
+    if (message.userCode !== "") {
+      writer.uint32(42).string(message.userCode);
+    }
+    if (message.createdAt !== "") {
+      writer.uint32(50).string(message.createdAt);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ProblemSpecificSubmissions {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseProblemSpecificSubmissions();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.Id = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.status = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 24) {
+            break;
+          }
+
+          message.language = reader.int32() as any;
+          continue;
+        }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.executionResult = ExecutionResult.decode(reader, reader.uint32());
+          continue;
+        }
+        case 5: {
+          if (tag !== 42) {
+            break;
+          }
+
+          message.userCode = reader.string();
+          continue;
+        }
+        case 6: {
+          if (tag !== 50) {
+            break;
+          }
+
+          message.createdAt = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ProblemSpecificSubmissions {
+    return {
+      Id: isSet(object.Id) ? globalThis.String(object.Id) : "",
+      status: isSet(object.status) ? globalThis.String(object.status) : "",
+      language: isSet(object.language) ? languageFromJSON(object.language) : 0,
+      executionResult: isSet(object.executionResult) ? ExecutionResult.fromJSON(object.executionResult) : undefined,
+      userCode: isSet(object.userCode) ? globalThis.String(object.userCode) : "",
+      createdAt: isSet(object.createdAt) ? globalThis.String(object.createdAt) : "",
+    };
+  },
+
+  toJSON(message: ProblemSpecificSubmissions): unknown {
+    const obj: any = {};
+    if (message.Id !== "") {
+      obj.Id = message.Id;
+    }
+    if (message.status !== "") {
+      obj.status = message.status;
+    }
+    if (message.language !== 0) {
+      obj.language = languageToJSON(message.language);
+    }
+    if (message.executionResult !== undefined) {
+      obj.executionResult = ExecutionResult.toJSON(message.executionResult);
+    }
+    if (message.userCode !== "") {
+      obj.userCode = message.userCode;
+    }
+    if (message.createdAt !== "") {
+      obj.createdAt = message.createdAt;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<ProblemSpecificSubmissions>, I>>(base?: I): ProblemSpecificSubmissions {
+    return ProblemSpecificSubmissions.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<ProblemSpecificSubmissions>, I>>(object: I): ProblemSpecificSubmissions {
+    const message = createBaseProblemSpecificSubmissions();
+    message.Id = object.Id ?? "";
+    message.status = object.status ?? "";
+    message.language = object.language ?? 0;
+    message.executionResult = (object.executionResult !== undefined && object.executionResult !== null)
+      ? ExecutionResult.fromPartial(object.executionResult)
+      : undefined;
+    message.userCode = object.userCode ?? "";
+    message.createdAt = object.createdAt ?? "";
+    return message;
+  },
+};
+
+function createBaseListProblemSpecificSubmissionResponse(): ListProblemSpecificSubmissionResponse {
+  return { submissions: [], nextCursor: "", hasMore: false };
+}
+
+export const ListProblemSpecificSubmissionResponse: MessageFns<ListProblemSpecificSubmissionResponse> = {
+  encode(message: ListProblemSpecificSubmissionResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    for (const v of message.submissions) {
+      ProblemSpecificSubmissions.encode(v!, writer.uint32(10).fork()).join();
+    }
+    if (message.nextCursor !== "") {
+      writer.uint32(18).string(message.nextCursor);
+    }
+    if (message.hasMore !== false) {
+      writer.uint32(24).bool(message.hasMore);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ListProblemSpecificSubmissionResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseListProblemSpecificSubmissionResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.submissions.push(ProblemSpecificSubmissions.decode(reader, reader.uint32()));
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.nextCursor = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 24) {
+            break;
+          }
+
+          message.hasMore = reader.bool();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ListProblemSpecificSubmissionResponse {
+    return {
+      submissions: globalThis.Array.isArray(object?.submissions)
+        ? object.submissions.map((e: any) => ProblemSpecificSubmissions.fromJSON(e))
+        : [],
+      nextCursor: isSet(object.nextCursor) ? globalThis.String(object.nextCursor) : "",
+      hasMore: isSet(object.hasMore) ? globalThis.Boolean(object.hasMore) : false,
+    };
+  },
+
+  toJSON(message: ListProblemSpecificSubmissionResponse): unknown {
+    const obj: any = {};
+    if (message.submissions?.length) {
+      obj.submissions = message.submissions.map((e) => ProblemSpecificSubmissions.toJSON(e));
+    }
+    if (message.nextCursor !== "") {
+      obj.nextCursor = message.nextCursor;
+    }
+    if (message.hasMore !== false) {
+      obj.hasMore = message.hasMore;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<ListProblemSpecificSubmissionResponse>, I>>(
+    base?: I,
+  ): ListProblemSpecificSubmissionResponse {
+    return ListProblemSpecificSubmissionResponse.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<ListProblemSpecificSubmissionResponse>, I>>(
+    object: I,
+  ): ListProblemSpecificSubmissionResponse {
+    const message = createBaseListProblemSpecificSubmissionResponse();
+    message.submissions = object.submissions?.map((e) => ProblemSpecificSubmissions.fromPartial(e)) || [];
+    message.nextCursor = object.nextCursor ?? "";
+    message.hasMore = object.hasMore ?? false;
+    return message;
+  },
+};
+
+function createBaseListTopKGlobalLeaderboardRequest(): ListTopKGlobalLeaderboardRequest {
+  return { k: 0 };
+}
+
+export const ListTopKGlobalLeaderboardRequest: MessageFns<ListTopKGlobalLeaderboardRequest> = {
+  encode(message: ListTopKGlobalLeaderboardRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.k !== 0) {
+      writer.uint32(8).int32(message.k);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ListTopKGlobalLeaderboardRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseListTopKGlobalLeaderboardRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 8) {
+            break;
+          }
+
+          message.k = reader.int32();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ListTopKGlobalLeaderboardRequest {
+    return { k: isSet(object.k) ? globalThis.Number(object.k) : 0 };
+  },
+
+  toJSON(message: ListTopKGlobalLeaderboardRequest): unknown {
+    const obj: any = {};
+    if (message.k !== 0) {
+      obj.k = Math.round(message.k);
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<ListTopKGlobalLeaderboardRequest>, I>>(
+    base?: I,
+  ): ListTopKGlobalLeaderboardRequest {
+    return ListTopKGlobalLeaderboardRequest.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<ListTopKGlobalLeaderboardRequest>, I>>(
+    object: I,
+  ): ListTopKGlobalLeaderboardRequest {
+    const message = createBaseListTopKGlobalLeaderboardRequest();
+    message.k = object.k ?? 0;
+    return message;
+  },
+};
+
+function createBaseLeaderboardUser(): LeaderboardUser {
+  return { id: "", entity: undefined, score: 0, username: "", problemsSolved: undefined };
+}
+
+export const LeaderboardUser: MessageFns<LeaderboardUser> = {
+  encode(message: LeaderboardUser, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.id !== "") {
+      writer.uint32(10).string(message.id);
+    }
+    if (message.entity !== undefined) {
+      writer.uint32(18).string(message.entity);
+    }
+    if (message.score !== 0) {
+      writer.uint32(24).int32(message.score);
+    }
+    if (message.username !== "") {
+      writer.uint32(34).string(message.username);
+    }
+    if (message.problemsSolved !== undefined) {
+      writer.uint32(40).int32(message.problemsSolved);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): LeaderboardUser {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseLeaderboardUser();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.id = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.entity = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 24) {
+            break;
+          }
+
+          message.score = reader.int32();
+          continue;
+        }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.username = reader.string();
+          continue;
+        }
+        case 5: {
+          if (tag !== 40) {
+            break;
+          }
+
+          message.problemsSolved = reader.int32();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): LeaderboardUser {
+    return {
+      id: isSet(object.id) ? globalThis.String(object.id) : "",
+      entity: isSet(object.entity) ? globalThis.String(object.entity) : undefined,
+      score: isSet(object.score) ? globalThis.Number(object.score) : 0,
+      username: isSet(object.username) ? globalThis.String(object.username) : "",
+      problemsSolved: isSet(object.problemsSolved) ? globalThis.Number(object.problemsSolved) : undefined,
+    };
+  },
+
+  toJSON(message: LeaderboardUser): unknown {
+    const obj: any = {};
+    if (message.id !== "") {
+      obj.id = message.id;
+    }
+    if (message.entity !== undefined) {
+      obj.entity = message.entity;
+    }
+    if (message.score !== 0) {
+      obj.score = Math.round(message.score);
+    }
+    if (message.username !== "") {
+      obj.username = message.username;
+    }
+    if (message.problemsSolved !== undefined) {
+      obj.problemsSolved = Math.round(message.problemsSolved);
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<LeaderboardUser>, I>>(base?: I): LeaderboardUser {
+    return LeaderboardUser.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<LeaderboardUser>, I>>(object: I): LeaderboardUser {
+    const message = createBaseLeaderboardUser();
+    message.id = object.id ?? "";
+    message.entity = object.entity ?? undefined;
+    message.score = object.score ?? 0;
+    message.username = object.username ?? "";
+    message.problemsSolved = object.problemsSolved ?? undefined;
+    return message;
+  },
+};
+
+function createBaseListTopKGlobalLeaderboardResponse(): ListTopKGlobalLeaderboardResponse {
+  return { users: [] };
+}
+
+export const ListTopKGlobalLeaderboardResponse: MessageFns<ListTopKGlobalLeaderboardResponse> = {
+  encode(message: ListTopKGlobalLeaderboardResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    for (const v of message.users) {
+      LeaderboardUser.encode(v!, writer.uint32(10).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ListTopKGlobalLeaderboardResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseListTopKGlobalLeaderboardResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.users.push(LeaderboardUser.decode(reader, reader.uint32()));
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ListTopKGlobalLeaderboardResponse {
+    return {
+      users: globalThis.Array.isArray(object?.users) ? object.users.map((e: any) => LeaderboardUser.fromJSON(e)) : [],
+    };
+  },
+
+  toJSON(message: ListTopKGlobalLeaderboardResponse): unknown {
+    const obj: any = {};
+    if (message.users?.length) {
+      obj.users = message.users.map((e) => LeaderboardUser.toJSON(e));
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<ListTopKGlobalLeaderboardResponse>, I>>(
+    base?: I,
+  ): ListTopKGlobalLeaderboardResponse {
+    return ListTopKGlobalLeaderboardResponse.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<ListTopKGlobalLeaderboardResponse>, I>>(
+    object: I,
+  ): ListTopKGlobalLeaderboardResponse {
+    const message = createBaseListTopKGlobalLeaderboardResponse();
+    message.users = object.users?.map((e) => LeaderboardUser.fromPartial(e)) || [];
+    return message;
+  },
+};
+
+function createBaseListTopKCountryLeaderboardRequest(): ListTopKCountryLeaderboardRequest {
+  return { country: "", k: 0 };
+}
+
+export const ListTopKCountryLeaderboardRequest: MessageFns<ListTopKCountryLeaderboardRequest> = {
+  encode(message: ListTopKCountryLeaderboardRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.country !== "") {
+      writer.uint32(10).string(message.country);
+    }
+    if (message.k !== 0) {
+      writer.uint32(16).int32(message.k);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ListTopKCountryLeaderboardRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseListTopKCountryLeaderboardRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.country = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 16) {
+            break;
+          }
+
+          message.k = reader.int32();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ListTopKCountryLeaderboardRequest {
+    return {
+      country: isSet(object.country) ? globalThis.String(object.country) : "",
+      k: isSet(object.k) ? globalThis.Number(object.k) : 0,
+    };
+  },
+
+  toJSON(message: ListTopKCountryLeaderboardRequest): unknown {
+    const obj: any = {};
+    if (message.country !== "") {
+      obj.country = message.country;
+    }
+    if (message.k !== 0) {
+      obj.k = Math.round(message.k);
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<ListTopKCountryLeaderboardRequest>, I>>(
+    base?: I,
+  ): ListTopKCountryLeaderboardRequest {
+    return ListTopKCountryLeaderboardRequest.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<ListTopKCountryLeaderboardRequest>, I>>(
+    object: I,
+  ): ListTopKCountryLeaderboardRequest {
+    const message = createBaseListTopKCountryLeaderboardRequest();
+    message.country = object.country ?? "";
+    message.k = object.k ?? 0;
+    return message;
+  },
+};
+
+function createBaseListTopKCountryLeaderboardResponse(): ListTopKCountryLeaderboardResponse {
+  return { users: [] };
+}
+
+export const ListTopKCountryLeaderboardResponse: MessageFns<ListTopKCountryLeaderboardResponse> = {
+  encode(message: ListTopKCountryLeaderboardResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    for (const v of message.users) {
+      LeaderboardUser.encode(v!, writer.uint32(10).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ListTopKCountryLeaderboardResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseListTopKCountryLeaderboardResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.users.push(LeaderboardUser.decode(reader, reader.uint32()));
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ListTopKCountryLeaderboardResponse {
+    return {
+      users: globalThis.Array.isArray(object?.users) ? object.users.map((e: any) => LeaderboardUser.fromJSON(e)) : [],
+    };
+  },
+
+  toJSON(message: ListTopKCountryLeaderboardResponse): unknown {
+    const obj: any = {};
+    if (message.users?.length) {
+      obj.users = message.users.map((e) => LeaderboardUser.toJSON(e));
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<ListTopKCountryLeaderboardResponse>, I>>(
+    base?: I,
+  ): ListTopKCountryLeaderboardResponse {
+    return ListTopKCountryLeaderboardResponse.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<ListTopKCountryLeaderboardResponse>, I>>(
+    object: I,
+  ): ListTopKCountryLeaderboardResponse {
+    const message = createBaseListTopKCountryLeaderboardResponse();
+    message.users = object.users?.map((e) => LeaderboardUser.fromPartial(e)) || [];
+    return message;
+  },
+};
+
+function createBaseGetDashboardStatsRequest(): GetDashboardStatsRequest {
+  return { userId: "", userTimezone: "" };
+}
+
+export const GetDashboardStatsRequest: MessageFns<GetDashboardStatsRequest> = {
+  encode(message: GetDashboardStatsRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.userId !== "") {
+      writer.uint32(10).string(message.userId);
+    }
+    if (message.userTimezone !== "") {
+      writer.uint32(18).string(message.userTimezone);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): GetDashboardStatsRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseGetDashboardStatsRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.userId = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.userTimezone = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): GetDashboardStatsRequest {
+    return {
+      userId: isSet(object.userId) ? globalThis.String(object.userId) : "",
+      userTimezone: isSet(object.userTimezone) ? globalThis.String(object.userTimezone) : "",
+    };
+  },
+
+  toJSON(message: GetDashboardStatsRequest): unknown {
+    const obj: any = {};
+    if (message.userId !== "") {
+      obj.userId = message.userId;
+    }
+    if (message.userTimezone !== "") {
+      obj.userTimezone = message.userTimezone;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<GetDashboardStatsRequest>, I>>(base?: I): GetDashboardStatsRequest {
+    return GetDashboardStatsRequest.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<GetDashboardStatsRequest>, I>>(object: I): GetDashboardStatsRequest {
+    const message = createBaseGetDashboardStatsRequest();
+    message.userId = object.userId ?? "";
+    message.userTimezone = object.userTimezone ?? "";
+    return message;
+  },
+};
+
+function createBaseActivity(): Activity {
+  return { date: "", count: 0 };
+}
+
+export const Activity: MessageFns<Activity> = {
+  encode(message: Activity, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.date !== "") {
+      writer.uint32(10).string(message.date);
+    }
+    if (message.count !== 0) {
+      writer.uint32(16).int32(message.count);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): Activity {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseActivity();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.date = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 16) {
+            break;
+          }
+
+          message.count = reader.int32();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): Activity {
+    return {
+      date: isSet(object.date) ? globalThis.String(object.date) : "",
+      count: isSet(object.count) ? globalThis.Number(object.count) : 0,
+    };
+  },
+
+  toJSON(message: Activity): unknown {
+    const obj: any = {};
+    if (message.date !== "") {
+      obj.date = message.date;
+    }
+    if (message.count !== 0) {
+      obj.count = Math.round(message.count);
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<Activity>, I>>(base?: I): Activity {
+    return Activity.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<Activity>, I>>(object: I): Activity {
+    const message = createBaseActivity();
+    message.date = object.date ?? "";
+    message.count = object.count ?? 0;
+    return message;
+  },
+};
+
+function createBaseRecentActivity(): RecentActivity {
+  return { title: "", difficulty: "", status: "", timeAgo: "" };
+}
+
+export const RecentActivity: MessageFns<RecentActivity> = {
+  encode(message: RecentActivity, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.title !== "") {
+      writer.uint32(10).string(message.title);
+    }
+    if (message.difficulty !== "") {
+      writer.uint32(18).string(message.difficulty);
+    }
+    if (message.status !== "") {
+      writer.uint32(26).string(message.status);
+    }
+    if (message.timeAgo !== "") {
+      writer.uint32(34).string(message.timeAgo);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): RecentActivity {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseRecentActivity();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.title = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.difficulty = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.status = reader.string();
+          continue;
+        }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.timeAgo = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): RecentActivity {
+    return {
+      title: isSet(object.title) ? globalThis.String(object.title) : "",
+      difficulty: isSet(object.difficulty) ? globalThis.String(object.difficulty) : "",
+      status: isSet(object.status) ? globalThis.String(object.status) : "",
+      timeAgo: isSet(object.timeAgo) ? globalThis.String(object.timeAgo) : "",
+    };
+  },
+
+  toJSON(message: RecentActivity): unknown {
+    const obj: any = {};
+    if (message.title !== "") {
+      obj.title = message.title;
+    }
+    if (message.difficulty !== "") {
+      obj.difficulty = message.difficulty;
+    }
+    if (message.status !== "") {
+      obj.status = message.status;
+    }
+    if (message.timeAgo !== "") {
+      obj.timeAgo = message.timeAgo;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<RecentActivity>, I>>(base?: I): RecentActivity {
+    return RecentActivity.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<RecentActivity>, I>>(object: I): RecentActivity {
+    const message = createBaseRecentActivity();
+    message.title = object.title ?? "";
+    message.difficulty = object.difficulty ?? "";
+    message.status = object.status ?? "";
+    message.timeAgo = object.timeAgo ?? "";
+    return message;
+  },
+};
+
+function createBaseLeaderboardData(): LeaderboardData {
+  return { userId: "", username: "", score: 0, entity: "", globalRank: 0, entityRank: 0 };
+}
+
+export const LeaderboardData: MessageFns<LeaderboardData> = {
+  encode(message: LeaderboardData, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.userId !== "") {
+      writer.uint32(10).string(message.userId);
+    }
+    if (message.username !== "") {
+      writer.uint32(18).string(message.username);
+    }
+    if (message.score !== 0) {
+      writer.uint32(24).int32(message.score);
+    }
+    if (message.entity !== "") {
+      writer.uint32(34).string(message.entity);
+    }
+    if (message.globalRank !== 0) {
+      writer.uint32(40).int32(message.globalRank);
+    }
+    if (message.entityRank !== 0) {
+      writer.uint32(48).int32(message.entityRank);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): LeaderboardData {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseLeaderboardData();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.userId = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.username = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 24) {
+            break;
+          }
+
+          message.score = reader.int32();
+          continue;
+        }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.entity = reader.string();
+          continue;
+        }
+        case 5: {
+          if (tag !== 40) {
+            break;
+          }
+
+          message.globalRank = reader.int32();
+          continue;
+        }
+        case 6: {
+          if (tag !== 48) {
+            break;
+          }
+
+          message.entityRank = reader.int32();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): LeaderboardData {
+    return {
+      userId: isSet(object.userId) ? globalThis.String(object.userId) : "",
+      username: isSet(object.username) ? globalThis.String(object.username) : "",
+      score: isSet(object.score) ? globalThis.Number(object.score) : 0,
+      entity: isSet(object.entity) ? globalThis.String(object.entity) : "",
+      globalRank: isSet(object.globalRank) ? globalThis.Number(object.globalRank) : 0,
+      entityRank: isSet(object.entityRank) ? globalThis.Number(object.entityRank) : 0,
+    };
+  },
+
+  toJSON(message: LeaderboardData): unknown {
+    const obj: any = {};
+    if (message.userId !== "") {
+      obj.userId = message.userId;
+    }
+    if (message.username !== "") {
+      obj.username = message.username;
+    }
+    if (message.score !== 0) {
+      obj.score = Math.round(message.score);
+    }
+    if (message.entity !== "") {
+      obj.entity = message.entity;
+    }
+    if (message.globalRank !== 0) {
+      obj.globalRank = Math.round(message.globalRank);
+    }
+    if (message.entityRank !== 0) {
+      obj.entityRank = Math.round(message.entityRank);
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<LeaderboardData>, I>>(base?: I): LeaderboardData {
+    return LeaderboardData.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<LeaderboardData>, I>>(object: I): LeaderboardData {
+    const message = createBaseLeaderboardData();
+    message.userId = object.userId ?? "";
+    message.username = object.username ?? "";
+    message.score = object.score ?? 0;
+    message.entity = object.entity ?? "";
+    message.globalRank = object.globalRank ?? 0;
+    message.entityRank = object.entityRank ?? 0;
+    return message;
+  },
+};
+
+function createBaseGetDashboardStatsResponse(): GetDashboardStatsResponse {
+  return { heatmap: [], currentStreak: 0, leaderboadDetails: undefined, problemsSolved: 0, recentActivities: [] };
+}
+
+export const GetDashboardStatsResponse: MessageFns<GetDashboardStatsResponse> = {
+  encode(message: GetDashboardStatsResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    for (const v of message.heatmap) {
+      Activity.encode(v!, writer.uint32(10).fork()).join();
+    }
+    if (message.currentStreak !== 0) {
+      writer.uint32(16).int32(message.currentStreak);
+    }
+    if (message.leaderboadDetails !== undefined) {
+      LeaderboardData.encode(message.leaderboadDetails, writer.uint32(26).fork()).join();
+    }
+    if (message.problemsSolved !== 0) {
+      writer.uint32(32).int32(message.problemsSolved);
+    }
+    for (const v of message.recentActivities) {
+      RecentActivity.encode(v!, writer.uint32(42).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): GetDashboardStatsResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseGetDashboardStatsResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.heatmap.push(Activity.decode(reader, reader.uint32()));
+          continue;
+        }
+        case 2: {
+          if (tag !== 16) {
+            break;
+          }
+
+          message.currentStreak = reader.int32();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.leaderboadDetails = LeaderboardData.decode(reader, reader.uint32());
+          continue;
+        }
+        case 4: {
+          if (tag !== 32) {
+            break;
+          }
+
+          message.problemsSolved = reader.int32();
+          continue;
+        }
+        case 5: {
+          if (tag !== 42) {
+            break;
+          }
+
+          message.recentActivities.push(RecentActivity.decode(reader, reader.uint32()));
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): GetDashboardStatsResponse {
+    return {
+      heatmap: globalThis.Array.isArray(object?.heatmap) ? object.heatmap.map((e: any) => Activity.fromJSON(e)) : [],
+      currentStreak: isSet(object.currentStreak) ? globalThis.Number(object.currentStreak) : 0,
+      leaderboadDetails: isSet(object.leaderboadDetails)
+        ? LeaderboardData.fromJSON(object.leaderboadDetails)
+        : undefined,
+      problemsSolved: isSet(object.problemsSolved) ? globalThis.Number(object.problemsSolved) : 0,
+      recentActivities: globalThis.Array.isArray(object?.recentActivities)
+        ? object.recentActivities.map((e: any) => RecentActivity.fromJSON(e))
+        : [],
+    };
+  },
+
+  toJSON(message: GetDashboardStatsResponse): unknown {
+    const obj: any = {};
+    if (message.heatmap?.length) {
+      obj.heatmap = message.heatmap.map((e) => Activity.toJSON(e));
+    }
+    if (message.currentStreak !== 0) {
+      obj.currentStreak = Math.round(message.currentStreak);
+    }
+    if (message.leaderboadDetails !== undefined) {
+      obj.leaderboadDetails = LeaderboardData.toJSON(message.leaderboadDetails);
+    }
+    if (message.problemsSolved !== 0) {
+      obj.problemsSolved = Math.round(message.problemsSolved);
+    }
+    if (message.recentActivities?.length) {
+      obj.recentActivities = message.recentActivities.map((e) => RecentActivity.toJSON(e));
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<GetDashboardStatsResponse>, I>>(base?: I): GetDashboardStatsResponse {
+    return GetDashboardStatsResponse.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<GetDashboardStatsResponse>, I>>(object: I): GetDashboardStatsResponse {
+    const message = createBaseGetDashboardStatsResponse();
+    message.heatmap = object.heatmap?.map((e) => Activity.fromPartial(e)) || [];
+    message.currentStreak = object.currentStreak ?? 0;
+    message.leaderboadDetails = (object.leaderboadDetails !== undefined && object.leaderboadDetails !== null)
+      ? LeaderboardData.fromPartial(object.leaderboadDetails)
+      : undefined;
+    message.problemsSolved = object.problemsSolved ?? 0;
+    message.recentActivities = object.recentActivities?.map((e) => RecentActivity.fromPartial(e)) || [];
+    return message;
+  },
+};
+
+function createBaseUpdateCountryRequest(): UpdateCountryRequest {
+  return { userId: "", country: "" };
+}
+
+export const UpdateCountryRequest: MessageFns<UpdateCountryRequest> = {
+  encode(message: UpdateCountryRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.userId !== "") {
+      writer.uint32(10).string(message.userId);
+    }
+    if (message.country !== "") {
+      writer.uint32(18).string(message.country);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): UpdateCountryRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseUpdateCountryRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.userId = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.country = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): UpdateCountryRequest {
+    return {
+      userId: isSet(object.userId) ? globalThis.String(object.userId) : "",
+      country: isSet(object.country) ? globalThis.String(object.country) : "",
+    };
+  },
+
+  toJSON(message: UpdateCountryRequest): unknown {
+    const obj: any = {};
+    if (message.userId !== "") {
+      obj.userId = message.userId;
+    }
+    if (message.country !== "") {
+      obj.country = message.country;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<UpdateCountryRequest>, I>>(base?: I): UpdateCountryRequest {
+    return UpdateCountryRequest.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<UpdateCountryRequest>, I>>(object: I): UpdateCountryRequest {
+    const message = createBaseUpdateCountryRequest();
+    message.userId = object.userId ?? "";
+    message.country = object.country ?? "";
+    return message;
+  },
+};
+
+function createBaseRemoveUserRequest(): RemoveUserRequest {
+  return { userId: "" };
+}
+
+export const RemoveUserRequest: MessageFns<RemoveUserRequest> = {
+  encode(message: RemoveUserRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.userId !== "") {
+      writer.uint32(10).string(message.userId);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): RemoveUserRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseRemoveUserRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.userId = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): RemoveUserRequest {
+    return { userId: isSet(object.userId) ? globalThis.String(object.userId) : "" };
+  },
+
+  toJSON(message: RemoveUserRequest): unknown {
+    const obj: any = {};
+    if (message.userId !== "") {
+      obj.userId = message.userId;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<RemoveUserRequest>, I>>(base?: I): RemoveUserRequest {
+    return RemoveUserRequest.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<RemoveUserRequest>, I>>(object: I): RemoveUserRequest {
+    const message = createBaseRemoveUserRequest();
+    message.userId = object.userId ?? "";
+    return message;
+  },
+};
+
 export type ProblemServiceService = typeof ProblemServiceService;
 export const ProblemServiceService = {
   createProblem: {
@@ -4805,46 +5627,6 @@ export const ProblemServiceService = {
     responseSerialize: (value: Empty): Buffer => Buffer.from(Empty.encode(value).finish()),
     responseDeserialize: (value: Buffer): Empty => Empty.decode(value),
   },
-  addSolutionCode: {
-    path: "/problem.v1.ProblemService/AddSolutionCode",
-    requestStream: false,
-    responseStream: false,
-    requestSerialize: (value: AddSolutionCodeRequest): Buffer =>
-      Buffer.from(AddSolutionCodeRequest.encode(value).finish()),
-    requestDeserialize: (value: Buffer): AddSolutionCodeRequest => AddSolutionCodeRequest.decode(value),
-    responseSerialize: (value: Empty): Buffer => Buffer.from(Empty.encode(value).finish()),
-    responseDeserialize: (value: Buffer): Empty => Empty.decode(value),
-  },
-  updateSolutionCode: {
-    path: "/problem.v1.ProblemService/UpdateSolutionCode",
-    requestStream: false,
-    responseStream: false,
-    requestSerialize: (value: UpdateSolutionCodeRequest): Buffer =>
-      Buffer.from(UpdateSolutionCodeRequest.encode(value).finish()),
-    requestDeserialize: (value: Buffer): UpdateSolutionCodeRequest => UpdateSolutionCodeRequest.decode(value),
-    responseSerialize: (value: Empty): Buffer => Buffer.from(Empty.encode(value).finish()),
-    responseDeserialize: (value: Buffer): Empty => Empty.decode(value),
-  },
-  removeSolutionCode: {
-    path: "/problem.v1.ProblemService/RemoveSolutionCode",
-    requestStream: false,
-    responseStream: false,
-    requestSerialize: (value: RemoveSolutionCodeRequest): Buffer =>
-      Buffer.from(RemoveSolutionCodeRequest.encode(value).finish()),
-    requestDeserialize: (value: Buffer): RemoveSolutionCodeRequest => RemoveSolutionCodeRequest.decode(value),
-    responseSerialize: (value: Empty): Buffer => Buffer.from(Empty.encode(value).finish()),
-    responseDeserialize: (value: Buffer): Empty => Empty.decode(value),
-  },
-  addTemplateCode: {
-    path: "/problem.v1.ProblemService/AddTemplateCode",
-    requestStream: false,
-    responseStream: false,
-    requestSerialize: (value: AddTemplateCodeRequest): Buffer =>
-      Buffer.from(AddTemplateCodeRequest.encode(value).finish()),
-    requestDeserialize: (value: Buffer): AddTemplateCodeRequest => AddTemplateCodeRequest.decode(value),
-    responseSerialize: (value: Empty): Buffer => Buffer.from(Empty.encode(value).finish()),
-    responseDeserialize: (value: Buffer): Empty => Empty.decode(value),
-  },
   updateTemplateCode: {
     path: "/problem.v1.ProblemService/UpdateTemplateCode",
     requestStream: false,
@@ -4852,16 +5634,6 @@ export const ProblemServiceService = {
     requestSerialize: (value: UpdateTemplateCodeRequest): Buffer =>
       Buffer.from(UpdateTemplateCodeRequest.encode(value).finish()),
     requestDeserialize: (value: Buffer): UpdateTemplateCodeRequest => UpdateTemplateCodeRequest.decode(value),
-    responseSerialize: (value: Empty): Buffer => Buffer.from(Empty.encode(value).finish()),
-    responseDeserialize: (value: Buffer): Empty => Empty.decode(value),
-  },
-  removeTemplateCode: {
-    path: "/problem.v1.ProblemService/RemoveTemplateCode",
-    requestStream: false,
-    responseStream: false,
-    requestSerialize: (value: RemoveTemplateCodeRequest): Buffer =>
-      Buffer.from(RemoveTemplateCodeRequest.encode(value).finish()),
-    requestDeserialize: (value: Buffer): RemoveTemplateCodeRequest => RemoveTemplateCodeRequest.decode(value),
     responseSerialize: (value: Empty): Buffer => Buffer.from(Empty.encode(value).finish()),
     responseDeserialize: (value: Buffer): Empty => Empty.decode(value),
   },
@@ -4896,12 +5668,7 @@ export interface ProblemServiceServer extends UntypedServiceImplementation {
   addTestCase: handleUnaryCall<AddTestCaseRequest, Empty>;
   bulkUploadTestCases: handleUnaryCall<BulkUploadTestCasesRequest, Empty>;
   removeTestCase: handleUnaryCall<RemoveTestCaseRequest, Empty>;
-  addSolutionCode: handleUnaryCall<AddSolutionCodeRequest, Empty>;
-  updateSolutionCode: handleUnaryCall<UpdateSolutionCodeRequest, Empty>;
-  removeSolutionCode: handleUnaryCall<RemoveSolutionCodeRequest, Empty>;
-  addTemplateCode: handleUnaryCall<AddTemplateCodeRequest, Empty>;
   updateTemplateCode: handleUnaryCall<UpdateTemplateCodeRequest, Empty>;
-  removeTemplateCode: handleUnaryCall<RemoveTemplateCodeRequest, Empty>;
   checkQuestionIdAvailability: handleUnaryCall<CheckQuestionIdRequest, Empty>;
   checkProblemTitle: handleUnaryCall<CheckProblemTitleRequest, Empty>;
 }
@@ -5027,66 +5794,6 @@ export interface ProblemServiceClient extends Client {
     options: Partial<CallOptions>,
     callback: (error: ServiceError | null, response: Empty) => void,
   ): ClientUnaryCall;
-  addSolutionCode(
-    request: AddSolutionCodeRequest,
-    callback: (error: ServiceError | null, response: Empty) => void,
-  ): ClientUnaryCall;
-  addSolutionCode(
-    request: AddSolutionCodeRequest,
-    metadata: Metadata,
-    callback: (error: ServiceError | null, response: Empty) => void,
-  ): ClientUnaryCall;
-  addSolutionCode(
-    request: AddSolutionCodeRequest,
-    metadata: Metadata,
-    options: Partial<CallOptions>,
-    callback: (error: ServiceError | null, response: Empty) => void,
-  ): ClientUnaryCall;
-  updateSolutionCode(
-    request: UpdateSolutionCodeRequest,
-    callback: (error: ServiceError | null, response: Empty) => void,
-  ): ClientUnaryCall;
-  updateSolutionCode(
-    request: UpdateSolutionCodeRequest,
-    metadata: Metadata,
-    callback: (error: ServiceError | null, response: Empty) => void,
-  ): ClientUnaryCall;
-  updateSolutionCode(
-    request: UpdateSolutionCodeRequest,
-    metadata: Metadata,
-    options: Partial<CallOptions>,
-    callback: (error: ServiceError | null, response: Empty) => void,
-  ): ClientUnaryCall;
-  removeSolutionCode(
-    request: RemoveSolutionCodeRequest,
-    callback: (error: ServiceError | null, response: Empty) => void,
-  ): ClientUnaryCall;
-  removeSolutionCode(
-    request: RemoveSolutionCodeRequest,
-    metadata: Metadata,
-    callback: (error: ServiceError | null, response: Empty) => void,
-  ): ClientUnaryCall;
-  removeSolutionCode(
-    request: RemoveSolutionCodeRequest,
-    metadata: Metadata,
-    options: Partial<CallOptions>,
-    callback: (error: ServiceError | null, response: Empty) => void,
-  ): ClientUnaryCall;
-  addTemplateCode(
-    request: AddTemplateCodeRequest,
-    callback: (error: ServiceError | null, response: Empty) => void,
-  ): ClientUnaryCall;
-  addTemplateCode(
-    request: AddTemplateCodeRequest,
-    metadata: Metadata,
-    callback: (error: ServiceError | null, response: Empty) => void,
-  ): ClientUnaryCall;
-  addTemplateCode(
-    request: AddTemplateCodeRequest,
-    metadata: Metadata,
-    options: Partial<CallOptions>,
-    callback: (error: ServiceError | null, response: Empty) => void,
-  ): ClientUnaryCall;
   updateTemplateCode(
     request: UpdateTemplateCodeRequest,
     callback: (error: ServiceError | null, response: Empty) => void,
@@ -5098,21 +5805,6 @@ export interface ProblemServiceClient extends Client {
   ): ClientUnaryCall;
   updateTemplateCode(
     request: UpdateTemplateCodeRequest,
-    metadata: Metadata,
-    options: Partial<CallOptions>,
-    callback: (error: ServiceError | null, response: Empty) => void,
-  ): ClientUnaryCall;
-  removeTemplateCode(
-    request: RemoveTemplateCodeRequest,
-    callback: (error: ServiceError | null, response: Empty) => void,
-  ): ClientUnaryCall;
-  removeTemplateCode(
-    request: RemoveTemplateCodeRequest,
-    metadata: Metadata,
-    callback: (error: ServiceError | null, response: Empty) => void,
-  ): ClientUnaryCall;
-  removeTemplateCode(
-    request: RemoveTemplateCodeRequest,
     metadata: Metadata,
     options: Partial<CallOptions>,
     callback: (error: ServiceError | null, response: Empty) => void,
@@ -5180,6 +5872,19 @@ export const SubmissionServiceService = {
     responseSerialize: (value: Empty): Buffer => Buffer.from(Empty.encode(value).finish()),
     responseDeserialize: (value: Buffer): Empty => Empty.decode(value),
   },
+  listProblemSpecificSubmission: {
+    path: "/problem.v1.SubmissionService/ListProblemSpecificSubmission",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: ListProblemSpecificSubmissionRequest): Buffer =>
+      Buffer.from(ListProblemSpecificSubmissionRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): ListProblemSpecificSubmissionRequest =>
+      ListProblemSpecificSubmissionRequest.decode(value),
+    responseSerialize: (value: ListProblemSpecificSubmissionResponse): Buffer =>
+      Buffer.from(ListProblemSpecificSubmissionResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): ListProblemSpecificSubmissionResponse =>
+      ListProblemSpecificSubmissionResponse.decode(value),
+  },
   getSubmissions: {
     path: "/problem.v1.SubmissionService/GetSubmissions",
     requestStream: false,
@@ -5191,12 +5896,76 @@ export const SubmissionServiceService = {
       Buffer.from(GetSubmissionsResponse.encode(value).finish()),
     responseDeserialize: (value: Buffer): GetSubmissionsResponse => GetSubmissionsResponse.decode(value),
   },
+  listTopKGlobalLeaderboard: {
+    path: "/problem.v1.SubmissionService/ListTopKGlobalLeaderboard",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: ListTopKGlobalLeaderboardRequest): Buffer =>
+      Buffer.from(ListTopKGlobalLeaderboardRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): ListTopKGlobalLeaderboardRequest =>
+      ListTopKGlobalLeaderboardRequest.decode(value),
+    responseSerialize: (value: ListTopKGlobalLeaderboardResponse): Buffer =>
+      Buffer.from(ListTopKGlobalLeaderboardResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): ListTopKGlobalLeaderboardResponse =>
+      ListTopKGlobalLeaderboardResponse.decode(value),
+  },
+  listTopKCountryLeaderboard: {
+    path: "/problem.v1.SubmissionService/ListTopKCountryLeaderboard",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: ListTopKCountryLeaderboardRequest): Buffer =>
+      Buffer.from(ListTopKCountryLeaderboardRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): ListTopKCountryLeaderboardRequest =>
+      ListTopKCountryLeaderboardRequest.decode(value),
+    responseSerialize: (value: ListTopKCountryLeaderboardResponse): Buffer =>
+      Buffer.from(ListTopKCountryLeaderboardResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): ListTopKCountryLeaderboardResponse =>
+      ListTopKCountryLeaderboardResponse.decode(value),
+  },
+  getDashboardStats: {
+    path: "/problem.v1.SubmissionService/GetDashboardStats",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: GetDashboardStatsRequest): Buffer =>
+      Buffer.from(GetDashboardStatsRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): GetDashboardStatsRequest => GetDashboardStatsRequest.decode(value),
+    responseSerialize: (value: GetDashboardStatsResponse): Buffer =>
+      Buffer.from(GetDashboardStatsResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): GetDashboardStatsResponse => GetDashboardStatsResponse.decode(value),
+  },
+  updateCountryInLeaderboard: {
+    path: "/problem.v1.SubmissionService/UpdateCountryInLeaderboard",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: UpdateCountryRequest): Buffer => Buffer.from(UpdateCountryRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): UpdateCountryRequest => UpdateCountryRequest.decode(value),
+    responseSerialize: (value: Empty): Buffer => Buffer.from(Empty.encode(value).finish()),
+    responseDeserialize: (value: Buffer): Empty => Empty.decode(value),
+  },
+  removeUserInLeaderboard: {
+    path: "/problem.v1.SubmissionService/RemoveUserInLeaderboard",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: RemoveUserRequest): Buffer => Buffer.from(RemoveUserRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): RemoveUserRequest => RemoveUserRequest.decode(value),
+    responseSerialize: (value: Empty): Buffer => Buffer.from(Empty.encode(value).finish()),
+    responseDeserialize: (value: Buffer): Empty => Empty.decode(value),
+  },
 } as const;
 
 export interface SubmissionServiceServer extends UntypedServiceImplementation {
   createSubmission: handleUnaryCall<CreateSubmissionRequest, Submission>;
   updateSubmission: handleUnaryCall<UpdateSubmissionRequest, Empty>;
+  listProblemSpecificSubmission: handleUnaryCall<
+    ListProblemSpecificSubmissionRequest,
+    ListProblemSpecificSubmissionResponse
+  >;
   getSubmissions: handleUnaryCall<GetSubmissionsRequest, GetSubmissionsResponse>;
+  listTopKGlobalLeaderboard: handleUnaryCall<ListTopKGlobalLeaderboardRequest, ListTopKGlobalLeaderboardResponse>;
+  listTopKCountryLeaderboard: handleUnaryCall<ListTopKCountryLeaderboardRequest, ListTopKCountryLeaderboardResponse>;
+  getDashboardStats: handleUnaryCall<GetDashboardStatsRequest, GetDashboardStatsResponse>;
+  updateCountryInLeaderboard: handleUnaryCall<UpdateCountryRequest, Empty>;
+  removeUserInLeaderboard: handleUnaryCall<RemoveUserRequest, Empty>;
 }
 
 export interface SubmissionServiceClient extends Client {
@@ -5230,6 +5999,21 @@ export interface SubmissionServiceClient extends Client {
     options: Partial<CallOptions>,
     callback: (error: ServiceError | null, response: Empty) => void,
   ): ClientUnaryCall;
+  listProblemSpecificSubmission(
+    request: ListProblemSpecificSubmissionRequest,
+    callback: (error: ServiceError | null, response: ListProblemSpecificSubmissionResponse) => void,
+  ): ClientUnaryCall;
+  listProblemSpecificSubmission(
+    request: ListProblemSpecificSubmissionRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: ListProblemSpecificSubmissionResponse) => void,
+  ): ClientUnaryCall;
+  listProblemSpecificSubmission(
+    request: ListProblemSpecificSubmissionRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: ListProblemSpecificSubmissionResponse) => void,
+  ): ClientUnaryCall;
   getSubmissions(
     request: GetSubmissionsRequest,
     callback: (error: ServiceError | null, response: GetSubmissionsResponse) => void,
@@ -5244,6 +6028,81 @@ export interface SubmissionServiceClient extends Client {
     metadata: Metadata,
     options: Partial<CallOptions>,
     callback: (error: ServiceError | null, response: GetSubmissionsResponse) => void,
+  ): ClientUnaryCall;
+  listTopKGlobalLeaderboard(
+    request: ListTopKGlobalLeaderboardRequest,
+    callback: (error: ServiceError | null, response: ListTopKGlobalLeaderboardResponse) => void,
+  ): ClientUnaryCall;
+  listTopKGlobalLeaderboard(
+    request: ListTopKGlobalLeaderboardRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: ListTopKGlobalLeaderboardResponse) => void,
+  ): ClientUnaryCall;
+  listTopKGlobalLeaderboard(
+    request: ListTopKGlobalLeaderboardRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: ListTopKGlobalLeaderboardResponse) => void,
+  ): ClientUnaryCall;
+  listTopKCountryLeaderboard(
+    request: ListTopKCountryLeaderboardRequest,
+    callback: (error: ServiceError | null, response: ListTopKCountryLeaderboardResponse) => void,
+  ): ClientUnaryCall;
+  listTopKCountryLeaderboard(
+    request: ListTopKCountryLeaderboardRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: ListTopKCountryLeaderboardResponse) => void,
+  ): ClientUnaryCall;
+  listTopKCountryLeaderboard(
+    request: ListTopKCountryLeaderboardRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: ListTopKCountryLeaderboardResponse) => void,
+  ): ClientUnaryCall;
+  getDashboardStats(
+    request: GetDashboardStatsRequest,
+    callback: (error: ServiceError | null, response: GetDashboardStatsResponse) => void,
+  ): ClientUnaryCall;
+  getDashboardStats(
+    request: GetDashboardStatsRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: GetDashboardStatsResponse) => void,
+  ): ClientUnaryCall;
+  getDashboardStats(
+    request: GetDashboardStatsRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: GetDashboardStatsResponse) => void,
+  ): ClientUnaryCall;
+  updateCountryInLeaderboard(
+    request: UpdateCountryRequest,
+    callback: (error: ServiceError | null, response: Empty) => void,
+  ): ClientUnaryCall;
+  updateCountryInLeaderboard(
+    request: UpdateCountryRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: Empty) => void,
+  ): ClientUnaryCall;
+  updateCountryInLeaderboard(
+    request: UpdateCountryRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: Empty) => void,
+  ): ClientUnaryCall;
+  removeUserInLeaderboard(
+    request: RemoveUserRequest,
+    callback: (error: ServiceError | null, response: Empty) => void,
+  ): ClientUnaryCall;
+  removeUserInLeaderboard(
+    request: RemoveUserRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: Empty) => void,
+  ): ClientUnaryCall;
+  removeUserInLeaderboard(
+    request: RemoveUserRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: Empty) => void,
   ): ClientUnaryCall;
 }
 

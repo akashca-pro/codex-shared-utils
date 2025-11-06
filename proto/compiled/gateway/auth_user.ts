@@ -24,10 +24,12 @@ export const protobufPackage = "auth_user.v1";
 
 export interface UserInfo {
   userId: string;
+  firstName: string;
   username: string;
   email: string;
   role: string;
   avatar: string;
+  country?: string | undefined;
 }
 
 export interface SignupRequest {
@@ -134,6 +136,7 @@ export interface UserProfileResponse {
 
 export interface RefreshTokenRequest {
   userId: string;
+  username: string;
   email: string;
   role: string;
 }
@@ -244,7 +247,7 @@ export interface BlockUserRequest {
 }
 
 function createBaseUserInfo(): UserInfo {
-  return { userId: "", username: "", email: "", role: "", avatar: "" };
+  return { userId: "", firstName: "", username: "", email: "", role: "", avatar: "", country: undefined };
 }
 
 export const UserInfo: MessageFns<UserInfo> = {
@@ -252,17 +255,23 @@ export const UserInfo: MessageFns<UserInfo> = {
     if (message.userId !== "") {
       writer.uint32(10).string(message.userId);
     }
+    if (message.firstName !== "") {
+      writer.uint32(18).string(message.firstName);
+    }
     if (message.username !== "") {
-      writer.uint32(18).string(message.username);
+      writer.uint32(26).string(message.username);
     }
     if (message.email !== "") {
-      writer.uint32(26).string(message.email);
+      writer.uint32(34).string(message.email);
     }
     if (message.role !== "") {
-      writer.uint32(34).string(message.role);
+      writer.uint32(42).string(message.role);
     }
     if (message.avatar !== "") {
-      writer.uint32(42).string(message.avatar);
+      writer.uint32(50).string(message.avatar);
+    }
+    if (message.country !== undefined) {
+      writer.uint32(58).string(message.country);
     }
     return writer;
   },
@@ -287,7 +296,7 @@ export const UserInfo: MessageFns<UserInfo> = {
             break;
           }
 
-          message.username = reader.string();
+          message.firstName = reader.string();
           continue;
         }
         case 3: {
@@ -295,7 +304,7 @@ export const UserInfo: MessageFns<UserInfo> = {
             break;
           }
 
-          message.email = reader.string();
+          message.username = reader.string();
           continue;
         }
         case 4: {
@@ -303,7 +312,7 @@ export const UserInfo: MessageFns<UserInfo> = {
             break;
           }
 
-          message.role = reader.string();
+          message.email = reader.string();
           continue;
         }
         case 5: {
@@ -311,7 +320,23 @@ export const UserInfo: MessageFns<UserInfo> = {
             break;
           }
 
+          message.role = reader.string();
+          continue;
+        }
+        case 6: {
+          if (tag !== 50) {
+            break;
+          }
+
           message.avatar = reader.string();
+          continue;
+        }
+        case 7: {
+          if (tag !== 58) {
+            break;
+          }
+
+          message.country = reader.string();
           continue;
         }
       }
@@ -326,10 +351,12 @@ export const UserInfo: MessageFns<UserInfo> = {
   fromJSON(object: any): UserInfo {
     return {
       userId: isSet(object.userId) ? globalThis.String(object.userId) : "",
+      firstName: isSet(object.firstName) ? globalThis.String(object.firstName) : "",
       username: isSet(object.username) ? globalThis.String(object.username) : "",
       email: isSet(object.email) ? globalThis.String(object.email) : "",
       role: isSet(object.role) ? globalThis.String(object.role) : "",
       avatar: isSet(object.avatar) ? globalThis.String(object.avatar) : "",
+      country: isSet(object.country) ? globalThis.String(object.country) : undefined,
     };
   },
 
@@ -337,6 +364,9 @@ export const UserInfo: MessageFns<UserInfo> = {
     const obj: any = {};
     if (message.userId !== "") {
       obj.userId = message.userId;
+    }
+    if (message.firstName !== "") {
+      obj.firstName = message.firstName;
     }
     if (message.username !== "") {
       obj.username = message.username;
@@ -350,6 +380,9 @@ export const UserInfo: MessageFns<UserInfo> = {
     if (message.avatar !== "") {
       obj.avatar = message.avatar;
     }
+    if (message.country !== undefined) {
+      obj.country = message.country;
+    }
     return obj;
   },
 
@@ -359,10 +392,12 @@ export const UserInfo: MessageFns<UserInfo> = {
   fromPartial<I extends Exact<DeepPartial<UserInfo>, I>>(object: I): UserInfo {
     const message = createBaseUserInfo();
     message.userId = object.userId ?? "";
+    message.firstName = object.firstName ?? "";
     message.username = object.username ?? "";
     message.email = object.email ?? "";
     message.role = object.role ?? "";
     message.avatar = object.avatar ?? "";
+    message.country = object.country ?? undefined;
     return message;
   },
 };
@@ -1948,7 +1983,7 @@ export const UserProfileResponse: MessageFns<UserProfileResponse> = {
 };
 
 function createBaseRefreshTokenRequest(): RefreshTokenRequest {
-  return { userId: "", email: "", role: "" };
+  return { userId: "", username: "", email: "", role: "" };
 }
 
 export const RefreshTokenRequest: MessageFns<RefreshTokenRequest> = {
@@ -1956,11 +1991,14 @@ export const RefreshTokenRequest: MessageFns<RefreshTokenRequest> = {
     if (message.userId !== "") {
       writer.uint32(10).string(message.userId);
     }
+    if (message.username !== "") {
+      writer.uint32(18).string(message.username);
+    }
     if (message.email !== "") {
-      writer.uint32(18).string(message.email);
+      writer.uint32(26).string(message.email);
     }
     if (message.role !== "") {
-      writer.uint32(26).string(message.role);
+      writer.uint32(34).string(message.role);
     }
     return writer;
   },
@@ -1985,11 +2023,19 @@ export const RefreshTokenRequest: MessageFns<RefreshTokenRequest> = {
             break;
           }
 
-          message.email = reader.string();
+          message.username = reader.string();
           continue;
         }
         case 3: {
           if (tag !== 26) {
+            break;
+          }
+
+          message.email = reader.string();
+          continue;
+        }
+        case 4: {
+          if (tag !== 34) {
             break;
           }
 
@@ -2008,6 +2054,7 @@ export const RefreshTokenRequest: MessageFns<RefreshTokenRequest> = {
   fromJSON(object: any): RefreshTokenRequest {
     return {
       userId: isSet(object.userId) ? globalThis.String(object.userId) : "",
+      username: isSet(object.username) ? globalThis.String(object.username) : "",
       email: isSet(object.email) ? globalThis.String(object.email) : "",
       role: isSet(object.role) ? globalThis.String(object.role) : "",
     };
@@ -2017,6 +2064,9 @@ export const RefreshTokenRequest: MessageFns<RefreshTokenRequest> = {
     const obj: any = {};
     if (message.userId !== "") {
       obj.userId = message.userId;
+    }
+    if (message.username !== "") {
+      obj.username = message.username;
     }
     if (message.email !== "") {
       obj.email = message.email;
@@ -2033,6 +2083,7 @@ export const RefreshTokenRequest: MessageFns<RefreshTokenRequest> = {
   fromPartial<I extends Exact<DeepPartial<RefreshTokenRequest>, I>>(object: I): RefreshTokenRequest {
     const message = createBaseRefreshTokenRequest();
     message.userId = object.userId ?? "";
+    message.username = object.username ?? "";
     message.email = object.email ?? "";
     message.role = object.role ?? "";
     return message;

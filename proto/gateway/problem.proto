@@ -327,6 +327,7 @@ message LeaderboardUser {
     int32 score = 3;
     string username = 4;
     optional int32 problemsSolved = 5;
+    optional int32 rank = 6;
 }
 
 message ListTopKGlobalLeaderboardResponse {

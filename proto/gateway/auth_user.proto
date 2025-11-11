@@ -159,8 +159,29 @@ message UpdateProfileRequest {
   optional string avatar = 7;
 }
 
+message UpdatedData {
+  optional string username = 1;
+  optional string firstName = 2;
+  optional string lastName = 3;
+  optional string avatar = 4;
+  optional string email = 5;
+  optional string country = 6;
+  optional string password = 7;
+  optional bool isVerified = 8;
+  optional bool isArchived = 9;
+  optional bool isBlocked = 10;
+  optional string preferredLanguage = 11;
+  optional int32 easySolved = 12;
+  optional int32 mediumSolved = 13;
+  optional int32 hardSolved = 14;
+  optional int32 totalSubmission = 15;
+  optional int32 streak = 16;
+  optional string updatedAt = 17;
+}
+
 message UpdateProfileResponse{
-  string message = 1;  
+    string message = 1;  
+    optional UpdatedData updatedData = 2;
 }
 
 message ChangeEmailRequest {

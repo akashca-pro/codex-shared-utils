@@ -413,6 +413,7 @@ export interface LeaderboardUser {
   score: number;
   username: string;
   problemsSolved?: number | undefined;
+  rank?: number | undefined;
 }
 
 export interface ListTopKGlobalLeaderboardResponse {
@@ -4553,7 +4554,7 @@ export const ListTopKGlobalLeaderboardRequest: MessageFns<ListTopKGlobalLeaderbo
 };
 
 function createBaseLeaderboardUser(): LeaderboardUser {
-  return { id: "", entity: undefined, score: 0, username: "", problemsSolved: undefined };
+  return { id: "", entity: undefined, score: 0, username: "", problemsSolved: undefined, rank: undefined };
 }
 
 export const LeaderboardUser: MessageFns<LeaderboardUser> = {
@@ -4572,6 +4573,9 @@ export const LeaderboardUser: MessageFns<LeaderboardUser> = {
     }
     if (message.problemsSolved !== undefined) {
       writer.uint32(40).int32(message.problemsSolved);
+    }
+    if (message.rank !== undefined) {
+      writer.uint32(48).int32(message.rank);
     }
     return writer;
   },
@@ -4623,6 +4627,14 @@ export const LeaderboardUser: MessageFns<LeaderboardUser> = {
           message.problemsSolved = reader.int32();
           continue;
         }
+        case 6: {
+          if (tag !== 48) {
+            break;
+          }
+
+          message.rank = reader.int32();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -4639,6 +4651,7 @@ export const LeaderboardUser: MessageFns<LeaderboardUser> = {
       score: isSet(object.score) ? globalThis.Number(object.score) : 0,
       username: isSet(object.username) ? globalThis.String(object.username) : "",
       problemsSolved: isSet(object.problemsSolved) ? globalThis.Number(object.problemsSolved) : undefined,
+      rank: isSet(object.rank) ? globalThis.Number(object.rank) : undefined,
     };
   },
 
@@ -4659,6 +4672,9 @@ export const LeaderboardUser: MessageFns<LeaderboardUser> = {
     if (message.problemsSolved !== undefined) {
       obj.problemsSolved = Math.round(message.problemsSolved);
     }
+    if (message.rank !== undefined) {
+      obj.rank = Math.round(message.rank);
+    }
     return obj;
   },
 
@@ -4672,6 +4688,7 @@ export const LeaderboardUser: MessageFns<LeaderboardUser> = {
     message.score = object.score ?? 0;
     message.username = object.username ?? "";
     message.problemsSolved = object.problemsSolved ?? undefined;
+    message.rank = object.rank ?? undefined;
     return message;
   },
 };

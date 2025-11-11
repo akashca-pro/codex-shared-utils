@@ -157,8 +157,29 @@ export interface UpdateProfileRequest {
   avatar?: string | undefined;
 }
 
+export interface UpdatedData {
+  username?: string | undefined;
+  firstName?: string | undefined;
+  lastName?: string | undefined;
+  avatar?: string | undefined;
+  email?: string | undefined;
+  country?: string | undefined;
+  password?: string | undefined;
+  isVerified?: boolean | undefined;
+  isArchived?: boolean | undefined;
+  isBlocked?: boolean | undefined;
+  preferredLanguage?: string | undefined;
+  easySolved?: number | undefined;
+  mediumSolved?: number | undefined;
+  hardSolved?: number | undefined;
+  totalSubmission?: number | undefined;
+  streak?: number | undefined;
+  updatedAt?: string | undefined;
+}
+
 export interface UpdateProfileResponse {
   message: string;
+  updatedData?: UpdatedData | undefined;
 }
 
 export interface ChangeEmailRequest {
@@ -2348,14 +2369,351 @@ export const UpdateProfileRequest: MessageFns<UpdateProfileRequest> = {
   },
 };
 
+function createBaseUpdatedData(): UpdatedData {
+  return {
+    username: undefined,
+    firstName: undefined,
+    lastName: undefined,
+    avatar: undefined,
+    email: undefined,
+    country: undefined,
+    password: undefined,
+    isVerified: undefined,
+    isArchived: undefined,
+    isBlocked: undefined,
+    preferredLanguage: undefined,
+    easySolved: undefined,
+    mediumSolved: undefined,
+    hardSolved: undefined,
+    totalSubmission: undefined,
+    streak: undefined,
+    updatedAt: undefined,
+  };
+}
+
+export const UpdatedData: MessageFns<UpdatedData> = {
+  encode(message: UpdatedData, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.username !== undefined) {
+      writer.uint32(10).string(message.username);
+    }
+    if (message.firstName !== undefined) {
+      writer.uint32(18).string(message.firstName);
+    }
+    if (message.lastName !== undefined) {
+      writer.uint32(26).string(message.lastName);
+    }
+    if (message.avatar !== undefined) {
+      writer.uint32(34).string(message.avatar);
+    }
+    if (message.email !== undefined) {
+      writer.uint32(42).string(message.email);
+    }
+    if (message.country !== undefined) {
+      writer.uint32(50).string(message.country);
+    }
+    if (message.password !== undefined) {
+      writer.uint32(58).string(message.password);
+    }
+    if (message.isVerified !== undefined) {
+      writer.uint32(64).bool(message.isVerified);
+    }
+    if (message.isArchived !== undefined) {
+      writer.uint32(72).bool(message.isArchived);
+    }
+    if (message.isBlocked !== undefined) {
+      writer.uint32(80).bool(message.isBlocked);
+    }
+    if (message.preferredLanguage !== undefined) {
+      writer.uint32(90).string(message.preferredLanguage);
+    }
+    if (message.easySolved !== undefined) {
+      writer.uint32(96).int32(message.easySolved);
+    }
+    if (message.mediumSolved !== undefined) {
+      writer.uint32(104).int32(message.mediumSolved);
+    }
+    if (message.hardSolved !== undefined) {
+      writer.uint32(112).int32(message.hardSolved);
+    }
+    if (message.totalSubmission !== undefined) {
+      writer.uint32(120).int32(message.totalSubmission);
+    }
+    if (message.streak !== undefined) {
+      writer.uint32(128).int32(message.streak);
+    }
+    if (message.updatedAt !== undefined) {
+      writer.uint32(138).string(message.updatedAt);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): UpdatedData {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseUpdatedData();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.username = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.firstName = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.lastName = reader.string();
+          continue;
+        }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.avatar = reader.string();
+          continue;
+        }
+        case 5: {
+          if (tag !== 42) {
+            break;
+          }
+
+          message.email = reader.string();
+          continue;
+        }
+        case 6: {
+          if (tag !== 50) {
+            break;
+          }
+
+          message.country = reader.string();
+          continue;
+        }
+        case 7: {
+          if (tag !== 58) {
+            break;
+          }
+
+          message.password = reader.string();
+          continue;
+        }
+        case 8: {
+          if (tag !== 64) {
+            break;
+          }
+
+          message.isVerified = reader.bool();
+          continue;
+        }
+        case 9: {
+          if (tag !== 72) {
+            break;
+          }
+
+          message.isArchived = reader.bool();
+          continue;
+        }
+        case 10: {
+          if (tag !== 80) {
+            break;
+          }
+
+          message.isBlocked = reader.bool();
+          continue;
+        }
+        case 11: {
+          if (tag !== 90) {
+            break;
+          }
+
+          message.preferredLanguage = reader.string();
+          continue;
+        }
+        case 12: {
+          if (tag !== 96) {
+            break;
+          }
+
+          message.easySolved = reader.int32();
+          continue;
+        }
+        case 13: {
+          if (tag !== 104) {
+            break;
+          }
+
+          message.mediumSolved = reader.int32();
+          continue;
+        }
+        case 14: {
+          if (tag !== 112) {
+            break;
+          }
+
+          message.hardSolved = reader.int32();
+          continue;
+        }
+        case 15: {
+          if (tag !== 120) {
+            break;
+          }
+
+          message.totalSubmission = reader.int32();
+          continue;
+        }
+        case 16: {
+          if (tag !== 128) {
+            break;
+          }
+
+          message.streak = reader.int32();
+          continue;
+        }
+        case 17: {
+          if (tag !== 138) {
+            break;
+          }
+
+          message.updatedAt = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): UpdatedData {
+    return {
+      username: isSet(object.username) ? globalThis.String(object.username) : undefined,
+      firstName: isSet(object.firstName) ? globalThis.String(object.firstName) : undefined,
+      lastName: isSet(object.lastName) ? globalThis.String(object.lastName) : undefined,
+      avatar: isSet(object.avatar) ? globalThis.String(object.avatar) : undefined,
+      email: isSet(object.email) ? globalThis.String(object.email) : undefined,
+      country: isSet(object.country) ? globalThis.String(object.country) : undefined,
+      password: isSet(object.password) ? globalThis.String(object.password) : undefined,
+      isVerified: isSet(object.isVerified) ? globalThis.Boolean(object.isVerified) : undefined,
+      isArchived: isSet(object.isArchived) ? globalThis.Boolean(object.isArchived) : undefined,
+      isBlocked: isSet(object.isBlocked) ? globalThis.Boolean(object.isBlocked) : undefined,
+      preferredLanguage: isSet(object.preferredLanguage) ? globalThis.String(object.preferredLanguage) : undefined,
+      easySolved: isSet(object.easySolved) ? globalThis.Number(object.easySolved) : undefined,
+      mediumSolved: isSet(object.mediumSolved) ? globalThis.Number(object.mediumSolved) : undefined,
+      hardSolved: isSet(object.hardSolved) ? globalThis.Number(object.hardSolved) : undefined,
+      totalSubmission: isSet(object.totalSubmission) ? globalThis.Number(object.totalSubmission) : undefined,
+      streak: isSet(object.streak) ? globalThis.Number(object.streak) : undefined,
+      updatedAt: isSet(object.updatedAt) ? globalThis.String(object.updatedAt) : undefined,
+    };
+  },
+
+  toJSON(message: UpdatedData): unknown {
+    const obj: any = {};
+    if (message.username !== undefined) {
+      obj.username = message.username;
+    }
+    if (message.firstName !== undefined) {
+      obj.firstName = message.firstName;
+    }
+    if (message.lastName !== undefined) {
+      obj.lastName = message.lastName;
+    }
+    if (message.avatar !== undefined) {
+      obj.avatar = message.avatar;
+    }
+    if (message.email !== undefined) {
+      obj.email = message.email;
+    }
+    if (message.country !== undefined) {
+      obj.country = message.country;
+    }
+    if (message.password !== undefined) {
+      obj.password = message.password;
+    }
+    if (message.isVerified !== undefined) {
+      obj.isVerified = message.isVerified;
+    }
+    if (message.isArchived !== undefined) {
+      obj.isArchived = message.isArchived;
+    }
+    if (message.isBlocked !== undefined) {
+      obj.isBlocked = message.isBlocked;
+    }
+    if (message.preferredLanguage !== undefined) {
+      obj.preferredLanguage = message.preferredLanguage;
+    }
+    if (message.easySolved !== undefined) {
+      obj.easySolved = Math.round(message.easySolved);
+    }
+    if (message.mediumSolved !== undefined) {
+      obj.mediumSolved = Math.round(message.mediumSolved);
+    }
+    if (message.hardSolved !== undefined) {
+      obj.hardSolved = Math.round(message.hardSolved);
+    }
+    if (message.totalSubmission !== undefined) {
+      obj.totalSubmission = Math.round(message.totalSubmission);
+    }
+    if (message.streak !== undefined) {
+      obj.streak = Math.round(message.streak);
+    }
+    if (message.updatedAt !== undefined) {
+      obj.updatedAt = message.updatedAt;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<UpdatedData>, I>>(base?: I): UpdatedData {
+    return UpdatedData.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<UpdatedData>, I>>(object: I): UpdatedData {
+    const message = createBaseUpdatedData();
+    message.username = object.username ?? undefined;
+    message.firstName = object.firstName ?? undefined;
+    message.lastName = object.lastName ?? undefined;
+    message.avatar = object.avatar ?? undefined;
+    message.email = object.email ?? undefined;
+    message.country = object.country ?? undefined;
+    message.password = object.password ?? undefined;
+    message.isVerified = object.isVerified ?? undefined;
+    message.isArchived = object.isArchived ?? undefined;
+    message.isBlocked = object.isBlocked ?? undefined;
+    message.preferredLanguage = object.preferredLanguage ?? undefined;
+    message.easySolved = object.easySolved ?? undefined;
+    message.mediumSolved = object.mediumSolved ?? undefined;
+    message.hardSolved = object.hardSolved ?? undefined;
+    message.totalSubmission = object.totalSubmission ?? undefined;
+    message.streak = object.streak ?? undefined;
+    message.updatedAt = object.updatedAt ?? undefined;
+    return message;
+  },
+};
+
 function createBaseUpdateProfileResponse(): UpdateProfileResponse {
-  return { message: "" };
+  return { message: "", updatedData: undefined };
 }
 
 export const UpdateProfileResponse: MessageFns<UpdateProfileResponse> = {
   encode(message: UpdateProfileResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
     if (message.message !== "") {
       writer.uint32(10).string(message.message);
+    }
+    if (message.updatedData !== undefined) {
+      UpdatedData.encode(message.updatedData, writer.uint32(18).fork()).join();
     }
     return writer;
   },
@@ -2375,6 +2733,14 @@ export const UpdateProfileResponse: MessageFns<UpdateProfileResponse> = {
           message.message = reader.string();
           continue;
         }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.updatedData = UpdatedData.decode(reader, reader.uint32());
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -2385,13 +2751,19 @@ export const UpdateProfileResponse: MessageFns<UpdateProfileResponse> = {
   },
 
   fromJSON(object: any): UpdateProfileResponse {
-    return { message: isSet(object.message) ? globalThis.String(object.message) : "" };
+    return {
+      message: isSet(object.message) ? globalThis.String(object.message) : "",
+      updatedData: isSet(object.updatedData) ? UpdatedData.fromJSON(object.updatedData) : undefined,
+    };
   },
 
   toJSON(message: UpdateProfileResponse): unknown {
     const obj: any = {};
     if (message.message !== "") {
       obj.message = message.message;
+    }
+    if (message.updatedData !== undefined) {
+      obj.updatedData = UpdatedData.toJSON(message.updatedData);
     }
     return obj;
   },
@@ -2402,6 +2774,9 @@ export const UpdateProfileResponse: MessageFns<UpdateProfileResponse> = {
   fromPartial<I extends Exact<DeepPartial<UpdateProfileResponse>, I>>(object: I): UpdateProfileResponse {
     const message = createBaseUpdateProfileResponse();
     message.message = object.message ?? "";
+    message.updatedData = (object.updatedData !== undefined && object.updatedData !== null)
+      ? UpdatedData.fromPartial(object.updatedData)
+      : undefined;
     return message;
   },
 };

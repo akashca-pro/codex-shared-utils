@@ -2,8 +2,11 @@ syntax = "proto3";
 
 package collab.v1;
 
+import "google/protobuf/empty.proto";
+
 service SessionManager {
   rpc CreateSession(CreateSessionRequest) returns (CreateSessionResponse);
+  rpc GetSessionStats (google.protobuf.Empty) returns (GetSessionStatsResponse);
 }
 
 message Session {
@@ -23,4 +26,15 @@ message CreateSessionRequest {
 
 message CreateSessionResponse {
   string inviteToken = 1;
+}
+
+message SessionStatus {
+  int32 active = 1;
+  int32 ended = 2;
+  int32 offline = 3;
+}
+
+message GetSessionStatsResponse {
+    SessionStatus total = 1;
+    SessionStatus today = 2;
 }

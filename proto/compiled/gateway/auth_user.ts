@@ -267,6 +267,11 @@ export interface BlockUserRequest {
   block: boolean;
 }
 
+export interface UserStatsResponse {
+  totalUsers: number;
+  todaysUsers: number;
+}
+
 function createBaseUserInfo(): UserInfo {
   return { userId: "", firstName: "", username: "", email: "", role: "", avatar: "", country: undefined };
 }
@@ -4140,6 +4145,82 @@ export const BlockUserRequest: MessageFns<BlockUserRequest> = {
   },
 };
 
+function createBaseUserStatsResponse(): UserStatsResponse {
+  return { totalUsers: 0, todaysUsers: 0 };
+}
+
+export const UserStatsResponse: MessageFns<UserStatsResponse> = {
+  encode(message: UserStatsResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.totalUsers !== 0) {
+      writer.uint32(8).int32(message.totalUsers);
+    }
+    if (message.todaysUsers !== 0) {
+      writer.uint32(16).int32(message.todaysUsers);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): UserStatsResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseUserStatsResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 8) {
+            break;
+          }
+
+          message.totalUsers = reader.int32();
+          continue;
+        }
+        case 2: {
+          if (tag !== 16) {
+            break;
+          }
+
+          message.todaysUsers = reader.int32();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): UserStatsResponse {
+    return {
+      totalUsers: isSet(object.totalUsers) ? globalThis.Number(object.totalUsers) : 0,
+      todaysUsers: isSet(object.todaysUsers) ? globalThis.Number(object.todaysUsers) : 0,
+    };
+  },
+
+  toJSON(message: UserStatsResponse): unknown {
+    const obj: any = {};
+    if (message.totalUsers !== 0) {
+      obj.totalUsers = Math.round(message.totalUsers);
+    }
+    if (message.todaysUsers !== 0) {
+      obj.todaysUsers = Math.round(message.todaysUsers);
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<UserStatsResponse>, I>>(base?: I): UserStatsResponse {
+    return UserStatsResponse.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<UserStatsResponse>, I>>(object: I): UserStatsResponse {
+    const message = createBaseUserStatsResponse();
+    message.totalUsers = object.totalUsers ?? 0;
+    message.todaysUsers = object.todaysUsers ?? 0;
+    return message;
+  },
+};
+
 export type AuthUserServiceService = typeof AuthUserServiceService;
 export const AuthUserServiceService = {
   signup: {
@@ -4575,6 +4656,15 @@ export const AuthAdminServiceService = {
     responseSerialize: (value: Empty): Buffer => Buffer.from(Empty.encode(value).finish()),
     responseDeserialize: (value: Buffer): Empty => Empty.decode(value),
   },
+  userStats: {
+    path: "/auth_user.v1.AuthAdminService/UserStats",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: Empty): Buffer => Buffer.from(Empty.encode(value).finish()),
+    requestDeserialize: (value: Buffer): Empty => Empty.decode(value),
+    responseSerialize: (value: UserStatsResponse): Buffer => Buffer.from(UserStatsResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): UserStatsResponse => UserStatsResponse.decode(value),
+  },
 } as const;
 
 export interface AuthAdminServiceServer extends UntypedServiceImplementation {
@@ -4584,6 +4674,7 @@ export interface AuthAdminServiceServer extends UntypedServiceImplementation {
   updateProfile: handleUnaryCall<UpdateProfileRequest, UpdateProfileResponse>;
   listUsers: handleUnaryCall<ListUsersRequest, ListUsersResponse>;
   blockUser: handleUnaryCall<BlockUserRequest, Empty>;
+  userStats: handleUnaryCall<Empty, UserStatsResponse>;
 }
 
 export interface AuthAdminServiceClient extends Client {
@@ -4676,6 +4767,21 @@ export interface AuthAdminServiceClient extends Client {
     metadata: Metadata,
     options: Partial<CallOptions>,
     callback: (error: ServiceError | null, response: Empty) => void,
+  ): ClientUnaryCall;
+  userStats(
+    request: Empty,
+    callback: (error: ServiceError | null, response: UserStatsResponse) => void,
+  ): ClientUnaryCall;
+  userStats(
+    request: Empty,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: UserStatsResponse) => void,
+  ): ClientUnaryCall;
+  userStats(
+    request: Empty,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: UserStatsResponse) => void,
   ): ClientUnaryCall;
 }
 

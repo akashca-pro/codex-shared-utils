@@ -18,6 +18,7 @@ import {
   type ServiceError,
   type UntypedServiceImplementation,
 } from "@grpc/grpc-js";
+import { Empty } from "../google/protobuf/empty";
 
 export const protobufPackage = "collab.v1";
 
@@ -38,6 +39,17 @@ export interface CreateSessionRequest {
 
 export interface CreateSessionResponse {
   inviteToken: string;
+}
+
+export interface SessionStatus {
+  active: number;
+  ended: number;
+  offline: number;
+}
+
+export interface GetSessionStatsResponse {
+  total?: SessionStatus | undefined;
+  today?: SessionStatus | undefined;
 }
 
 function createBaseSession(): Session {
@@ -330,6 +342,178 @@ export const CreateSessionResponse: MessageFns<CreateSessionResponse> = {
   },
 };
 
+function createBaseSessionStatus(): SessionStatus {
+  return { active: 0, ended: 0, offline: 0 };
+}
+
+export const SessionStatus: MessageFns<SessionStatus> = {
+  encode(message: SessionStatus, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.active !== 0) {
+      writer.uint32(8).int32(message.active);
+    }
+    if (message.ended !== 0) {
+      writer.uint32(16).int32(message.ended);
+    }
+    if (message.offline !== 0) {
+      writer.uint32(24).int32(message.offline);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): SessionStatus {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseSessionStatus();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 8) {
+            break;
+          }
+
+          message.active = reader.int32();
+          continue;
+        }
+        case 2: {
+          if (tag !== 16) {
+            break;
+          }
+
+          message.ended = reader.int32();
+          continue;
+        }
+        case 3: {
+          if (tag !== 24) {
+            break;
+          }
+
+          message.offline = reader.int32();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): SessionStatus {
+    return {
+      active: isSet(object.active) ? globalThis.Number(object.active) : 0,
+      ended: isSet(object.ended) ? globalThis.Number(object.ended) : 0,
+      offline: isSet(object.offline) ? globalThis.Number(object.offline) : 0,
+    };
+  },
+
+  toJSON(message: SessionStatus): unknown {
+    const obj: any = {};
+    if (message.active !== 0) {
+      obj.active = Math.round(message.active);
+    }
+    if (message.ended !== 0) {
+      obj.ended = Math.round(message.ended);
+    }
+    if (message.offline !== 0) {
+      obj.offline = Math.round(message.offline);
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<SessionStatus>, I>>(base?: I): SessionStatus {
+    return SessionStatus.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<SessionStatus>, I>>(object: I): SessionStatus {
+    const message = createBaseSessionStatus();
+    message.active = object.active ?? 0;
+    message.ended = object.ended ?? 0;
+    message.offline = object.offline ?? 0;
+    return message;
+  },
+};
+
+function createBaseGetSessionStatsResponse(): GetSessionStatsResponse {
+  return { total: undefined, today: undefined };
+}
+
+export const GetSessionStatsResponse: MessageFns<GetSessionStatsResponse> = {
+  encode(message: GetSessionStatsResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.total !== undefined) {
+      SessionStatus.encode(message.total, writer.uint32(10).fork()).join();
+    }
+    if (message.today !== undefined) {
+      SessionStatus.encode(message.today, writer.uint32(18).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): GetSessionStatsResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseGetSessionStatsResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.total = SessionStatus.decode(reader, reader.uint32());
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.today = SessionStatus.decode(reader, reader.uint32());
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): GetSessionStatsResponse {
+    return {
+      total: isSet(object.total) ? SessionStatus.fromJSON(object.total) : undefined,
+      today: isSet(object.today) ? SessionStatus.fromJSON(object.today) : undefined,
+    };
+  },
+
+  toJSON(message: GetSessionStatsResponse): unknown {
+    const obj: any = {};
+    if (message.total !== undefined) {
+      obj.total = SessionStatus.toJSON(message.total);
+    }
+    if (message.today !== undefined) {
+      obj.today = SessionStatus.toJSON(message.today);
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<GetSessionStatsResponse>, I>>(base?: I): GetSessionStatsResponse {
+    return GetSessionStatsResponse.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<GetSessionStatsResponse>, I>>(object: I): GetSessionStatsResponse {
+    const message = createBaseGetSessionStatsResponse();
+    message.total = (object.total !== undefined && object.total !== null)
+      ? SessionStatus.fromPartial(object.total)
+      : undefined;
+    message.today = (object.today !== undefined && object.today !== null)
+      ? SessionStatus.fromPartial(object.today)
+      : undefined;
+    return message;
+  },
+};
+
 export type SessionManagerService = typeof SessionManagerService;
 export const SessionManagerService = {
   createSession: {
@@ -342,10 +526,21 @@ export const SessionManagerService = {
       Buffer.from(CreateSessionResponse.encode(value).finish()),
     responseDeserialize: (value: Buffer): CreateSessionResponse => CreateSessionResponse.decode(value),
   },
+  getSessionStats: {
+    path: "/collab.v1.SessionManager/GetSessionStats",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: Empty): Buffer => Buffer.from(Empty.encode(value).finish()),
+    requestDeserialize: (value: Buffer): Empty => Empty.decode(value),
+    responseSerialize: (value: GetSessionStatsResponse): Buffer =>
+      Buffer.from(GetSessionStatsResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): GetSessionStatsResponse => GetSessionStatsResponse.decode(value),
+  },
 } as const;
 
 export interface SessionManagerServer extends UntypedServiceImplementation {
   createSession: handleUnaryCall<CreateSessionRequest, CreateSessionResponse>;
+  getSessionStats: handleUnaryCall<Empty, GetSessionStatsResponse>;
 }
 
 export interface SessionManagerClient extends Client {
@@ -363,6 +558,21 @@ export interface SessionManagerClient extends Client {
     metadata: Metadata,
     options: Partial<CallOptions>,
     callback: (error: ServiceError | null, response: CreateSessionResponse) => void,
+  ): ClientUnaryCall;
+  getSessionStats(
+    request: Empty,
+    callback: (error: ServiceError | null, response: GetSessionStatsResponse) => void,
+  ): ClientUnaryCall;
+  getSessionStats(
+    request: Empty,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: GetSessionStatsResponse) => void,
+  ): ClientUnaryCall;
+  getSessionStats(
+    request: Empty,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: GetSessionStatsResponse) => void,
   ): ClientUnaryCall;
 }
 

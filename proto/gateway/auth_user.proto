@@ -216,6 +216,7 @@ service AuthAdminService {
   rpc UpdateProfile(UpdateProfileRequest) returns (UpdateProfileResponse);
   rpc ListUsers (ListUsersRequest) returns (ListUsersResponse);
   rpc BlockUser (BlockUserRequest) returns (google.protobuf.Empty);
+  rpc UserStats (google.protobuf.Empty) returns (UserStatsResponse);
 }
 
 message AdminProfileRequest {
@@ -278,4 +279,9 @@ message ListUsersResponse {
 message BlockUserRequest {
     string userId = 1;
     bool block = 2;
+}
+
+message UserStatsResponse {
+  int32 totalUsers = 1;
+  int32 todaysUsers = 2;
 }

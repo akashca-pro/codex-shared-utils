@@ -455,12 +455,18 @@ export interface LeaderboardData {
   entityRank: number;
 }
 
+export interface SolvedByDifficulty {
+  difficulty: string;
+  count: number;
+}
+
 export interface GetDashboardStatsResponse {
   heatmap: Activity[];
   currentStreak: number;
-  leaderboadDetails?: LeaderboardData | undefined;
+  leaderboardDetails?: LeaderboardData | undefined;
   problemsSolved: number;
   recentActivities: RecentActivity[];
+  solvedByDifficulty: SolvedByDifficulty[];
 }
 
 export interface UpdateCountryRequest {
@@ -470,6 +476,33 @@ export interface UpdateCountryRequest {
 
 export interface RemoveUserRequest {
   userId: string;
+}
+
+export interface LanguageWiseSubmissionStats {
+  language: string;
+  count: number;
+}
+
+export interface SubmissionStats {
+  totalSubmissions: number;
+  todaysSubmissions: number;
+  languageWise: LanguageWiseSubmissionStats[];
+}
+
+export interface DifficultyWiseProblemStats {
+  difficulty: string;
+  count: number;
+}
+
+export interface ProblemStats {
+  totalProblems: number;
+  todaysProblems: number;
+  difficultyWise: DifficultyWiseProblemStats[];
+}
+
+export interface GetProblemSubmissionStatsResponse {
+  submissionStats?: SubmissionStats | undefined;
+  problemStats?: ProblemStats | undefined;
 }
 
 function createBaseTestCase(): TestCase {
@@ -5301,8 +5334,91 @@ export const LeaderboardData: MessageFns<LeaderboardData> = {
   },
 };
 
+function createBaseSolvedByDifficulty(): SolvedByDifficulty {
+  return { difficulty: "", count: 0 };
+}
+
+export const SolvedByDifficulty: MessageFns<SolvedByDifficulty> = {
+  encode(message: SolvedByDifficulty, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.difficulty !== "") {
+      writer.uint32(10).string(message.difficulty);
+    }
+    if (message.count !== 0) {
+      writer.uint32(16).int32(message.count);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): SolvedByDifficulty {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseSolvedByDifficulty();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.difficulty = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 16) {
+            break;
+          }
+
+          message.count = reader.int32();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): SolvedByDifficulty {
+    return {
+      difficulty: isSet(object.difficulty) ? globalThis.String(object.difficulty) : "",
+      count: isSet(object.count) ? globalThis.Number(object.count) : 0,
+    };
+  },
+
+  toJSON(message: SolvedByDifficulty): unknown {
+    const obj: any = {};
+    if (message.difficulty !== "") {
+      obj.difficulty = message.difficulty;
+    }
+    if (message.count !== 0) {
+      obj.count = Math.round(message.count);
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<SolvedByDifficulty>, I>>(base?: I): SolvedByDifficulty {
+    return SolvedByDifficulty.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<SolvedByDifficulty>, I>>(object: I): SolvedByDifficulty {
+    const message = createBaseSolvedByDifficulty();
+    message.difficulty = object.difficulty ?? "";
+    message.count = object.count ?? 0;
+    return message;
+  },
+};
+
 function createBaseGetDashboardStatsResponse(): GetDashboardStatsResponse {
-  return { heatmap: [], currentStreak: 0, leaderboadDetails: undefined, problemsSolved: 0, recentActivities: [] };
+  return {
+    heatmap: [],
+    currentStreak: 0,
+    leaderboardDetails: undefined,
+    problemsSolved: 0,
+    recentActivities: [],
+    solvedByDifficulty: [],
+  };
 }
 
 export const GetDashboardStatsResponse: MessageFns<GetDashboardStatsResponse> = {
@@ -5313,14 +5429,17 @@ export const GetDashboardStatsResponse: MessageFns<GetDashboardStatsResponse> = 
     if (message.currentStreak !== 0) {
       writer.uint32(16).int32(message.currentStreak);
     }
-    if (message.leaderboadDetails !== undefined) {
-      LeaderboardData.encode(message.leaderboadDetails, writer.uint32(26).fork()).join();
+    if (message.leaderboardDetails !== undefined) {
+      LeaderboardData.encode(message.leaderboardDetails, writer.uint32(26).fork()).join();
     }
     if (message.problemsSolved !== 0) {
       writer.uint32(32).int32(message.problemsSolved);
     }
     for (const v of message.recentActivities) {
       RecentActivity.encode(v!, writer.uint32(42).fork()).join();
+    }
+    for (const v of message.solvedByDifficulty) {
+      SolvedByDifficulty.encode(v!, writer.uint32(50).fork()).join();
     }
     return writer;
   },
@@ -5353,7 +5472,7 @@ export const GetDashboardStatsResponse: MessageFns<GetDashboardStatsResponse> = 
             break;
           }
 
-          message.leaderboadDetails = LeaderboardData.decode(reader, reader.uint32());
+          message.leaderboardDetails = LeaderboardData.decode(reader, reader.uint32());
           continue;
         }
         case 4: {
@@ -5372,6 +5491,14 @@ export const GetDashboardStatsResponse: MessageFns<GetDashboardStatsResponse> = 
           message.recentActivities.push(RecentActivity.decode(reader, reader.uint32()));
           continue;
         }
+        case 6: {
+          if (tag !== 50) {
+            break;
+          }
+
+          message.solvedByDifficulty.push(SolvedByDifficulty.decode(reader, reader.uint32()));
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -5385,12 +5512,15 @@ export const GetDashboardStatsResponse: MessageFns<GetDashboardStatsResponse> = 
     return {
       heatmap: globalThis.Array.isArray(object?.heatmap) ? object.heatmap.map((e: any) => Activity.fromJSON(e)) : [],
       currentStreak: isSet(object.currentStreak) ? globalThis.Number(object.currentStreak) : 0,
-      leaderboadDetails: isSet(object.leaderboadDetails)
-        ? LeaderboardData.fromJSON(object.leaderboadDetails)
+      leaderboardDetails: isSet(object.leaderboardDetails)
+        ? LeaderboardData.fromJSON(object.leaderboardDetails)
         : undefined,
       problemsSolved: isSet(object.problemsSolved) ? globalThis.Number(object.problemsSolved) : 0,
       recentActivities: globalThis.Array.isArray(object?.recentActivities)
         ? object.recentActivities.map((e: any) => RecentActivity.fromJSON(e))
+        : [],
+      solvedByDifficulty: globalThis.Array.isArray(object?.solvedByDifficulty)
+        ? object.solvedByDifficulty.map((e: any) => SolvedByDifficulty.fromJSON(e))
         : [],
     };
   },
@@ -5403,14 +5533,17 @@ export const GetDashboardStatsResponse: MessageFns<GetDashboardStatsResponse> = 
     if (message.currentStreak !== 0) {
       obj.currentStreak = Math.round(message.currentStreak);
     }
-    if (message.leaderboadDetails !== undefined) {
-      obj.leaderboadDetails = LeaderboardData.toJSON(message.leaderboadDetails);
+    if (message.leaderboardDetails !== undefined) {
+      obj.leaderboardDetails = LeaderboardData.toJSON(message.leaderboardDetails);
     }
     if (message.problemsSolved !== 0) {
       obj.problemsSolved = Math.round(message.problemsSolved);
     }
     if (message.recentActivities?.length) {
       obj.recentActivities = message.recentActivities.map((e) => RecentActivity.toJSON(e));
+    }
+    if (message.solvedByDifficulty?.length) {
+      obj.solvedByDifficulty = message.solvedByDifficulty.map((e) => SolvedByDifficulty.toJSON(e));
     }
     return obj;
   },
@@ -5422,11 +5555,12 @@ export const GetDashboardStatsResponse: MessageFns<GetDashboardStatsResponse> = 
     const message = createBaseGetDashboardStatsResponse();
     message.heatmap = object.heatmap?.map((e) => Activity.fromPartial(e)) || [];
     message.currentStreak = object.currentStreak ?? 0;
-    message.leaderboadDetails = (object.leaderboadDetails !== undefined && object.leaderboadDetails !== null)
-      ? LeaderboardData.fromPartial(object.leaderboadDetails)
+    message.leaderboardDetails = (object.leaderboardDetails !== undefined && object.leaderboardDetails !== null)
+      ? LeaderboardData.fromPartial(object.leaderboardDetails)
       : undefined;
     message.problemsSolved = object.problemsSolved ?? 0;
     message.recentActivities = object.recentActivities?.map((e) => RecentActivity.fromPartial(e)) || [];
+    message.solvedByDifficulty = object.solvedByDifficulty?.map((e) => SolvedByDifficulty.fromPartial(e)) || [];
     return message;
   },
 };
@@ -5561,6 +5695,430 @@ export const RemoveUserRequest: MessageFns<RemoveUserRequest> = {
   fromPartial<I extends Exact<DeepPartial<RemoveUserRequest>, I>>(object: I): RemoveUserRequest {
     const message = createBaseRemoveUserRequest();
     message.userId = object.userId ?? "";
+    return message;
+  },
+};
+
+function createBaseLanguageWiseSubmissionStats(): LanguageWiseSubmissionStats {
+  return { language: "", count: 0 };
+}
+
+export const LanguageWiseSubmissionStats: MessageFns<LanguageWiseSubmissionStats> = {
+  encode(message: LanguageWiseSubmissionStats, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.language !== "") {
+      writer.uint32(10).string(message.language);
+    }
+    if (message.count !== 0) {
+      writer.uint32(16).int32(message.count);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): LanguageWiseSubmissionStats {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseLanguageWiseSubmissionStats();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.language = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 16) {
+            break;
+          }
+
+          message.count = reader.int32();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): LanguageWiseSubmissionStats {
+    return {
+      language: isSet(object.language) ? globalThis.String(object.language) : "",
+      count: isSet(object.count) ? globalThis.Number(object.count) : 0,
+    };
+  },
+
+  toJSON(message: LanguageWiseSubmissionStats): unknown {
+    const obj: any = {};
+    if (message.language !== "") {
+      obj.language = message.language;
+    }
+    if (message.count !== 0) {
+      obj.count = Math.round(message.count);
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<LanguageWiseSubmissionStats>, I>>(base?: I): LanguageWiseSubmissionStats {
+    return LanguageWiseSubmissionStats.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<LanguageWiseSubmissionStats>, I>>(object: I): LanguageWiseSubmissionStats {
+    const message = createBaseLanguageWiseSubmissionStats();
+    message.language = object.language ?? "";
+    message.count = object.count ?? 0;
+    return message;
+  },
+};
+
+function createBaseSubmissionStats(): SubmissionStats {
+  return { totalSubmissions: 0, todaysSubmissions: 0, languageWise: [] };
+}
+
+export const SubmissionStats: MessageFns<SubmissionStats> = {
+  encode(message: SubmissionStats, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.totalSubmissions !== 0) {
+      writer.uint32(8).int32(message.totalSubmissions);
+    }
+    if (message.todaysSubmissions !== 0) {
+      writer.uint32(16).int32(message.todaysSubmissions);
+    }
+    for (const v of message.languageWise) {
+      LanguageWiseSubmissionStats.encode(v!, writer.uint32(26).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): SubmissionStats {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseSubmissionStats();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 8) {
+            break;
+          }
+
+          message.totalSubmissions = reader.int32();
+          continue;
+        }
+        case 2: {
+          if (tag !== 16) {
+            break;
+          }
+
+          message.todaysSubmissions = reader.int32();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.languageWise.push(LanguageWiseSubmissionStats.decode(reader, reader.uint32()));
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): SubmissionStats {
+    return {
+      totalSubmissions: isSet(object.totalSubmissions) ? globalThis.Number(object.totalSubmissions) : 0,
+      todaysSubmissions: isSet(object.todaysSubmissions) ? globalThis.Number(object.todaysSubmissions) : 0,
+      languageWise: globalThis.Array.isArray(object?.languageWise)
+        ? object.languageWise.map((e: any) => LanguageWiseSubmissionStats.fromJSON(e))
+        : [],
+    };
+  },
+
+  toJSON(message: SubmissionStats): unknown {
+    const obj: any = {};
+    if (message.totalSubmissions !== 0) {
+      obj.totalSubmissions = Math.round(message.totalSubmissions);
+    }
+    if (message.todaysSubmissions !== 0) {
+      obj.todaysSubmissions = Math.round(message.todaysSubmissions);
+    }
+    if (message.languageWise?.length) {
+      obj.languageWise = message.languageWise.map((e) => LanguageWiseSubmissionStats.toJSON(e));
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<SubmissionStats>, I>>(base?: I): SubmissionStats {
+    return SubmissionStats.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<SubmissionStats>, I>>(object: I): SubmissionStats {
+    const message = createBaseSubmissionStats();
+    message.totalSubmissions = object.totalSubmissions ?? 0;
+    message.todaysSubmissions = object.todaysSubmissions ?? 0;
+    message.languageWise = object.languageWise?.map((e) => LanguageWiseSubmissionStats.fromPartial(e)) || [];
+    return message;
+  },
+};
+
+function createBaseDifficultyWiseProblemStats(): DifficultyWiseProblemStats {
+  return { difficulty: "", count: 0 };
+}
+
+export const DifficultyWiseProblemStats: MessageFns<DifficultyWiseProblemStats> = {
+  encode(message: DifficultyWiseProblemStats, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.difficulty !== "") {
+      writer.uint32(10).string(message.difficulty);
+    }
+    if (message.count !== 0) {
+      writer.uint32(16).int32(message.count);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): DifficultyWiseProblemStats {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseDifficultyWiseProblemStats();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.difficulty = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 16) {
+            break;
+          }
+
+          message.count = reader.int32();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): DifficultyWiseProblemStats {
+    return {
+      difficulty: isSet(object.difficulty) ? globalThis.String(object.difficulty) : "",
+      count: isSet(object.count) ? globalThis.Number(object.count) : 0,
+    };
+  },
+
+  toJSON(message: DifficultyWiseProblemStats): unknown {
+    const obj: any = {};
+    if (message.difficulty !== "") {
+      obj.difficulty = message.difficulty;
+    }
+    if (message.count !== 0) {
+      obj.count = Math.round(message.count);
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<DifficultyWiseProblemStats>, I>>(base?: I): DifficultyWiseProblemStats {
+    return DifficultyWiseProblemStats.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<DifficultyWiseProblemStats>, I>>(object: I): DifficultyWiseProblemStats {
+    const message = createBaseDifficultyWiseProblemStats();
+    message.difficulty = object.difficulty ?? "";
+    message.count = object.count ?? 0;
+    return message;
+  },
+};
+
+function createBaseProblemStats(): ProblemStats {
+  return { totalProblems: 0, todaysProblems: 0, difficultyWise: [] };
+}
+
+export const ProblemStats: MessageFns<ProblemStats> = {
+  encode(message: ProblemStats, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.totalProblems !== 0) {
+      writer.uint32(8).int32(message.totalProblems);
+    }
+    if (message.todaysProblems !== 0) {
+      writer.uint32(16).int32(message.todaysProblems);
+    }
+    for (const v of message.difficultyWise) {
+      DifficultyWiseProblemStats.encode(v!, writer.uint32(26).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ProblemStats {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseProblemStats();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 8) {
+            break;
+          }
+
+          message.totalProblems = reader.int32();
+          continue;
+        }
+        case 2: {
+          if (tag !== 16) {
+            break;
+          }
+
+          message.todaysProblems = reader.int32();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.difficultyWise.push(DifficultyWiseProblemStats.decode(reader, reader.uint32()));
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ProblemStats {
+    return {
+      totalProblems: isSet(object.totalProblems) ? globalThis.Number(object.totalProblems) : 0,
+      todaysProblems: isSet(object.todaysProblems) ? globalThis.Number(object.todaysProblems) : 0,
+      difficultyWise: globalThis.Array.isArray(object?.difficultyWise)
+        ? object.difficultyWise.map((e: any) => DifficultyWiseProblemStats.fromJSON(e))
+        : [],
+    };
+  },
+
+  toJSON(message: ProblemStats): unknown {
+    const obj: any = {};
+    if (message.totalProblems !== 0) {
+      obj.totalProblems = Math.round(message.totalProblems);
+    }
+    if (message.todaysProblems !== 0) {
+      obj.todaysProblems = Math.round(message.todaysProblems);
+    }
+    if (message.difficultyWise?.length) {
+      obj.difficultyWise = message.difficultyWise.map((e) => DifficultyWiseProblemStats.toJSON(e));
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<ProblemStats>, I>>(base?: I): ProblemStats {
+    return ProblemStats.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<ProblemStats>, I>>(object: I): ProblemStats {
+    const message = createBaseProblemStats();
+    message.totalProblems = object.totalProblems ?? 0;
+    message.todaysProblems = object.todaysProblems ?? 0;
+    message.difficultyWise = object.difficultyWise?.map((e) => DifficultyWiseProblemStats.fromPartial(e)) || [];
+    return message;
+  },
+};
+
+function createBaseGetProblemSubmissionStatsResponse(): GetProblemSubmissionStatsResponse {
+  return { submissionStats: undefined, problemStats: undefined };
+}
+
+export const GetProblemSubmissionStatsResponse: MessageFns<GetProblemSubmissionStatsResponse> = {
+  encode(message: GetProblemSubmissionStatsResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.submissionStats !== undefined) {
+      SubmissionStats.encode(message.submissionStats, writer.uint32(10).fork()).join();
+    }
+    if (message.problemStats !== undefined) {
+      ProblemStats.encode(message.problemStats, writer.uint32(18).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): GetProblemSubmissionStatsResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseGetProblemSubmissionStatsResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.submissionStats = SubmissionStats.decode(reader, reader.uint32());
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.problemStats = ProblemStats.decode(reader, reader.uint32());
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): GetProblemSubmissionStatsResponse {
+    return {
+      submissionStats: isSet(object.submissionStats) ? SubmissionStats.fromJSON(object.submissionStats) : undefined,
+      problemStats: isSet(object.problemStats) ? ProblemStats.fromJSON(object.problemStats) : undefined,
+    };
+  },
+
+  toJSON(message: GetProblemSubmissionStatsResponse): unknown {
+    const obj: any = {};
+    if (message.submissionStats !== undefined) {
+      obj.submissionStats = SubmissionStats.toJSON(message.submissionStats);
+    }
+    if (message.problemStats !== undefined) {
+      obj.problemStats = ProblemStats.toJSON(message.problemStats);
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<GetProblemSubmissionStatsResponse>, I>>(
+    base?: I,
+  ): GetProblemSubmissionStatsResponse {
+    return GetProblemSubmissionStatsResponse.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<GetProblemSubmissionStatsResponse>, I>>(
+    object: I,
+  ): GetProblemSubmissionStatsResponse {
+    const message = createBaseGetProblemSubmissionStatsResponse();
+    message.submissionStats = (object.submissionStats !== undefined && object.submissionStats !== null)
+      ? SubmissionStats.fromPartial(object.submissionStats)
+      : undefined;
+    message.problemStats = (object.problemStats !== undefined && object.problemStats !== null)
+      ? ProblemStats.fromPartial(object.problemStats)
+      : undefined;
     return message;
   },
 };
@@ -5950,6 +6508,17 @@ export const SubmissionServiceService = {
       Buffer.from(GetDashboardStatsResponse.encode(value).finish()),
     responseDeserialize: (value: Buffer): GetDashboardStatsResponse => GetDashboardStatsResponse.decode(value),
   },
+  getProblemSubmissionStats: {
+    path: "/problem.v1.SubmissionService/GetProblemSubmissionStats",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: Empty): Buffer => Buffer.from(Empty.encode(value).finish()),
+    requestDeserialize: (value: Buffer): Empty => Empty.decode(value),
+    responseSerialize: (value: GetProblemSubmissionStatsResponse): Buffer =>
+      Buffer.from(GetProblemSubmissionStatsResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): GetProblemSubmissionStatsResponse =>
+      GetProblemSubmissionStatsResponse.decode(value),
+  },
   updateCountryInLeaderboard: {
     path: "/problem.v1.SubmissionService/UpdateCountryInLeaderboard",
     requestStream: false,
@@ -5981,6 +6550,7 @@ export interface SubmissionServiceServer extends UntypedServiceImplementation {
   listTopKGlobalLeaderboard: handleUnaryCall<ListTopKGlobalLeaderboardRequest, ListTopKGlobalLeaderboardResponse>;
   listTopKCountryLeaderboard: handleUnaryCall<ListTopKCountryLeaderboardRequest, ListTopKCountryLeaderboardResponse>;
   getDashboardStats: handleUnaryCall<GetDashboardStatsRequest, GetDashboardStatsResponse>;
+  getProblemSubmissionStats: handleUnaryCall<Empty, GetProblemSubmissionStatsResponse>;
   updateCountryInLeaderboard: handleUnaryCall<UpdateCountryRequest, Empty>;
   removeUserInLeaderboard: handleUnaryCall<RemoveUserRequest, Empty>;
 }
@@ -6090,6 +6660,21 @@ export interface SubmissionServiceClient extends Client {
     metadata: Metadata,
     options: Partial<CallOptions>,
     callback: (error: ServiceError | null, response: GetDashboardStatsResponse) => void,
+  ): ClientUnaryCall;
+  getProblemSubmissionStats(
+    request: Empty,
+    callback: (error: ServiceError | null, response: GetProblemSubmissionStatsResponse) => void,
+  ): ClientUnaryCall;
+  getProblemSubmissionStats(
+    request: Empty,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: GetProblemSubmissionStatsResponse) => void,
+  ): ClientUnaryCall;
+  getProblemSubmissionStats(
+    request: Empty,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: GetProblemSubmissionStatsResponse) => void,
   ): ClientUnaryCall;
   updateCountryInLeaderboard(
     request: UpdateCountryRequest,

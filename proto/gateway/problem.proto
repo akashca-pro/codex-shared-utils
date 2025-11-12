@@ -258,6 +258,7 @@ service SubmissionService {
     rpc ListTopKGlobalLeaderboard(ListTopKGlobalLeaderboardRequest) returns (ListTopKGlobalLeaderboardResponse);
     rpc ListTopKCountryLeaderboard(ListTopKCountryLeaderboardRequest) returns (ListTopKCountryLeaderboardResponse);
     rpc GetDashboardStats(GetDashboardStatsRequest) returns (GetDashboardStatsResponse);
+    rpc GetProblemSubmissionStats(google.protobuf.Empty) returns (GetProblemSubmissionStatsResponse);
     rpc UpdateCountryInLeaderboard(UpdateCountryRequest) returns (google.protobuf.Empty);
     rpc RemoveUserInLeaderboard(RemoveUserRequest) returns (google.protobuf.Empty);
 }
@@ -369,12 +370,18 @@ message LeaderboardData {
     int32 entityRank = 6;
 }
 
+message SolvedByDifficulty {
+    string difficulty = 1;
+    int32 count = 2;
+}
+
 message GetDashboardStatsResponse {
     repeated Activity heatmap = 1;
     int32 currentStreak = 2;
-    LeaderboardData leaderboadDetails = 3;
+    LeaderboardData leaderboardDetails = 3;
     int32 problemsSolved = 4;
     repeated RecentActivity recentActivities = 5;
+    repeated SolvedByDifficulty solvedByDifficulty = 6;
 }
 
 message UpdateCountryRequest {
@@ -384,4 +391,31 @@ message UpdateCountryRequest {
 
 message RemoveUserRequest {
     string userId = 1;
+}
+
+message LanguageWiseSubmissionStats {
+    string language = 1;
+    int32 count = 2;
+}
+
+message SubmissionStats {
+    int32 totalSubmissions = 1;
+    int32 todaysSubmissions = 2;
+    repeated LanguageWiseSubmissionStats languageWise = 3;
+}
+
+message DifficultyWiseProblemStats {
+    string difficulty = 1;
+    int32 count = 2;
+}
+
+message ProblemStats {
+    int32 totalProblems = 1;
+    int32 todaysProblems = 2;
+    repeated DifficultyWiseProblemStats difficultyWise = 3;
+}
+
+message GetProblemSubmissionStatsResponse {
+    SubmissionStats submissionStats = 1;
+    ProblemStats problemStats = 2;
 }

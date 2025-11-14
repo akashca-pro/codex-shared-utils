@@ -166,7 +166,6 @@ export interface Example {
   Id: string;
   input: string;
   output: string;
-  explanation: string;
 }
 
 export interface StarterCode {
@@ -444,6 +443,7 @@ export interface RecentActivity {
   difficulty: string;
   status: string;
   timeAgo: string;
+  language: string;
 }
 
 export interface LeaderboardData {
@@ -674,7 +674,7 @@ export const TestCaseCollection: MessageFns<TestCaseCollection> = {
 };
 
 function createBaseExample(): Example {
-  return { Id: "", input: "", output: "", explanation: "" };
+  return { Id: "", input: "", output: "" };
 }
 
 export const Example: MessageFns<Example> = {
@@ -687,9 +687,6 @@ export const Example: MessageFns<Example> = {
     }
     if (message.output !== "") {
       writer.uint32(26).string(message.output);
-    }
-    if (message.explanation !== "") {
-      writer.uint32(34).string(message.explanation);
     }
     return writer;
   },
@@ -725,14 +722,6 @@ export const Example: MessageFns<Example> = {
           message.output = reader.string();
           continue;
         }
-        case 4: {
-          if (tag !== 34) {
-            break;
-          }
-
-          message.explanation = reader.string();
-          continue;
-        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -747,7 +736,6 @@ export const Example: MessageFns<Example> = {
       Id: isSet(object.Id) ? globalThis.String(object.Id) : "",
       input: isSet(object.input) ? globalThis.String(object.input) : "",
       output: isSet(object.output) ? globalThis.String(object.output) : "",
-      explanation: isSet(object.explanation) ? globalThis.String(object.explanation) : "",
     };
   },
 
@@ -762,9 +750,6 @@ export const Example: MessageFns<Example> = {
     if (message.output !== "") {
       obj.output = message.output;
     }
-    if (message.explanation !== "") {
-      obj.explanation = message.explanation;
-    }
     return obj;
   },
 
@@ -776,7 +761,6 @@ export const Example: MessageFns<Example> = {
     message.Id = object.Id ?? "";
     message.input = object.input ?? "";
     message.output = object.output ?? "";
-    message.explanation = object.explanation ?? "";
     return message;
   },
 };
@@ -5087,7 +5071,7 @@ export const Activity: MessageFns<Activity> = {
 };
 
 function createBaseRecentActivity(): RecentActivity {
-  return { title: "", difficulty: "", status: "", timeAgo: "" };
+  return { title: "", difficulty: "", status: "", timeAgo: "", language: "" };
 }
 
 export const RecentActivity: MessageFns<RecentActivity> = {
@@ -5103,6 +5087,9 @@ export const RecentActivity: MessageFns<RecentActivity> = {
     }
     if (message.timeAgo !== "") {
       writer.uint32(34).string(message.timeAgo);
+    }
+    if (message.language !== "") {
+      writer.uint32(42).string(message.language);
     }
     return writer;
   },
@@ -5146,6 +5133,14 @@ export const RecentActivity: MessageFns<RecentActivity> = {
           message.timeAgo = reader.string();
           continue;
         }
+        case 5: {
+          if (tag !== 42) {
+            break;
+          }
+
+          message.language = reader.string();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -5161,6 +5156,7 @@ export const RecentActivity: MessageFns<RecentActivity> = {
       difficulty: isSet(object.difficulty) ? globalThis.String(object.difficulty) : "",
       status: isSet(object.status) ? globalThis.String(object.status) : "",
       timeAgo: isSet(object.timeAgo) ? globalThis.String(object.timeAgo) : "",
+      language: isSet(object.language) ? globalThis.String(object.language) : "",
     };
   },
 
@@ -5178,6 +5174,9 @@ export const RecentActivity: MessageFns<RecentActivity> = {
     if (message.timeAgo !== "") {
       obj.timeAgo = message.timeAgo;
     }
+    if (message.language !== "") {
+      obj.language = message.language;
+    }
     return obj;
   },
 
@@ -5190,6 +5189,7 @@ export const RecentActivity: MessageFns<RecentActivity> = {
     message.difficulty = object.difficulty ?? "";
     message.status = object.status ?? "";
     message.timeAgo = object.timeAgo ?? "";
+    message.language = object.language ?? "";
     return message;
   },
 };

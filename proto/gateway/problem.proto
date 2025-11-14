@@ -42,7 +42,6 @@ message Example {
     string _id = 1;
     string input = 2;
     string output = 3;
-    string explanation = 4;
 }
 
 message StarterCode {
@@ -359,6 +358,7 @@ message RecentActivity {
     string difficulty = 2;
     string status = 3;
     string timeAgo = 4;
+    string language = 5;
 }
 
 message LeaderboardData {

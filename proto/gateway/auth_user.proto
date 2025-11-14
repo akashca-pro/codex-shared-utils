@@ -15,6 +15,7 @@ service AuthUserService {
   rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse);
   rpc Profile(UserProfileRequest) returns (UserProfileResponse);
   rpc UpdateProfile(UpdateProfileRequest) returns (UpdateProfileResponse);
+  rpc UpdateUserProgress(UpdateUserProgressRequest) returns (google.protobuf.Empty);
   rpc ChangeEmail(ChangeEmailRequest) returns (google.protobuf.Empty);
   rpc VerifyNewEmail(VerifyNewEmailRequest) returns (google.protobuf.Empty);
   rpc ChangePassword(ChangePasswordRequest) returns (google.protobuf.Empty);
@@ -182,6 +183,12 @@ message UpdatedData {
 message UpdateProfileResponse{
     string message = 1;  
     optional UpdatedData updatedData = 2;
+}
+
+message UpdateUserProgressRequest {
+  string userId = 1;
+  optional string difficulty = 2;
+  bool isSubmitted = 3;
 }
 
 message ChangeEmailRequest {

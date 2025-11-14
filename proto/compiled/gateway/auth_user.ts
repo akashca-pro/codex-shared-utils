@@ -182,6 +182,12 @@ export interface UpdateProfileResponse {
   updatedData?: UpdatedData | undefined;
 }
 
+export interface UpdateUserProgressRequest {
+  userId: string;
+  difficulty?: string | undefined;
+  isSubmitted: boolean;
+}
+
 export interface ChangeEmailRequest {
   userId: string;
   newEmail: string;
@@ -2786,6 +2792,98 @@ export const UpdateProfileResponse: MessageFns<UpdateProfileResponse> = {
   },
 };
 
+function createBaseUpdateUserProgressRequest(): UpdateUserProgressRequest {
+  return { userId: "", difficulty: undefined, isSubmitted: false };
+}
+
+export const UpdateUserProgressRequest: MessageFns<UpdateUserProgressRequest> = {
+  encode(message: UpdateUserProgressRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.userId !== "") {
+      writer.uint32(10).string(message.userId);
+    }
+    if (message.difficulty !== undefined) {
+      writer.uint32(18).string(message.difficulty);
+    }
+    if (message.isSubmitted !== false) {
+      writer.uint32(24).bool(message.isSubmitted);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): UpdateUserProgressRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseUpdateUserProgressRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.userId = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.difficulty = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 24) {
+            break;
+          }
+
+          message.isSubmitted = reader.bool();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): UpdateUserProgressRequest {
+    return {
+      userId: isSet(object.userId) ? globalThis.String(object.userId) : "",
+      difficulty: isSet(object.difficulty) ? globalThis.String(object.difficulty) : undefined,
+      isSubmitted: isSet(object.isSubmitted) ? globalThis.Boolean(object.isSubmitted) : false,
+    };
+  },
+
+  toJSON(message: UpdateUserProgressRequest): unknown {
+    const obj: any = {};
+    if (message.userId !== "") {
+      obj.userId = message.userId;
+    }
+    if (message.difficulty !== undefined) {
+      obj.difficulty = message.difficulty;
+    }
+    if (message.isSubmitted !== false) {
+      obj.isSubmitted = message.isSubmitted;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<UpdateUserProgressRequest>, I>>(base?: I): UpdateUserProgressRequest {
+    return UpdateUserProgressRequest.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<UpdateUserProgressRequest>, I>>(object: I): UpdateUserProgressRequest {
+    const message = createBaseUpdateUserProgressRequest();
+    message.userId = object.userId ?? "";
+    message.difficulty = object.difficulty ?? undefined;
+    message.isSubmitted = object.isSubmitted ?? false;
+    return message;
+  },
+};
+
 function createBaseChangeEmailRequest(): ChangeEmailRequest {
   return { userId: "", newEmail: "", password: "" };
 }
@@ -4318,6 +4416,16 @@ export const AuthUserServiceService = {
       Buffer.from(UpdateProfileResponse.encode(value).finish()),
     responseDeserialize: (value: Buffer): UpdateProfileResponse => UpdateProfileResponse.decode(value),
   },
+  updateUserProgress: {
+    path: "/auth_user.v1.AuthUserService/UpdateUserProgress",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: UpdateUserProgressRequest): Buffer =>
+      Buffer.from(UpdateUserProgressRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): UpdateUserProgressRequest => UpdateUserProgressRequest.decode(value),
+    responseSerialize: (value: Empty): Buffer => Buffer.from(Empty.encode(value).finish()),
+    responseDeserialize: (value: Buffer): Empty => Empty.decode(value),
+  },
   changeEmail: {
     path: "/auth_user.v1.AuthUserService/ChangeEmail",
     requestStream: false,
@@ -4369,6 +4477,7 @@ export interface AuthUserServiceServer extends UntypedServiceImplementation {
   refreshToken: handleUnaryCall<RefreshTokenRequest, RefreshTokenResponse>;
   profile: handleUnaryCall<UserProfileRequest, UserProfileResponse>;
   updateProfile: handleUnaryCall<UpdateProfileRequest, UpdateProfileResponse>;
+  updateUserProgress: handleUnaryCall<UpdateUserProgressRequest, Empty>;
   changeEmail: handleUnaryCall<ChangeEmailRequest, Empty>;
   verifyNewEmail: handleUnaryCall<VerifyNewEmailRequest, Empty>;
   changePassword: handleUnaryCall<ChangePasswordRequest, Empty>;
@@ -4525,6 +4634,21 @@ export interface AuthUserServiceClient extends Client {
     metadata: Metadata,
     options: Partial<CallOptions>,
     callback: (error: ServiceError | null, response: UpdateProfileResponse) => void,
+  ): ClientUnaryCall;
+  updateUserProgress(
+    request: UpdateUserProgressRequest,
+    callback: (error: ServiceError | null, response: Empty) => void,
+  ): ClientUnaryCall;
+  updateUserProgress(
+    request: UpdateUserProgressRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: Empty) => void,
+  ): ClientUnaryCall;
+  updateUserProgress(
+    request: UpdateUserProgressRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: Empty) => void,
   ): ClientUnaryCall;
   changeEmail(
     request: ChangeEmailRequest,

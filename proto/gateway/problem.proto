@@ -57,6 +57,12 @@ message TemplateCode {
     string runWrapperCode = 4;
 }
 
+message SolutionRoadmap {
+    string _id = 1;
+    int32 level = 2;
+    string description = 3;
+}
+
 
 // main problem message for admin.
 
@@ -73,8 +79,9 @@ message Problem {
     repeated Example examples = 10;
     bool active = 11;
     repeated TemplateCode templateCodes = 12;
-    string createdAt = 13;
-    string updatedAt = 14;
+    repeated SolutionRoadmap solutionRoadmap = 13;
+    string createdAt = 14;
+    string updatedAt = 15;
 }
 
 message ListProblemDetails {
@@ -164,7 +171,8 @@ message UpdateBasicProblemDetailsRequest {
     repeated string tags = 7;
     repeated string constraints = 8;
     repeated Example examples = 9;
-    repeated StarterCode starterCodes = 10;
+    repeated SolutionRoadmap solutionRoadmap = 10;
+    repeated StarterCode starterCodes = 11;
 }
 
 message AddTestCaseRequest {
@@ -228,6 +236,13 @@ message ExecutionResult {
     optional FailedTestCase failedTestCase = 2;
 }
 
+message HintsUsed {
+    string _id = 1;
+    int32 level = 2;
+    string hint = 3;
+    string createdAt = 4;
+}
+
 message Submission {
     string _id = 1;
     string problemId = 2;
@@ -243,8 +258,10 @@ message Submission {
     optional ExecutionResult executionResult = 12;
     Difficulty difficulty = 13;
     bool isFirst = 14;
-    string updatedAt = 15;
-    string createdAt = 16;
+    bool isAiAssisted = 15;
+    repeated HintsUsed hintsUsed = 16;
+    string updatedAt = 17;
+    string createdAt = 18;
 }
 
 // --- Service Definition ---
@@ -260,6 +277,8 @@ service SubmissionService {
     rpc GetProblemSubmissionStats(google.protobuf.Empty) returns (GetProblemSubmissionStatsResponse);
     rpc UpdateCountryInLeaderboard(UpdateCountryRequest) returns (google.protobuf.Empty);
     rpc RemoveUserInLeaderboard(RemoveUserRequest) returns (google.protobuf.Empty);
+    rpc RequestHint(RequestHintRequest) returns (RequestHintResponse);
+    rpc GetPreviousHints(GetPreviousHintsRequest) returns (GetPreviousHintsResponse);
 }
 
 message CreateSubmissionRequest {
@@ -309,7 +328,9 @@ message ProblemSpecificSubmissions {
     Language language = 3;
     ExecutionResult executionResult = 4;
     string userCode = 5;
-    string createdAt = 6;
+    bool isAiAssisted = 6;
+    repeated HintsUsed hintsUsed = 7;
+    string createdAt = 8;
 }
 
 message ListProblemSpecificSubmissionResponse {
@@ -418,4 +439,30 @@ message ProblemStats {
 message GetProblemSubmissionStatsResponse {
     SubmissionStats submissionStats = 1;
     ProblemStats problemStats = 2;
+}
+
+message RequestHintRequest {
+    string userCode = 1;
+    string problemId = 2;
+    string language = 3;
+    string userId = 4;
+}
+
+message RequestHintResponse {
+    string hint = 1;
+}
+
+message GetPreviousHintsRequest {
+    string problemId = 1;
+    string userId = 2;
+}
+
+message PreviousHint {
+    string hint = 1;
+    string createdAt = 2;
+    int32 level = 3;
+}
+
+message GetPreviousHintsResponse {
+    repeated PreviousHint hints = 1;
 }

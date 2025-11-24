@@ -181,6 +181,12 @@ export interface TemplateCode {
   runWrapperCode: string;
 }
 
+export interface SolutionRoadmap {
+  Id: string;
+  level: number;
+  description: string;
+}
+
 export interface Problem {
   Id: string;
   questionId: string;
@@ -194,6 +200,7 @@ export interface Problem {
   examples: Example[];
   active: boolean;
   templateCodes: TemplateCode[];
+  solutionRoadmap: SolutionRoadmap[];
   createdAt: string;
   updatedAt: string;
 }
@@ -267,6 +274,7 @@ export interface UpdateBasicProblemDetailsRequest {
   tags: string[];
   constraints: string[];
   examples: Example[];
+  solutionRoadmap: SolutionRoadmap[];
   starterCodes: StarterCode[];
 }
 
@@ -328,6 +336,13 @@ export interface ExecutionResult {
   failedTestCase?: FailedTestCase | undefined;
 }
 
+export interface HintsUsed {
+  Id: string;
+  level: number;
+  hint: string;
+  createdAt: string;
+}
+
 export interface Submission {
   Id: string;
   problemId: string;
@@ -343,6 +358,8 @@ export interface Submission {
   executionResult?: ExecutionResult | undefined;
   difficulty: Difficulty;
   isFirst: boolean;
+  isAiAssisted: boolean;
+  hintsUsed: HintsUsed[];
   updatedAt: string;
   createdAt: string;
 }
@@ -393,6 +410,8 @@ export interface ProblemSpecificSubmissions {
   language: Language;
   executionResult?: ExecutionResult | undefined;
   userCode: string;
+  isAiAssisted: boolean;
+  hintsUsed: HintsUsed[];
   createdAt: string;
 }
 
@@ -503,6 +522,32 @@ export interface ProblemStats {
 export interface GetProblemSubmissionStatsResponse {
   submissionStats?: SubmissionStats | undefined;
   problemStats?: ProblemStats | undefined;
+}
+
+export interface RequestHintRequest {
+  userCode: string;
+  problemId: string;
+  language: string;
+  userId: string;
+}
+
+export interface RequestHintResponse {
+  hint: string;
+}
+
+export interface GetPreviousHintsRequest {
+  problemId: string;
+  userId: string;
+}
+
+export interface PreviousHint {
+  hint: string;
+  createdAt: string;
+  level: number;
+}
+
+export interface GetPreviousHintsResponse {
+  hints: PreviousHint[];
 }
 
 function createBaseTestCase(): TestCase {
@@ -965,6 +1010,98 @@ export const TemplateCode: MessageFns<TemplateCode> = {
   },
 };
 
+function createBaseSolutionRoadmap(): SolutionRoadmap {
+  return { Id: "", level: 0, description: "" };
+}
+
+export const SolutionRoadmap: MessageFns<SolutionRoadmap> = {
+  encode(message: SolutionRoadmap, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.Id !== "") {
+      writer.uint32(10).string(message.Id);
+    }
+    if (message.level !== 0) {
+      writer.uint32(16).int32(message.level);
+    }
+    if (message.description !== "") {
+      writer.uint32(26).string(message.description);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): SolutionRoadmap {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseSolutionRoadmap();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.Id = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 16) {
+            break;
+          }
+
+          message.level = reader.int32();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.description = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): SolutionRoadmap {
+    return {
+      Id: isSet(object.Id) ? globalThis.String(object.Id) : "",
+      level: isSet(object.level) ? globalThis.Number(object.level) : 0,
+      description: isSet(object.description) ? globalThis.String(object.description) : "",
+    };
+  },
+
+  toJSON(message: SolutionRoadmap): unknown {
+    const obj: any = {};
+    if (message.Id !== "") {
+      obj.Id = message.Id;
+    }
+    if (message.level !== 0) {
+      obj.level = Math.round(message.level);
+    }
+    if (message.description !== "") {
+      obj.description = message.description;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<SolutionRoadmap>, I>>(base?: I): SolutionRoadmap {
+    return SolutionRoadmap.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<SolutionRoadmap>, I>>(object: I): SolutionRoadmap {
+    const message = createBaseSolutionRoadmap();
+    message.Id = object.Id ?? "";
+    message.level = object.level ?? 0;
+    message.description = object.description ?? "";
+    return message;
+  },
+};
+
 function createBaseProblem(): Problem {
   return {
     Id: "",
@@ -979,6 +1116,7 @@ function createBaseProblem(): Problem {
     examples: [],
     active: false,
     templateCodes: [],
+    solutionRoadmap: [],
     createdAt: "",
     updatedAt: "",
   };
@@ -1022,11 +1160,14 @@ export const Problem: MessageFns<Problem> = {
     for (const v of message.templateCodes) {
       TemplateCode.encode(v!, writer.uint32(98).fork()).join();
     }
+    for (const v of message.solutionRoadmap) {
+      SolutionRoadmap.encode(v!, writer.uint32(106).fork()).join();
+    }
     if (message.createdAt !== "") {
-      writer.uint32(106).string(message.createdAt);
+      writer.uint32(114).string(message.createdAt);
     }
     if (message.updatedAt !== "") {
-      writer.uint32(114).string(message.updatedAt);
+      writer.uint32(122).string(message.updatedAt);
     }
     return writer;
   },
@@ -1139,11 +1280,19 @@ export const Problem: MessageFns<Problem> = {
             break;
           }
 
-          message.createdAt = reader.string();
+          message.solutionRoadmap.push(SolutionRoadmap.decode(reader, reader.uint32()));
           continue;
         }
         case 14: {
           if (tag !== 114) {
+            break;
+          }
+
+          message.createdAt = reader.string();
+          continue;
+        }
+        case 15: {
+          if (tag !== 122) {
             break;
           }
 
@@ -1180,6 +1329,9 @@ export const Problem: MessageFns<Problem> = {
       active: isSet(object.active) ? globalThis.Boolean(object.active) : false,
       templateCodes: globalThis.Array.isArray(object?.templateCodes)
         ? object.templateCodes.map((e: any) => TemplateCode.fromJSON(e))
+        : [],
+      solutionRoadmap: globalThis.Array.isArray(object?.solutionRoadmap)
+        ? object.solutionRoadmap.map((e: any) => SolutionRoadmap.fromJSON(e))
         : [],
       createdAt: isSet(object.createdAt) ? globalThis.String(object.createdAt) : "",
       updatedAt: isSet(object.updatedAt) ? globalThis.String(object.updatedAt) : "",
@@ -1224,6 +1376,9 @@ export const Problem: MessageFns<Problem> = {
     if (message.templateCodes?.length) {
       obj.templateCodes = message.templateCodes.map((e) => TemplateCode.toJSON(e));
     }
+    if (message.solutionRoadmap?.length) {
+      obj.solutionRoadmap = message.solutionRoadmap.map((e) => SolutionRoadmap.toJSON(e));
+    }
     if (message.createdAt !== "") {
       obj.createdAt = message.createdAt;
     }
@@ -1252,6 +1407,7 @@ export const Problem: MessageFns<Problem> = {
     message.examples = object.examples?.map((e) => Example.fromPartial(e)) || [];
     message.active = object.active ?? false;
     message.templateCodes = object.templateCodes?.map((e) => TemplateCode.fromPartial(e)) || [];
+    message.solutionRoadmap = object.solutionRoadmap?.map((e) => SolutionRoadmap.fromPartial(e)) || [];
     message.createdAt = object.createdAt ?? "";
     message.updatedAt = object.updatedAt ?? "";
     return message;
@@ -2201,6 +2357,7 @@ function createBaseUpdateBasicProblemDetailsRequest(): UpdateBasicProblemDetails
     tags: [],
     constraints: [],
     examples: [],
+    solutionRoadmap: [],
     starterCodes: [],
   };
 }
@@ -2234,8 +2391,11 @@ export const UpdateBasicProblemDetailsRequest: MessageFns<UpdateBasicProblemDeta
     for (const v of message.examples) {
       Example.encode(v!, writer.uint32(74).fork()).join();
     }
+    for (const v of message.solutionRoadmap) {
+      SolutionRoadmap.encode(v!, writer.uint32(82).fork()).join();
+    }
     for (const v of message.starterCodes) {
-      StarterCode.encode(v!, writer.uint32(82).fork()).join();
+      StarterCode.encode(v!, writer.uint32(90).fork()).join();
     }
     return writer;
   },
@@ -2324,6 +2484,14 @@ export const UpdateBasicProblemDetailsRequest: MessageFns<UpdateBasicProblemDeta
             break;
           }
 
+          message.solutionRoadmap.push(SolutionRoadmap.decode(reader, reader.uint32()));
+          continue;
+        }
+        case 11: {
+          if (tag !== 90) {
+            break;
+          }
+
           message.starterCodes.push(StarterCode.decode(reader, reader.uint32()));
           continue;
         }
@@ -2349,6 +2517,9 @@ export const UpdateBasicProblemDetailsRequest: MessageFns<UpdateBasicProblemDeta
         ? object.constraints.map((e: any) => globalThis.String(e))
         : [],
       examples: globalThis.Array.isArray(object?.examples) ? object.examples.map((e: any) => Example.fromJSON(e)) : [],
+      solutionRoadmap: globalThis.Array.isArray(object?.solutionRoadmap)
+        ? object.solutionRoadmap.map((e: any) => SolutionRoadmap.fromJSON(e))
+        : [],
       starterCodes: globalThis.Array.isArray(object?.starterCodes)
         ? object.starterCodes.map((e: any) => StarterCode.fromJSON(e))
         : [],
@@ -2384,6 +2555,9 @@ export const UpdateBasicProblemDetailsRequest: MessageFns<UpdateBasicProblemDeta
     if (message.examples?.length) {
       obj.examples = message.examples.map((e) => Example.toJSON(e));
     }
+    if (message.solutionRoadmap?.length) {
+      obj.solutionRoadmap = message.solutionRoadmap.map((e) => SolutionRoadmap.toJSON(e));
+    }
     if (message.starterCodes?.length) {
       obj.starterCodes = message.starterCodes.map((e) => StarterCode.toJSON(e));
     }
@@ -2408,6 +2582,7 @@ export const UpdateBasicProblemDetailsRequest: MessageFns<UpdateBasicProblemDeta
     message.tags = object.tags?.map((e) => e) || [];
     message.constraints = object.constraints?.map((e) => e) || [];
     message.examples = object.examples?.map((e) => Example.fromPartial(e)) || [];
+    message.solutionRoadmap = object.solutionRoadmap?.map((e) => SolutionRoadmap.fromPartial(e)) || [];
     message.starterCodes = object.starterCodes?.map((e) => StarterCode.fromPartial(e)) || [];
     return message;
   },
@@ -3311,6 +3486,114 @@ export const ExecutionResult: MessageFns<ExecutionResult> = {
   },
 };
 
+function createBaseHintsUsed(): HintsUsed {
+  return { Id: "", level: 0, hint: "", createdAt: "" };
+}
+
+export const HintsUsed: MessageFns<HintsUsed> = {
+  encode(message: HintsUsed, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.Id !== "") {
+      writer.uint32(10).string(message.Id);
+    }
+    if (message.level !== 0) {
+      writer.uint32(16).int32(message.level);
+    }
+    if (message.hint !== "") {
+      writer.uint32(26).string(message.hint);
+    }
+    if (message.createdAt !== "") {
+      writer.uint32(34).string(message.createdAt);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): HintsUsed {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseHintsUsed();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.Id = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 16) {
+            break;
+          }
+
+          message.level = reader.int32();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.hint = reader.string();
+          continue;
+        }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.createdAt = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): HintsUsed {
+    return {
+      Id: isSet(object.Id) ? globalThis.String(object.Id) : "",
+      level: isSet(object.level) ? globalThis.Number(object.level) : 0,
+      hint: isSet(object.hint) ? globalThis.String(object.hint) : "",
+      createdAt: isSet(object.createdAt) ? globalThis.String(object.createdAt) : "",
+    };
+  },
+
+  toJSON(message: HintsUsed): unknown {
+    const obj: any = {};
+    if (message.Id !== "") {
+      obj.Id = message.Id;
+    }
+    if (message.level !== 0) {
+      obj.level = Math.round(message.level);
+    }
+    if (message.hint !== "") {
+      obj.hint = message.hint;
+    }
+    if (message.createdAt !== "") {
+      obj.createdAt = message.createdAt;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<HintsUsed>, I>>(base?: I): HintsUsed {
+    return HintsUsed.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<HintsUsed>, I>>(object: I): HintsUsed {
+    const message = createBaseHintsUsed();
+    message.Id = object.Id ?? "";
+    message.level = object.level ?? 0;
+    message.hint = object.hint ?? "";
+    message.createdAt = object.createdAt ?? "";
+    return message;
+  },
+};
+
 function createBaseSubmission(): Submission {
   return {
     Id: "",
@@ -3327,6 +3610,8 @@ function createBaseSubmission(): Submission {
     executionResult: undefined,
     difficulty: 0,
     isFirst: false,
+    isAiAssisted: false,
+    hintsUsed: [],
     updatedAt: "",
     createdAt: "",
   };
@@ -3376,11 +3661,17 @@ export const Submission: MessageFns<Submission> = {
     if (message.isFirst !== false) {
       writer.uint32(112).bool(message.isFirst);
     }
+    if (message.isAiAssisted !== false) {
+      writer.uint32(120).bool(message.isAiAssisted);
+    }
+    for (const v of message.hintsUsed) {
+      HintsUsed.encode(v!, writer.uint32(130).fork()).join();
+    }
     if (message.updatedAt !== "") {
-      writer.uint32(122).string(message.updatedAt);
+      writer.uint32(138).string(message.updatedAt);
     }
     if (message.createdAt !== "") {
-      writer.uint32(130).string(message.createdAt);
+      writer.uint32(146).string(message.createdAt);
     }
     return writer;
   },
@@ -3505,15 +3796,31 @@ export const Submission: MessageFns<Submission> = {
           continue;
         }
         case 15: {
-          if (tag !== 122) {
+          if (tag !== 120) {
+            break;
+          }
+
+          message.isAiAssisted = reader.bool();
+          continue;
+        }
+        case 16: {
+          if (tag !== 130) {
+            break;
+          }
+
+          message.hintsUsed.push(HintsUsed.decode(reader, reader.uint32()));
+          continue;
+        }
+        case 17: {
+          if (tag !== 138) {
             break;
           }
 
           message.updatedAt = reader.string();
           continue;
         }
-        case 16: {
-          if (tag !== 130) {
+        case 18: {
+          if (tag !== 146) {
             break;
           }
 
@@ -3545,6 +3852,10 @@ export const Submission: MessageFns<Submission> = {
       executionResult: isSet(object.executionResult) ? ExecutionResult.fromJSON(object.executionResult) : undefined,
       difficulty: isSet(object.difficulty) ? difficultyFromJSON(object.difficulty) : 0,
       isFirst: isSet(object.isFirst) ? globalThis.Boolean(object.isFirst) : false,
+      isAiAssisted: isSet(object.isAiAssisted) ? globalThis.Boolean(object.isAiAssisted) : false,
+      hintsUsed: globalThis.Array.isArray(object?.hintsUsed)
+        ? object.hintsUsed.map((e: any) => HintsUsed.fromJSON(e))
+        : [],
       updatedAt: isSet(object.updatedAt) ? globalThis.String(object.updatedAt) : "",
       createdAt: isSet(object.createdAt) ? globalThis.String(object.createdAt) : "",
     };
@@ -3594,6 +3905,12 @@ export const Submission: MessageFns<Submission> = {
     if (message.isFirst !== false) {
       obj.isFirst = message.isFirst;
     }
+    if (message.isAiAssisted !== false) {
+      obj.isAiAssisted = message.isAiAssisted;
+    }
+    if (message.hintsUsed?.length) {
+      obj.hintsUsed = message.hintsUsed.map((e) => HintsUsed.toJSON(e));
+    }
     if (message.updatedAt !== "") {
       obj.updatedAt = message.updatedAt;
     }
@@ -3624,6 +3941,8 @@ export const Submission: MessageFns<Submission> = {
       : undefined;
     message.difficulty = object.difficulty ?? 0;
     message.isFirst = object.isFirst ?? false;
+    message.isAiAssisted = object.isAiAssisted ?? false;
+    message.hintsUsed = object.hintsUsed?.map((e) => HintsUsed.fromPartial(e)) || [];
     message.updatedAt = object.updatedAt ?? "";
     message.createdAt = object.createdAt ?? "";
     return message;
@@ -4269,7 +4588,16 @@ export const ListProblemSpecificSubmissionRequest: MessageFns<ListProblemSpecifi
 };
 
 function createBaseProblemSpecificSubmissions(): ProblemSpecificSubmissions {
-  return { Id: "", status: "", language: 0, executionResult: undefined, userCode: "", createdAt: "" };
+  return {
+    Id: "",
+    status: "",
+    language: 0,
+    executionResult: undefined,
+    userCode: "",
+    isAiAssisted: false,
+    hintsUsed: [],
+    createdAt: "",
+  };
 }
 
 export const ProblemSpecificSubmissions: MessageFns<ProblemSpecificSubmissions> = {
@@ -4289,8 +4617,14 @@ export const ProblemSpecificSubmissions: MessageFns<ProblemSpecificSubmissions> 
     if (message.userCode !== "") {
       writer.uint32(42).string(message.userCode);
     }
+    if (message.isAiAssisted !== false) {
+      writer.uint32(48).bool(message.isAiAssisted);
+    }
+    for (const v of message.hintsUsed) {
+      HintsUsed.encode(v!, writer.uint32(58).fork()).join();
+    }
     if (message.createdAt !== "") {
-      writer.uint32(50).string(message.createdAt);
+      writer.uint32(66).string(message.createdAt);
     }
     return writer;
   },
@@ -4343,7 +4677,23 @@ export const ProblemSpecificSubmissions: MessageFns<ProblemSpecificSubmissions> 
           continue;
         }
         case 6: {
-          if (tag !== 50) {
+          if (tag !== 48) {
+            break;
+          }
+
+          message.isAiAssisted = reader.bool();
+          continue;
+        }
+        case 7: {
+          if (tag !== 58) {
+            break;
+          }
+
+          message.hintsUsed.push(HintsUsed.decode(reader, reader.uint32()));
+          continue;
+        }
+        case 8: {
+          if (tag !== 66) {
             break;
           }
 
@@ -4366,6 +4716,10 @@ export const ProblemSpecificSubmissions: MessageFns<ProblemSpecificSubmissions> 
       language: isSet(object.language) ? languageFromJSON(object.language) : 0,
       executionResult: isSet(object.executionResult) ? ExecutionResult.fromJSON(object.executionResult) : undefined,
       userCode: isSet(object.userCode) ? globalThis.String(object.userCode) : "",
+      isAiAssisted: isSet(object.isAiAssisted) ? globalThis.Boolean(object.isAiAssisted) : false,
+      hintsUsed: globalThis.Array.isArray(object?.hintsUsed)
+        ? object.hintsUsed.map((e: any) => HintsUsed.fromJSON(e))
+        : [],
       createdAt: isSet(object.createdAt) ? globalThis.String(object.createdAt) : "",
     };
   },
@@ -4387,6 +4741,12 @@ export const ProblemSpecificSubmissions: MessageFns<ProblemSpecificSubmissions> 
     if (message.userCode !== "") {
       obj.userCode = message.userCode;
     }
+    if (message.isAiAssisted !== false) {
+      obj.isAiAssisted = message.isAiAssisted;
+    }
+    if (message.hintsUsed?.length) {
+      obj.hintsUsed = message.hintsUsed.map((e) => HintsUsed.toJSON(e));
+    }
     if (message.createdAt !== "") {
       obj.createdAt = message.createdAt;
     }
@@ -4405,6 +4765,8 @@ export const ProblemSpecificSubmissions: MessageFns<ProblemSpecificSubmissions> 
       ? ExecutionResult.fromPartial(object.executionResult)
       : undefined;
     message.userCode = object.userCode ?? "";
+    message.isAiAssisted = object.isAiAssisted ?? false;
+    message.hintsUsed = object.hintsUsed?.map((e) => HintsUsed.fromPartial(e)) || [];
     message.createdAt = object.createdAt ?? "";
     return message;
   },
@@ -6123,6 +6485,400 @@ export const GetProblemSubmissionStatsResponse: MessageFns<GetProblemSubmissionS
   },
 };
 
+function createBaseRequestHintRequest(): RequestHintRequest {
+  return { userCode: "", problemId: "", language: "", userId: "" };
+}
+
+export const RequestHintRequest: MessageFns<RequestHintRequest> = {
+  encode(message: RequestHintRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.userCode !== "") {
+      writer.uint32(10).string(message.userCode);
+    }
+    if (message.problemId !== "") {
+      writer.uint32(18).string(message.problemId);
+    }
+    if (message.language !== "") {
+      writer.uint32(26).string(message.language);
+    }
+    if (message.userId !== "") {
+      writer.uint32(34).string(message.userId);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): RequestHintRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseRequestHintRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.userCode = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.problemId = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.language = reader.string();
+          continue;
+        }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.userId = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): RequestHintRequest {
+    return {
+      userCode: isSet(object.userCode) ? globalThis.String(object.userCode) : "",
+      problemId: isSet(object.problemId) ? globalThis.String(object.problemId) : "",
+      language: isSet(object.language) ? globalThis.String(object.language) : "",
+      userId: isSet(object.userId) ? globalThis.String(object.userId) : "",
+    };
+  },
+
+  toJSON(message: RequestHintRequest): unknown {
+    const obj: any = {};
+    if (message.userCode !== "") {
+      obj.userCode = message.userCode;
+    }
+    if (message.problemId !== "") {
+      obj.problemId = message.problemId;
+    }
+    if (message.language !== "") {
+      obj.language = message.language;
+    }
+    if (message.userId !== "") {
+      obj.userId = message.userId;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<RequestHintRequest>, I>>(base?: I): RequestHintRequest {
+    return RequestHintRequest.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<RequestHintRequest>, I>>(object: I): RequestHintRequest {
+    const message = createBaseRequestHintRequest();
+    message.userCode = object.userCode ?? "";
+    message.problemId = object.problemId ?? "";
+    message.language = object.language ?? "";
+    message.userId = object.userId ?? "";
+    return message;
+  },
+};
+
+function createBaseRequestHintResponse(): RequestHintResponse {
+  return { hint: "" };
+}
+
+export const RequestHintResponse: MessageFns<RequestHintResponse> = {
+  encode(message: RequestHintResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.hint !== "") {
+      writer.uint32(10).string(message.hint);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): RequestHintResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseRequestHintResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.hint = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): RequestHintResponse {
+    return { hint: isSet(object.hint) ? globalThis.String(object.hint) : "" };
+  },
+
+  toJSON(message: RequestHintResponse): unknown {
+    const obj: any = {};
+    if (message.hint !== "") {
+      obj.hint = message.hint;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<RequestHintResponse>, I>>(base?: I): RequestHintResponse {
+    return RequestHintResponse.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<RequestHintResponse>, I>>(object: I): RequestHintResponse {
+    const message = createBaseRequestHintResponse();
+    message.hint = object.hint ?? "";
+    return message;
+  },
+};
+
+function createBaseGetPreviousHintsRequest(): GetPreviousHintsRequest {
+  return { problemId: "", userId: "" };
+}
+
+export const GetPreviousHintsRequest: MessageFns<GetPreviousHintsRequest> = {
+  encode(message: GetPreviousHintsRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.problemId !== "") {
+      writer.uint32(10).string(message.problemId);
+    }
+    if (message.userId !== "") {
+      writer.uint32(18).string(message.userId);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): GetPreviousHintsRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseGetPreviousHintsRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.problemId = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.userId = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): GetPreviousHintsRequest {
+    return {
+      problemId: isSet(object.problemId) ? globalThis.String(object.problemId) : "",
+      userId: isSet(object.userId) ? globalThis.String(object.userId) : "",
+    };
+  },
+
+  toJSON(message: GetPreviousHintsRequest): unknown {
+    const obj: any = {};
+    if (message.problemId !== "") {
+      obj.problemId = message.problemId;
+    }
+    if (message.userId !== "") {
+      obj.userId = message.userId;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<GetPreviousHintsRequest>, I>>(base?: I): GetPreviousHintsRequest {
+    return GetPreviousHintsRequest.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<GetPreviousHintsRequest>, I>>(object: I): GetPreviousHintsRequest {
+    const message = createBaseGetPreviousHintsRequest();
+    message.problemId = object.problemId ?? "";
+    message.userId = object.userId ?? "";
+    return message;
+  },
+};
+
+function createBasePreviousHint(): PreviousHint {
+  return { hint: "", createdAt: "", level: 0 };
+}
+
+export const PreviousHint: MessageFns<PreviousHint> = {
+  encode(message: PreviousHint, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.hint !== "") {
+      writer.uint32(10).string(message.hint);
+    }
+    if (message.createdAt !== "") {
+      writer.uint32(18).string(message.createdAt);
+    }
+    if (message.level !== 0) {
+      writer.uint32(24).int32(message.level);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): PreviousHint {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBasePreviousHint();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.hint = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.createdAt = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 24) {
+            break;
+          }
+
+          message.level = reader.int32();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): PreviousHint {
+    return {
+      hint: isSet(object.hint) ? globalThis.String(object.hint) : "",
+      createdAt: isSet(object.createdAt) ? globalThis.String(object.createdAt) : "",
+      level: isSet(object.level) ? globalThis.Number(object.level) : 0,
+    };
+  },
+
+  toJSON(message: PreviousHint): unknown {
+    const obj: any = {};
+    if (message.hint !== "") {
+      obj.hint = message.hint;
+    }
+    if (message.createdAt !== "") {
+      obj.createdAt = message.createdAt;
+    }
+    if (message.level !== 0) {
+      obj.level = Math.round(message.level);
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<PreviousHint>, I>>(base?: I): PreviousHint {
+    return PreviousHint.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<PreviousHint>, I>>(object: I): PreviousHint {
+    const message = createBasePreviousHint();
+    message.hint = object.hint ?? "";
+    message.createdAt = object.createdAt ?? "";
+    message.level = object.level ?? 0;
+    return message;
+  },
+};
+
+function createBaseGetPreviousHintsResponse(): GetPreviousHintsResponse {
+  return { hints: [] };
+}
+
+export const GetPreviousHintsResponse: MessageFns<GetPreviousHintsResponse> = {
+  encode(message: GetPreviousHintsResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    for (const v of message.hints) {
+      PreviousHint.encode(v!, writer.uint32(10).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): GetPreviousHintsResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseGetPreviousHintsResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.hints.push(PreviousHint.decode(reader, reader.uint32()));
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): GetPreviousHintsResponse {
+    return {
+      hints: globalThis.Array.isArray(object?.hints) ? object.hints.map((e: any) => PreviousHint.fromJSON(e)) : [],
+    };
+  },
+
+  toJSON(message: GetPreviousHintsResponse): unknown {
+    const obj: any = {};
+    if (message.hints?.length) {
+      obj.hints = message.hints.map((e) => PreviousHint.toJSON(e));
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<GetPreviousHintsResponse>, I>>(base?: I): GetPreviousHintsResponse {
+    return GetPreviousHintsResponse.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<GetPreviousHintsResponse>, I>>(object: I): GetPreviousHintsResponse {
+    const message = createBaseGetPreviousHintsResponse();
+    message.hints = object.hints?.map((e) => PreviousHint.fromPartial(e)) || [];
+    return message;
+  },
+};
+
 export type ProblemServiceService = typeof ProblemServiceService;
 export const ProblemServiceService = {
   createProblem: {
@@ -6537,6 +7293,26 @@ export const SubmissionServiceService = {
     responseSerialize: (value: Empty): Buffer => Buffer.from(Empty.encode(value).finish()),
     responseDeserialize: (value: Buffer): Empty => Empty.decode(value),
   },
+  requestHint: {
+    path: "/problem.v1.SubmissionService/RequestHint",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: RequestHintRequest): Buffer => Buffer.from(RequestHintRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): RequestHintRequest => RequestHintRequest.decode(value),
+    responseSerialize: (value: RequestHintResponse): Buffer => Buffer.from(RequestHintResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): RequestHintResponse => RequestHintResponse.decode(value),
+  },
+  getPreviousHints: {
+    path: "/problem.v1.SubmissionService/GetPreviousHints",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: GetPreviousHintsRequest): Buffer =>
+      Buffer.from(GetPreviousHintsRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): GetPreviousHintsRequest => GetPreviousHintsRequest.decode(value),
+    responseSerialize: (value: GetPreviousHintsResponse): Buffer =>
+      Buffer.from(GetPreviousHintsResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): GetPreviousHintsResponse => GetPreviousHintsResponse.decode(value),
+  },
 } as const;
 
 export interface SubmissionServiceServer extends UntypedServiceImplementation {
@@ -6553,6 +7329,8 @@ export interface SubmissionServiceServer extends UntypedServiceImplementation {
   getProblemSubmissionStats: handleUnaryCall<Empty, GetProblemSubmissionStatsResponse>;
   updateCountryInLeaderboard: handleUnaryCall<UpdateCountryRequest, Empty>;
   removeUserInLeaderboard: handleUnaryCall<RemoveUserRequest, Empty>;
+  requestHint: handleUnaryCall<RequestHintRequest, RequestHintResponse>;
+  getPreviousHints: handleUnaryCall<GetPreviousHintsRequest, GetPreviousHintsResponse>;
 }
 
 export interface SubmissionServiceClient extends Client {
@@ -6705,6 +7483,36 @@ export interface SubmissionServiceClient extends Client {
     metadata: Metadata,
     options: Partial<CallOptions>,
     callback: (error: ServiceError | null, response: Empty) => void,
+  ): ClientUnaryCall;
+  requestHint(
+    request: RequestHintRequest,
+    callback: (error: ServiceError | null, response: RequestHintResponse) => void,
+  ): ClientUnaryCall;
+  requestHint(
+    request: RequestHintRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: RequestHintResponse) => void,
+  ): ClientUnaryCall;
+  requestHint(
+    request: RequestHintRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: RequestHintResponse) => void,
+  ): ClientUnaryCall;
+  getPreviousHints(
+    request: GetPreviousHintsRequest,
+    callback: (error: ServiceError | null, response: GetPreviousHintsResponse) => void,
+  ): ClientUnaryCall;
+  getPreviousHints(
+    request: GetPreviousHintsRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: GetPreviousHintsResponse) => void,
+  ): ClientUnaryCall;
+  getPreviousHints(
+    request: GetPreviousHintsRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: GetPreviousHintsResponse) => void,
   ): ClientUnaryCall;
 }
 

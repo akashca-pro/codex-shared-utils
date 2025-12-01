@@ -336,13 +336,6 @@ export interface ExecutionResult {
   failedTestCase?: FailedTestCase | undefined;
 }
 
-export interface HintsUsed {
-  Id: string;
-  level: number;
-  hint: string;
-  createdAt: string;
-}
-
 export interface Submission {
   Id: string;
   problemId: string;
@@ -359,7 +352,7 @@ export interface Submission {
   difficulty: Difficulty;
   isFirst: boolean;
   isAiAssisted: boolean;
-  hintsUsed: HintsUsed[];
+  hintsUsed: number;
   updatedAt: string;
   createdAt: string;
 }
@@ -411,7 +404,7 @@ export interface ProblemSpecificSubmissions {
   executionResult?: ExecutionResult | undefined;
   userCode: string;
   isAiAssisted: boolean;
-  hintsUsed: HintsUsed[];
+  hintsUsed: number;
   createdAt: string;
 }
 
@@ -543,11 +536,20 @@ export interface GetPreviousHintsRequest {
 export interface PreviousHint {
   hint: string;
   createdAt: string;
-  level: number;
 }
 
 export interface GetPreviousHintsResponse {
   hints: PreviousHint[];
+}
+
+export interface RequestFullSolutionRequest {
+  problemId: string;
+  userId: string;
+  language: string;
+}
+
+export interface RequestFullSolutionResponse {
+  solution: string;
 }
 
 function createBaseTestCase(): TestCase {
@@ -3486,114 +3488,6 @@ export const ExecutionResult: MessageFns<ExecutionResult> = {
   },
 };
 
-function createBaseHintsUsed(): HintsUsed {
-  return { Id: "", level: 0, hint: "", createdAt: "" };
-}
-
-export const HintsUsed: MessageFns<HintsUsed> = {
-  encode(message: HintsUsed, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.Id !== "") {
-      writer.uint32(10).string(message.Id);
-    }
-    if (message.level !== 0) {
-      writer.uint32(16).int32(message.level);
-    }
-    if (message.hint !== "") {
-      writer.uint32(26).string(message.hint);
-    }
-    if (message.createdAt !== "") {
-      writer.uint32(34).string(message.createdAt);
-    }
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): HintsUsed {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseHintsUsed();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1: {
-          if (tag !== 10) {
-            break;
-          }
-
-          message.Id = reader.string();
-          continue;
-        }
-        case 2: {
-          if (tag !== 16) {
-            break;
-          }
-
-          message.level = reader.int32();
-          continue;
-        }
-        case 3: {
-          if (tag !== 26) {
-            break;
-          }
-
-          message.hint = reader.string();
-          continue;
-        }
-        case 4: {
-          if (tag !== 34) {
-            break;
-          }
-
-          message.createdAt = reader.string();
-          continue;
-        }
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
-
-  fromJSON(object: any): HintsUsed {
-    return {
-      Id: isSet(object.Id) ? globalThis.String(object.Id) : "",
-      level: isSet(object.level) ? globalThis.Number(object.level) : 0,
-      hint: isSet(object.hint) ? globalThis.String(object.hint) : "",
-      createdAt: isSet(object.createdAt) ? globalThis.String(object.createdAt) : "",
-    };
-  },
-
-  toJSON(message: HintsUsed): unknown {
-    const obj: any = {};
-    if (message.Id !== "") {
-      obj.Id = message.Id;
-    }
-    if (message.level !== 0) {
-      obj.level = Math.round(message.level);
-    }
-    if (message.hint !== "") {
-      obj.hint = message.hint;
-    }
-    if (message.createdAt !== "") {
-      obj.createdAt = message.createdAt;
-    }
-    return obj;
-  },
-
-  create<I extends Exact<DeepPartial<HintsUsed>, I>>(base?: I): HintsUsed {
-    return HintsUsed.fromPartial(base ?? ({} as any));
-  },
-  fromPartial<I extends Exact<DeepPartial<HintsUsed>, I>>(object: I): HintsUsed {
-    const message = createBaseHintsUsed();
-    message.Id = object.Id ?? "";
-    message.level = object.level ?? 0;
-    message.hint = object.hint ?? "";
-    message.createdAt = object.createdAt ?? "";
-    return message;
-  },
-};
-
 function createBaseSubmission(): Submission {
   return {
     Id: "",
@@ -3611,7 +3505,7 @@ function createBaseSubmission(): Submission {
     difficulty: 0,
     isFirst: false,
     isAiAssisted: false,
-    hintsUsed: [],
+    hintsUsed: 0,
     updatedAt: "",
     createdAt: "",
   };
@@ -3664,8 +3558,8 @@ export const Submission: MessageFns<Submission> = {
     if (message.isAiAssisted !== false) {
       writer.uint32(120).bool(message.isAiAssisted);
     }
-    for (const v of message.hintsUsed) {
-      HintsUsed.encode(v!, writer.uint32(130).fork()).join();
+    if (message.hintsUsed !== 0) {
+      writer.uint32(128).int32(message.hintsUsed);
     }
     if (message.updatedAt !== "") {
       writer.uint32(138).string(message.updatedAt);
@@ -3804,11 +3698,11 @@ export const Submission: MessageFns<Submission> = {
           continue;
         }
         case 16: {
-          if (tag !== 130) {
+          if (tag !== 128) {
             break;
           }
 
-          message.hintsUsed.push(HintsUsed.decode(reader, reader.uint32()));
+          message.hintsUsed = reader.int32();
           continue;
         }
         case 17: {
@@ -3853,9 +3747,7 @@ export const Submission: MessageFns<Submission> = {
       difficulty: isSet(object.difficulty) ? difficultyFromJSON(object.difficulty) : 0,
       isFirst: isSet(object.isFirst) ? globalThis.Boolean(object.isFirst) : false,
       isAiAssisted: isSet(object.isAiAssisted) ? globalThis.Boolean(object.isAiAssisted) : false,
-      hintsUsed: globalThis.Array.isArray(object?.hintsUsed)
-        ? object.hintsUsed.map((e: any) => HintsUsed.fromJSON(e))
-        : [],
+      hintsUsed: isSet(object.hintsUsed) ? globalThis.Number(object.hintsUsed) : 0,
       updatedAt: isSet(object.updatedAt) ? globalThis.String(object.updatedAt) : "",
       createdAt: isSet(object.createdAt) ? globalThis.String(object.createdAt) : "",
     };
@@ -3908,8 +3800,8 @@ export const Submission: MessageFns<Submission> = {
     if (message.isAiAssisted !== false) {
       obj.isAiAssisted = message.isAiAssisted;
     }
-    if (message.hintsUsed?.length) {
-      obj.hintsUsed = message.hintsUsed.map((e) => HintsUsed.toJSON(e));
+    if (message.hintsUsed !== 0) {
+      obj.hintsUsed = Math.round(message.hintsUsed);
     }
     if (message.updatedAt !== "") {
       obj.updatedAt = message.updatedAt;
@@ -3942,7 +3834,7 @@ export const Submission: MessageFns<Submission> = {
     message.difficulty = object.difficulty ?? 0;
     message.isFirst = object.isFirst ?? false;
     message.isAiAssisted = object.isAiAssisted ?? false;
-    message.hintsUsed = object.hintsUsed?.map((e) => HintsUsed.fromPartial(e)) || [];
+    message.hintsUsed = object.hintsUsed ?? 0;
     message.updatedAt = object.updatedAt ?? "";
     message.createdAt = object.createdAt ?? "";
     return message;
@@ -4595,7 +4487,7 @@ function createBaseProblemSpecificSubmissions(): ProblemSpecificSubmissions {
     executionResult: undefined,
     userCode: "",
     isAiAssisted: false,
-    hintsUsed: [],
+    hintsUsed: 0,
     createdAt: "",
   };
 }
@@ -4620,8 +4512,8 @@ export const ProblemSpecificSubmissions: MessageFns<ProblemSpecificSubmissions> 
     if (message.isAiAssisted !== false) {
       writer.uint32(48).bool(message.isAiAssisted);
     }
-    for (const v of message.hintsUsed) {
-      HintsUsed.encode(v!, writer.uint32(58).fork()).join();
+    if (message.hintsUsed !== 0) {
+      writer.uint32(56).int32(message.hintsUsed);
     }
     if (message.createdAt !== "") {
       writer.uint32(66).string(message.createdAt);
@@ -4685,11 +4577,11 @@ export const ProblemSpecificSubmissions: MessageFns<ProblemSpecificSubmissions> 
           continue;
         }
         case 7: {
-          if (tag !== 58) {
+          if (tag !== 56) {
             break;
           }
 
-          message.hintsUsed.push(HintsUsed.decode(reader, reader.uint32()));
+          message.hintsUsed = reader.int32();
           continue;
         }
         case 8: {
@@ -4717,9 +4609,7 @@ export const ProblemSpecificSubmissions: MessageFns<ProblemSpecificSubmissions> 
       executionResult: isSet(object.executionResult) ? ExecutionResult.fromJSON(object.executionResult) : undefined,
       userCode: isSet(object.userCode) ? globalThis.String(object.userCode) : "",
       isAiAssisted: isSet(object.isAiAssisted) ? globalThis.Boolean(object.isAiAssisted) : false,
-      hintsUsed: globalThis.Array.isArray(object?.hintsUsed)
-        ? object.hintsUsed.map((e: any) => HintsUsed.fromJSON(e))
-        : [],
+      hintsUsed: isSet(object.hintsUsed) ? globalThis.Number(object.hintsUsed) : 0,
       createdAt: isSet(object.createdAt) ? globalThis.String(object.createdAt) : "",
     };
   },
@@ -4744,8 +4634,8 @@ export const ProblemSpecificSubmissions: MessageFns<ProblemSpecificSubmissions> 
     if (message.isAiAssisted !== false) {
       obj.isAiAssisted = message.isAiAssisted;
     }
-    if (message.hintsUsed?.length) {
-      obj.hintsUsed = message.hintsUsed.map((e) => HintsUsed.toJSON(e));
+    if (message.hintsUsed !== 0) {
+      obj.hintsUsed = Math.round(message.hintsUsed);
     }
     if (message.createdAt !== "") {
       obj.createdAt = message.createdAt;
@@ -4766,7 +4656,7 @@ export const ProblemSpecificSubmissions: MessageFns<ProblemSpecificSubmissions> 
       : undefined;
     message.userCode = object.userCode ?? "";
     message.isAiAssisted = object.isAiAssisted ?? false;
-    message.hintsUsed = object.hintsUsed?.map((e) => HintsUsed.fromPartial(e)) || [];
+    message.hintsUsed = object.hintsUsed ?? 0;
     message.createdAt = object.createdAt ?? "";
     return message;
   },
@@ -6728,7 +6618,7 @@ export const GetPreviousHintsRequest: MessageFns<GetPreviousHintsRequest> = {
 };
 
 function createBasePreviousHint(): PreviousHint {
-  return { hint: "", createdAt: "", level: 0 };
+  return { hint: "", createdAt: "" };
 }
 
 export const PreviousHint: MessageFns<PreviousHint> = {
@@ -6738,9 +6628,6 @@ export const PreviousHint: MessageFns<PreviousHint> = {
     }
     if (message.createdAt !== "") {
       writer.uint32(18).string(message.createdAt);
-    }
-    if (message.level !== 0) {
-      writer.uint32(24).int32(message.level);
     }
     return writer;
   },
@@ -6768,14 +6655,6 @@ export const PreviousHint: MessageFns<PreviousHint> = {
           message.createdAt = reader.string();
           continue;
         }
-        case 3: {
-          if (tag !== 24) {
-            break;
-          }
-
-          message.level = reader.int32();
-          continue;
-        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -6789,7 +6668,6 @@ export const PreviousHint: MessageFns<PreviousHint> = {
     return {
       hint: isSet(object.hint) ? globalThis.String(object.hint) : "",
       createdAt: isSet(object.createdAt) ? globalThis.String(object.createdAt) : "",
-      level: isSet(object.level) ? globalThis.Number(object.level) : 0,
     };
   },
 
@@ -6801,9 +6679,6 @@ export const PreviousHint: MessageFns<PreviousHint> = {
     if (message.createdAt !== "") {
       obj.createdAt = message.createdAt;
     }
-    if (message.level !== 0) {
-      obj.level = Math.round(message.level);
-    }
     return obj;
   },
 
@@ -6814,7 +6689,6 @@ export const PreviousHint: MessageFns<PreviousHint> = {
     const message = createBasePreviousHint();
     message.hint = object.hint ?? "";
     message.createdAt = object.createdAt ?? "";
-    message.level = object.level ?? 0;
     return message;
   },
 };
@@ -6875,6 +6749,156 @@ export const GetPreviousHintsResponse: MessageFns<GetPreviousHintsResponse> = {
   fromPartial<I extends Exact<DeepPartial<GetPreviousHintsResponse>, I>>(object: I): GetPreviousHintsResponse {
     const message = createBaseGetPreviousHintsResponse();
     message.hints = object.hints?.map((e) => PreviousHint.fromPartial(e)) || [];
+    return message;
+  },
+};
+
+function createBaseRequestFullSolutionRequest(): RequestFullSolutionRequest {
+  return { problemId: "", userId: "", language: "" };
+}
+
+export const RequestFullSolutionRequest: MessageFns<RequestFullSolutionRequest> = {
+  encode(message: RequestFullSolutionRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.problemId !== "") {
+      writer.uint32(10).string(message.problemId);
+    }
+    if (message.userId !== "") {
+      writer.uint32(18).string(message.userId);
+    }
+    if (message.language !== "") {
+      writer.uint32(26).string(message.language);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): RequestFullSolutionRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseRequestFullSolutionRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.problemId = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.userId = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.language = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): RequestFullSolutionRequest {
+    return {
+      problemId: isSet(object.problemId) ? globalThis.String(object.problemId) : "",
+      userId: isSet(object.userId) ? globalThis.String(object.userId) : "",
+      language: isSet(object.language) ? globalThis.String(object.language) : "",
+    };
+  },
+
+  toJSON(message: RequestFullSolutionRequest): unknown {
+    const obj: any = {};
+    if (message.problemId !== "") {
+      obj.problemId = message.problemId;
+    }
+    if (message.userId !== "") {
+      obj.userId = message.userId;
+    }
+    if (message.language !== "") {
+      obj.language = message.language;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<RequestFullSolutionRequest>, I>>(base?: I): RequestFullSolutionRequest {
+    return RequestFullSolutionRequest.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<RequestFullSolutionRequest>, I>>(object: I): RequestFullSolutionRequest {
+    const message = createBaseRequestFullSolutionRequest();
+    message.problemId = object.problemId ?? "";
+    message.userId = object.userId ?? "";
+    message.language = object.language ?? "";
+    return message;
+  },
+};
+
+function createBaseRequestFullSolutionResponse(): RequestFullSolutionResponse {
+  return { solution: "" };
+}
+
+export const RequestFullSolutionResponse: MessageFns<RequestFullSolutionResponse> = {
+  encode(message: RequestFullSolutionResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.solution !== "") {
+      writer.uint32(10).string(message.solution);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): RequestFullSolutionResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseRequestFullSolutionResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.solution = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): RequestFullSolutionResponse {
+    return { solution: isSet(object.solution) ? globalThis.String(object.solution) : "" };
+  },
+
+  toJSON(message: RequestFullSolutionResponse): unknown {
+    const obj: any = {};
+    if (message.solution !== "") {
+      obj.solution = message.solution;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<RequestFullSolutionResponse>, I>>(base?: I): RequestFullSolutionResponse {
+    return RequestFullSolutionResponse.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<RequestFullSolutionResponse>, I>>(object: I): RequestFullSolutionResponse {
+    const message = createBaseRequestFullSolutionResponse();
+    message.solution = object.solution ?? "";
     return message;
   },
 };
@@ -7313,6 +7337,17 @@ export const SubmissionServiceService = {
       Buffer.from(GetPreviousHintsResponse.encode(value).finish()),
     responseDeserialize: (value: Buffer): GetPreviousHintsResponse => GetPreviousHintsResponse.decode(value),
   },
+  requestFullSolution: {
+    path: "/problem.v1.SubmissionService/RequestFullSolution",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: RequestFullSolutionRequest): Buffer =>
+      Buffer.from(RequestFullSolutionRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): RequestFullSolutionRequest => RequestFullSolutionRequest.decode(value),
+    responseSerialize: (value: RequestFullSolutionResponse): Buffer =>
+      Buffer.from(RequestFullSolutionResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): RequestFullSolutionResponse => RequestFullSolutionResponse.decode(value),
+  },
 } as const;
 
 export interface SubmissionServiceServer extends UntypedServiceImplementation {
@@ -7331,6 +7366,7 @@ export interface SubmissionServiceServer extends UntypedServiceImplementation {
   removeUserInLeaderboard: handleUnaryCall<RemoveUserRequest, Empty>;
   requestHint: handleUnaryCall<RequestHintRequest, RequestHintResponse>;
   getPreviousHints: handleUnaryCall<GetPreviousHintsRequest, GetPreviousHintsResponse>;
+  requestFullSolution: handleUnaryCall<RequestFullSolutionRequest, RequestFullSolutionResponse>;
 }
 
 export interface SubmissionServiceClient extends Client {
@@ -7513,6 +7549,21 @@ export interface SubmissionServiceClient extends Client {
     metadata: Metadata,
     options: Partial<CallOptions>,
     callback: (error: ServiceError | null, response: GetPreviousHintsResponse) => void,
+  ): ClientUnaryCall;
+  requestFullSolution(
+    request: RequestFullSolutionRequest,
+    callback: (error: ServiceError | null, response: RequestFullSolutionResponse) => void,
+  ): ClientUnaryCall;
+  requestFullSolution(
+    request: RequestFullSolutionRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: RequestFullSolutionResponse) => void,
+  ): ClientUnaryCall;
+  requestFullSolution(
+    request: RequestFullSolutionRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: RequestFullSolutionResponse) => void,
   ): ClientUnaryCall;
 }
 

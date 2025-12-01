@@ -236,13 +236,6 @@ message ExecutionResult {
     optional FailedTestCase failedTestCase = 2;
 }
 
-message HintsUsed {
-    string _id = 1;
-    int32 level = 2;
-    string hint = 3;
-    string createdAt = 4;
-}
-
 message Submission {
     string _id = 1;
     string problemId = 2;
@@ -259,7 +252,7 @@ message Submission {
     Difficulty difficulty = 13;
     bool isFirst = 14;
     bool isAiAssisted = 15;
-    repeated HintsUsed hintsUsed = 16;
+    int32 hintsUsed = 16;
     string updatedAt = 17;
     string createdAt = 18;
 }
@@ -279,6 +272,7 @@ service SubmissionService {
     rpc RemoveUserInLeaderboard(RemoveUserRequest) returns (google.protobuf.Empty);
     rpc RequestHint(RequestHintRequest) returns (RequestHintResponse);
     rpc GetPreviousHints(GetPreviousHintsRequest) returns (GetPreviousHintsResponse);
+    rpc RequestFullSolution(RequestFullSolutionRequest) returns (RequestFullSolutionResponse);
 }
 
 message CreateSubmissionRequest {
@@ -329,7 +323,7 @@ message ProblemSpecificSubmissions {
     ExecutionResult executionResult = 4;
     string userCode = 5;
     bool isAiAssisted = 6;
-    repeated HintsUsed hintsUsed = 7;
+    int32 hintsUsed = 7;
     string createdAt = 8;
 }
 
@@ -460,9 +454,18 @@ message GetPreviousHintsRequest {
 message PreviousHint {
     string hint = 1;
     string createdAt = 2;
-    int32 level = 3;
 }
 
 message GetPreviousHintsResponse {
     repeated PreviousHint hints = 1;
+}
+
+message RequestFullSolutionRequest {
+    string problemId = 1;
+    string userId = 2;
+    string language = 3;
+}
+
+message RequestFullSolutionResponse {
+    string solution = 1;
 }

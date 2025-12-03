@@ -166,6 +166,7 @@ export interface Example {
   Id: string;
   input: string;
   output: string;
+  explanation?: string | undefined;
 }
 
 export interface StarterCode {
@@ -721,7 +722,7 @@ export const TestCaseCollection: MessageFns<TestCaseCollection> = {
 };
 
 function createBaseExample(): Example {
-  return { Id: "", input: "", output: "" };
+  return { Id: "", input: "", output: "", explanation: undefined };
 }
 
 export const Example: MessageFns<Example> = {
@@ -734,6 +735,9 @@ export const Example: MessageFns<Example> = {
     }
     if (message.output !== "") {
       writer.uint32(26).string(message.output);
+    }
+    if (message.explanation !== undefined) {
+      writer.uint32(34).string(message.explanation);
     }
     return writer;
   },
@@ -769,6 +773,14 @@ export const Example: MessageFns<Example> = {
           message.output = reader.string();
           continue;
         }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.explanation = reader.string();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -783,6 +795,7 @@ export const Example: MessageFns<Example> = {
       Id: isSet(object.Id) ? globalThis.String(object.Id) : "",
       input: isSet(object.input) ? globalThis.String(object.input) : "",
       output: isSet(object.output) ? globalThis.String(object.output) : "",
+      explanation: isSet(object.explanation) ? globalThis.String(object.explanation) : undefined,
     };
   },
 
@@ -797,6 +810,9 @@ export const Example: MessageFns<Example> = {
     if (message.output !== "") {
       obj.output = message.output;
     }
+    if (message.explanation !== undefined) {
+      obj.explanation = message.explanation;
+    }
     return obj;
   },
 
@@ -808,6 +824,7 @@ export const Example: MessageFns<Example> = {
     message.Id = object.Id ?? "";
     message.input = object.input ?? "";
     message.output = object.output ?? "";
+    message.explanation = object.explanation ?? undefined;
     return message;
   },
 };
